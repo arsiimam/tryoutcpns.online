@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "CPNS Tryout App"
+version = "1.0.0"
+id = "artifacts/cpns-tryout"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22075
+
+[services.development]
+run = "pnpm --filter @workspace/cpns-tryout run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cpns-tryout", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/cpns-tryout/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22075"
+BASE_PATH = "/"
