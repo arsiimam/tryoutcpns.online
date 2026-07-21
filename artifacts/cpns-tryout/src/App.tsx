@@ -5,7 +5,7 @@ import { ClerkProvider, SignIn, SignUp, Show, useClerk } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 
-import { AuthProvider } from "./lib/auth-context";
+import { AuthProvider, useAuth } from "./lib/auth-context";
 import { LandingPage } from "./pages/public/LandingPage";
 import { PricingPage } from "./pages/public/PricingPage";
 import { FaqPage } from "./pages/public/FaqPage";
