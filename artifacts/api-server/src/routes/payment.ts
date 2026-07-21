@@ -136,13 +136,15 @@ router.post("/payment/callback", (req, res) => {
   }
 });
 
-/** GET /api/payment/check/:merchantOrderId
+/** GET /api/payment/check/:merchantOrderId?amount=99000
  *  Checks the status of a specific transaction.
+ *  amount query param is required by Duitku for signature.
  */
 router.get("/payment/check/:merchantOrderId", async (req, res) => {
   try {
     const { merchantOrderId } = req.params;
-    const result = await checkTransaction(merchantOrderId);
+    const amount = Number(req.query.amount) || 0;
+    const result = await checkTransaction(merchantOrderId, amount);
     return res.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);

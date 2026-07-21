@@ -56,7 +56,7 @@ export function ProfilePage() {
               {user.subscriptionId ? 'Premium Member' : 'Free Member'}
             </div>
             <div className="text-sm text-slate-500">
-              Bergabung sejak: {new Date(user.createdAt).toLocaleDateString('id-ID', {month: 'long', year: 'numeric'})}
+              Bergabung sejak: {user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID', {month: 'long', year: 'numeric'}) : '-'}
             </div>
           </div>
         </div>

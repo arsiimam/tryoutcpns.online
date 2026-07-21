@@ -1,66 +1,58 @@
 import React from 'react';
+import { useUser, useClerk } from '@clerk/react';
 import { useLocation } from 'wouter';
-import { User, dummyApi } from './dummy-api';
-import { users } from '../data/dummy-cpns-data';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'participant';
+  avatar: string;
+  subscriptionId?: string | null;
+  createdAt?: string;
+}
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** @deprecated Use Clerk's SignIn component instead */
+  login: (email: string, pass: string) => Promise<void>;
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
+function clerkUserToAppUser(clerkUser: ReturnType<typeof useUser>['user']): User | null {
+  if (!clerkUser) return null;
+  const email = clerkUser.primaryEmailAddress?.emailAddress ?? '';
+  // Admin role check via public metadata (can be set in Auth pane)
+  const role = (clerkUser.publicMetadata?.role as string) === 'admin' ? 'admin' : 'participant';
+  return {
+    id: clerkUser.id,
+    name: clerkUser.fullName ?? clerkUser.firstName ?? email.split('@')[0] ?? 'Pengguna',
+    email,
+    role,
+    avatar: clerkUser.firstName?.charAt(0).toUpperCase() ?? email.charAt(0).toUpperCase() ?? 'U',
+    subscriptionId: (clerkUser.publicMetadata?.subscriptionId as string) ?? null,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = React.useState<User | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const { user: clerkUser, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const [, setLocation] = useLocation();
 
-  React.useEffect(() => {
-    const init = async () => {
-      try {
-        const stored = localStorage.getItem('cpns_user');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setUser(parsed);
-        } else {
-          // Auto-login with demo participant user for demo purposes
-          const demoUser = users[1]; // Budi Santoso - Gold subscriber
-          setUser(demoUser);
-          localStorage.setItem('cpns_user', JSON.stringify(demoUser));
-        }
-      } catch (e) {
-        const demoUser = users[1];
-        setUser(demoUser);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    init();
-  }, []);
-
-  const login = async (email: string, pass: string) => {
-    setIsLoading(true);
-    try {
-      const u = await dummyApi.login(email, pass);
-      setUser(u);
-      localStorage.setItem('cpns_user', JSON.stringify(u));
-      if (u.role === 'admin') {
-        setLocation('/admin/dashboard');
-      } else {
-        setLocation('/dashboard');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const user = isLoaded ? clerkUserToAppUser(clerkUser) : null;
+  const isLoading = !isLoaded;
 
   const logout = async () => {
-    await dummyApi.logout();
-    setUser(null);
-    localStorage.removeItem('cpns_user');
-    setLocation('/login');
+    await signOut();
+    setLocation('/');
+  };
+
+  // Legacy no-op — pages using this should migrate to Clerk SignIn component
+  const login = async (_email: string, _pass: string) => {
+    setLocation('/sign-in');
   };
 
   return (

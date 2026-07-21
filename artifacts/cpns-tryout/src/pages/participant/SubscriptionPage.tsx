@@ -380,11 +380,11 @@ export function SubscriptionPage() {
               ) : (
                 payments.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.invoiceNumber}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.invoiceNo}</td>
                     <td className="px-4 py-3 text-slate-600">{new Date(p.createdAt).toLocaleDateString("id-ID")}</td>
                     <td className="px-4 py-3 font-medium text-slate-800">{p.subscriptionId}</td>
                     <td className="px-4 py-3 font-semibold text-slate-800">Rp {fmt(p.amount)}</td>
-                    <td className="px-4 py-3 text-slate-600">{p.paymentMethod}</td>
+                    <td className="px-4 py-3 text-slate-600">{p.method}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={p.status} />
                     </td>
@@ -469,7 +469,7 @@ export function SubscriptionPage() {
                         {GROUP_LABELS[group as PaymentMethodInfo["group"]]}
                       </p>
                       <div className="grid grid-cols-2 gap-2">
-                        {methods.map((m) => (
+                        {methods.map((m: PaymentMethodInfo) => (
                           <button
                             key={m.code}
                             onClick={() => setSelectedMethod(m.code)}
