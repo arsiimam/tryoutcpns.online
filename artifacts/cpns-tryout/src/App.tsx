@@ -164,6 +164,22 @@ function PlaceholderPage({ title }: { title: string }) {
   );
 }
 
+// Redirect admin users away from participant dashboard
+function DashboardGuard() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (user?.role === "admin") return <Redirect to="/admin/dashboard" />;
+  return <ParticipantDashboard />;
+}
+
+// Redirect participant users away from admin area
+function AdminGuard({ component: Component }: { component: React.ComponentType }) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (user && user.role !== "admin") return <Redirect to="/dashboard" />;
+  return <Component />;
+}
+
 function Router() {
   return (
     <Switch>
@@ -182,8 +198,8 @@ function Router() {
       <Route path="/register">{() => <Redirect to="/sign-up" />}</Route>
       <Route path="/forgot-password" component={ForgotPasswordPage} />
 
-      {/* Participant Routes */}
-      <Route path="/dashboard" component={ParticipantDashboard} />
+      {/* Participant Routes — admin gets redirected to admin dashboard */}
+      <Route path="/dashboard" component={DashboardGuard} />
       <Route path="/tryout" component={TryoutListPage} />
       <Route path="/tryout/:id" component={TryoutDetailPage} />
       <Route path="/tryout/:id/start" component={SessionPage} />
@@ -195,17 +211,17 @@ function Router() {
       <Route path="/subscription" component={SubscriptionPage} />
       <Route path="/profile" component={ProfilePage} />
 
-      {/* Admin Routes */}
-      <Route path="/admin/dashboard" component={AdminDashboardPage} />
-      <Route path="/admin/questions" component={AdminQuestionsPage} />
-      <Route path="/admin/categories" component={AdminCategoriesPage} />
-      <Route path="/admin/tryouts" component={AdminTryoutsPage} />
-      <Route path="/admin/users" component={AdminUsersPage} />
-      <Route path="/admin/subscriptions" component={AdminSubscriptionsPage} />
-      <Route path="/admin/payments" component={AdminPaymentsPage} />
-      <Route path="/admin/coupons" component={AdminCouponsPage} />
-      <Route path="/admin/reports" component={AdminReportsPage} />
-      <Route path="/admin/cms" component={AdminCmsPage} />
+      {/* Admin Routes — non-admin gets redirected to participant dashboard */}
+      <Route path="/admin/dashboard">{() => <AdminGuard component={AdminDashboardPage} />}</Route>
+      <Route path="/admin/questions">{() => <AdminGuard component={AdminQuestionsPage} />}</Route>
+      <Route path="/admin/categories">{() => <AdminGuard component={AdminCategoriesPage} />}</Route>
+      <Route path="/admin/tryouts">{() => <AdminGuard component={AdminTryoutsPage} />}</Route>
+      <Route path="/admin/users">{() => <AdminGuard component={AdminUsersPage} />}</Route>
+      <Route path="/admin/subscriptions">{() => <AdminGuard component={AdminSubscriptionsPage} />}</Route>
+      <Route path="/admin/payments">{() => <AdminGuard component={AdminPaymentsPage} />}</Route>
+      <Route path="/admin/coupons">{() => <AdminGuard component={AdminCouponsPage} />}</Route>
+      <Route path="/admin/reports">{() => <AdminGuard component={AdminReportsPage} />}</Route>
+      <Route path="/admin/cms">{() => <AdminGuard component={AdminCmsPage} />}</Route>
 
       {/* Catch all */}
       <Route component={() => <PlaceholderPage title="404 Not Found" />} />
