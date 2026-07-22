@@ -77,7 +77,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               display: "flex",
               alignItems: "center",
             }}>
-              <img src="/logo.png" alt="Tryout CPNS Online" style={{ height: 30, width: "auto", display: "block" }} />
+              <img src="/logo-dashboard.png" alt="Tryout CPNS Online" style={{ height: 42, width: "auto", display: "block" }} />
             </div>
           </Link>
           <div className="flex items-center gap-1.5">

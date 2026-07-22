@@ -180,8 +180,7 @@ export function LandingPage() {
       <header className="lp-nav">
         <div className="lp-nav-inner">
           <Link href="/" className="lp-brand">
-            <span className="lp-brand-badge">AYO</span>
-            <span className="lp-brand-name">CPNS</span>
+            <img src="/logo-landing.png" alt="Tryout CPNS Online" className="lp-brand-img" />
           </Link>
 
           <nav className="lp-nav-links">

@@ -74,7 +74,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               display: "flex",
               alignItems: "center",
             }}>
-              <img src="/logo.png" alt="Tryout CPNS Online" style={{ height: 32, width: "auto", display: "block" }} />
+              <img src="/logo-dashboard.png" alt="Tryout CPNS Online" style={{ height: 44, width: "auto", display: "block" }} />
             </div>
           </Link>
           <button
