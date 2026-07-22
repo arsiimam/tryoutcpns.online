@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../../lib/auth-context";
+import { BrandLogo } from "../../components/BrandLogo";
 import "./LandingPage.css";
 
 /* ------------------------------------------------------------------ */
@@ -180,7 +181,7 @@ export function LandingPage() {
       <header className="lp-nav">
         <div className="lp-nav-inner">
           <Link href="/" className="lp-brand">
-            <img src="/logo-landing.png" alt="Tryout CPNS Online" className="lp-brand-img" />
+            <BrandLogo variant="light" size="md" />
           </Link>
 
           <nav className="lp-nav-links">
@@ -466,7 +467,7 @@ export function LandingPage() {
             {/* Brand */}
             <div>
               <div className="lp-footer-logo-wrap">
-                <img src="/logo.png" alt="Tryout CPNS Online" />
+                <BrandLogo variant="light" size="sm" />
               </div>
               <p className="lp-footer-desc">
                 Platform tryout CPNS berbasis CAT terdepan di Indonesia. Persiapkan ujian dengan sistem yang sama persis dengan ujian resmi.

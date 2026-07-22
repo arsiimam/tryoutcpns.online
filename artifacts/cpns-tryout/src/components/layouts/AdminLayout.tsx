@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
+import { BrandLogo } from "../BrandLogo";
 import {
   LayoutDashboard, Users, FileQuestion, BookOpen, Clock,
   Settings, CreditCard, Tag, BarChart3, LogOut, Menu, X,
@@ -70,15 +71,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           style={{ background: BLUE_D, borderBottom: "1px solid rgba(255,255,255,0.12)" }}
         >
           <Link href="/" className="flex items-center">
-            <div style={{
-              background: "#fff",
-              borderRadius: 8,
-              padding: "5px 12px",
-              display: "flex",
-              alignItems: "center",
-            }}>
-              <img src="/logo-dashboard.png" alt="Tryout CPNS Online" style={{ height: 42, width: "auto", display: "block" }} />
-            </div>
+            <BrandLogo variant="dark" size="md" />
           </Link>
           <div className="flex items-center gap-1.5">
             <ShieldAlert size={14} style={{ color: "#fca5a5" }} />

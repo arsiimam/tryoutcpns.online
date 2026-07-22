@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
+import { BrandLogo } from "../BrandLogo";
 import {
   LayoutDashboard, FileText, CheckCircle, BarChart2,
   Trophy, Star, User as UserIcon, LogOut, Menu, X,
@@ -67,15 +68,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           style={{ background: BLUE_D, borderBottom: "1px solid rgba(255,255,255,0.12)" }}
         >
           <Link href="/" className="flex items-center">
-            <div style={{
-              background: "#fff",
-              borderRadius: 8,
-              padding: "5px 12px",
-              display: "flex",
-              alignItems: "center",
-            }}>
-              <img src="/logo-dashboard.png" alt="Tryout CPNS Online" style={{ height: 44, width: "auto", display: "block" }} />
-            </div>
+            <BrandLogo variant="dark" size="md" />
           </Link>
           <button
             className="ml-auto md:hidden text-white/70 hover:text-white"
