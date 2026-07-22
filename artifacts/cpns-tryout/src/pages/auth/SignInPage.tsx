@@ -60,9 +60,8 @@ export function SignInPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center text-white font-black text-lg">S</div>
-            <span className="font-extrabold text-2xl text-primary">SiapCPNS</span>
+          <Link href="/" className="inline-flex items-center justify-center mb-2">
+            <img src="/logo.png" alt="Tryout CPNS Online" className="h-14 w-auto" />
           </Link>
           <h1 className="text-2xl font-bold text-slate-900 mt-4">Masuk ke akun Anda</h1>
           <p className="text-slate-500 text-sm mt-1">Selamat datang kembali!</p>

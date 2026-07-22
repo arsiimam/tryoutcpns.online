@@ -42,9 +42,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
         <div className="h-16 flex items-center px-6 border-b border-slate-800 shrink-0 bg-slate-950">
-          <div className="flex items-center gap-2 text-white">
-            <ShieldAlert size={20} className="text-red-500" />
-            <span className="font-bold tracking-tight">Admin SiapCPNS</span>
+          <div className="flex items-center gap-3 text-white">
+            <div className="bg-white rounded-md px-2 py-1">
+              <img src="/logo.png" alt="Tryout CPNS Online" className="h-6 w-auto block" />
+            </div>
+            <span className="font-semibold text-sm text-slate-300">Admin Panel</span>
           </div>
           <button 
             className="ml-auto lg:hidden text-slate-400"

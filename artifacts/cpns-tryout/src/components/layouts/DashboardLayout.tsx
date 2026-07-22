@@ -37,10 +37,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       `}>
         <div className="h-16 flex items-center px-6 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-accent flex items-center justify-center text-primary font-bold">
-              S
+            <div className="bg-white rounded-md px-2 py-1">
+              <img src="/logo.png" alt="Tryout CPNS Online" className="h-7 w-auto block" />
             </div>
-            <span className="font-bold text-lg tracking-tight">SiapCPNS</span>
           </div>
           <button 
             className="ml-auto md:hidden"

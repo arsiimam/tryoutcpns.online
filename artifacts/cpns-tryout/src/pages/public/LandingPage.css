@@ -60,6 +60,8 @@
   padding: 16px 40px; max-width: 1280px; margin: 0 auto;
 }
 .lp-brand { display: flex; align-items: center; gap: 12px; }
+.lp-brand-img { height: 44px; width: auto; display: block; }
+/* Keep lp-brand-logo only for footer dark bg wrapper */
 .lp-brand-logo {
   width: 44px; height: 44px; border-radius: 12px;
   background: linear-gradient(135deg, var(--lp-blue-600), var(--lp-blue-700));
@@ -68,6 +70,10 @@
 }
 .lp-brand-text .lp-title { font-weight: 700; font-size: 18px; color: var(--lp-ink-900); }
 .lp-brand-text .lp-sub { font-size: 12px; color: var(--lp-ink-400); }
+.lp-footer-logo-wrap {
+  background: #fff; border-radius: 8px; padding: 6px 12px; display: inline-block; margin-bottom: 18px;
+}
+.lp-footer-logo-wrap img { height: 30px; width: auto; display: block; }
 .lp-nav-links { display: flex; gap: 36px; font-size: 15px; color: var(--lp-ink-700); }
 .lp-nav-links a:hover { color: var(--lp-blue-600); }
 .lp-nav-right { display: flex; align-items: center; gap: 20px; }

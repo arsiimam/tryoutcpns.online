@@ -180,11 +180,7 @@ export function LandingPage() {
       <header className="lp-nav" ref={mobileMenuRef as any}>
         <div className="lp-nav-inner">
           <Link href="/" className="lp-brand">
-            <div className="lp-brand-logo">CP</div>
-            <div className="lp-brand-text">
-              <div className="lp-title">Tryout CPNS</div>
-              <div className="lp-sub">Simulasi CAT</div>
-            </div>
+            <img src="/logo.png" alt="Tryout CPNS Online" className="lp-brand-img" />
           </Link>
 
           <nav className="lp-nav-links">
@@ -475,12 +471,8 @@ export function LandingPage() {
           <div className="lp-footer-grid">
             {/* Brand */}
             <div>
-              <div className="lp-footer-brand">
-                <div className="lp-brand-logo">CP</div>
-                <div>
-                  <div className="lp-title">Tryout CPNS</div>
-                  <div className="lp-sub">Simulasi CAT</div>
-                </div>
+              <div className="lp-footer-logo-wrap">
+                <img src="/logo.png" alt="Tryout CPNS Online" />
               </div>
               <p className="lp-footer-desc">
                 Platform tryout CPNS berbasis CAT terdepan di Indonesia. Persiapkan ujian dengan sistem yang sama persis dengan ujian resmi.
