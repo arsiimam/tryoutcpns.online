@@ -2,10 +2,11 @@ import React from "react";
 import { Link } from "wouter";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import { subscriptions } from "../../data/dummy-cpns-data";
-import { useUser } from "@clerk/react";
+import { useAuth } from "../../lib/auth-context";
 
 export function LandingPage() {
-  const { isSignedIn } = useUser();
+  const { user } = useAuth();
+  const isSignedIn = !!user;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
@@ -126,30 +127,33 @@ export function LandingPage() {
                     </div>
                   )}
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black">Rp {plan.price.toLocaleString('id-ID')}</span>
-                    <span className={`text-sm ${plan.name === 'Gold' ? 'text-white/80' : 'text-slate-500'}`}>/{plan.duration} hari</span>
+                    <span className={`text-3xl font-black ${plan.name === 'Gold' ? 'text-white' : 'text-slate-900'}`}>
+                      {plan.price === 0 ? 'Gratis' : `Rp ${plan.price.toLocaleString('id-ID')}`}
+                    </span>
+                    {plan.price > 0 && (
+                      <span className={`text-sm ${plan.name === 'Gold' ? 'text-white/70' : 'text-slate-500'}`}>/bulan</span>
+                    )}
                   </div>
                 </div>
 
-                <ul className="flex-1 space-y-4 mb-8">
+                <ul className="space-y-3 mb-8 flex-1">
                   {plan.benefits.map((benefit, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <CheckCircle2 size={20} className={`shrink-0 ${plan.name === 'Gold' ? 'text-amber-400' : 'text-emerald-500'}`} />
+                    <li key={i} className="flex items-start gap-2">
+                      <CheckCircle2 size={16} className={`mt-0.5 shrink-0 ${plan.name === 'Gold' ? 'text-amber-300' : 'text-emerald-500'}`} />
                       <span className={`text-sm ${plan.name === 'Gold' ? 'text-white/90' : 'text-slate-600'}`}>{benefit}</span>
                     </li>
                   ))}
                 </ul>
 
-                <Link 
+                <Link
                   href={isSignedIn ? "/subscription" : "/sign-up"}
-                  className={`
-                    w-full h-12 flex items-center justify-center rounded-lg font-semibold transition-all
-                    ${plan.name === 'Gold' 
-                      ? 'bg-amber-500 text-white hover:bg-amber-600' 
-                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}
+                  className={`text-center py-3 px-6 rounded-xl font-semibold transition-all text-sm
+                    ${plan.name === 'Gold'
+                      ? 'bg-white text-primary hover:bg-amber-50'
+                      : 'bg-primary text-white hover:bg-primary/90'}
                   `}
                 >
-                  {isSignedIn ? `Pilih Paket ${plan.name}` : `Daftar & Pilih ${plan.name}`}
+                  {plan.price === 0 ? 'Mulai Gratis' : 'Pilih Paket'}
                 </Link>
               </div>
             ))}
@@ -157,37 +161,101 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded bg-amber-500 flex items-center justify-center text-white font-bold">
-                S
+      {/* Features */}
+      <section id="fitur" className="py-24 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl font-bold mb-4">Semua yang Anda Butuhkan untuk Lulus CPNS</h2>
+            <p className="text-slate-600">Fitur lengkap dirancang khusus untuk memaksimalkan persiapan ujian Anda.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { icon: "🎯", title: "Simulasi CAT BKN", desc: "Ujian mirip asli dengan tampilan dan waktu yang identik dengan CAT BKN resmi." },
+              { icon: "📊", title: "Analisis Nilai Mendalam", desc: "Lacak perkembangan per subtes, identifikasi kelemahan, dan optimalkan strategi belajar." },
+              { icon: "📚", title: "10.000+ Soal HOTS", desc: "Bank soal terbarukan setiap bulan dengan pembahasan lengkap oleh tim ahli." },
+              { icon: "🏆", title: "Ranking Nasional", desc: "Bandingkan skor Anda dengan peserta seluruh Indonesia dan ukur posisi kompetitif." },
+              { icon: "⚡", title: "Mode Latihan Cepat", desc: "Latihan per topik kapan saja tanpa batasan waktu untuk pemahaman mendalam." },
+              { icon: "📱", title: "Akses Multi-Device", desc: "Belajar dari mana saja — PC, tablet, dan smartphone dengan tampilan yang responsif." },
+            ].map((f, i) => (
+              <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="text-3xl mb-4">{f.icon}</div>
+                <h3 className="font-bold text-slate-900 mb-2">{f.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{f.desc}</p>
               </div>
-              <span className="font-bold text-xl tracking-tight text-white">SiapCPNS</span>
-            </div>
-            <p className="text-sm">Platform belajar CPNS terbaik di Indonesia. Persiapkan dirimu menjadi ASN dengan cara yang tepat.</p>
-          </div>
-          <div>
-            <h4 className="text-white font-semibold mb-4">Produk</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white">Tryout CAT</a></li>
-              <li><a href="#" className="hover:text-white">Bank Soal</a></li>
-              <li><a href="#harga" className="hover:text-white">Harga Paket</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-semibold mb-4">Bantuan</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white">FAQ</a></li>
-              <li><a href="#" className="hover:text-white">Kontak Kami</a></li>
-              <li><a href="#" className="hover:text-white">Syarat & Ketentuan</a></li>
-            </ul>
+            ))}
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-slate-800 text-sm text-center">
-          &copy; {new Date().getFullYear()} SiapCPNS. All rights reserved.
+      </section>
+
+      {/* Testimonials */}
+      <section id="testimoni" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl font-bold mb-4">Ribuan Peserta Sudah Membuktikan</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { name: "Andi Prasetyo", role: "Lulus CPNS Kemenkeu 2023", text: "Berkat SiapCPNS, saya berhasil lulus di percobaan pertama. Soal-soalnya sangat mirip dengan ujian asli!" },
+              { name: "Sari Dewi", role: "Lulus CPNS Kemendikbud 2023", text: "Fitur analisis nilainya sangat membantu. Saya tahu persis bagian mana yang perlu diperkuat." },
+              { name: "Budi Santoso", role: "Lulus CPNS Kemenkes 2023", text: "Simulasi CAT-nya bikin mental saya siap. Pas ujian beneran, saya sudah terbiasa dengan tekanannya." },
+            ].map((t, i) => (
+              <div key={i} className="p-6 rounded-2xl bg-slate-50 border border-slate-200">
+                <p className="text-slate-700 text-sm leading-relaxed mb-4">"{t.text}"</p>
+                <div>
+                  <div className="font-semibold text-slate-900 text-sm">{t.name}</div>
+                  <div className="text-slate-500 text-xs">{t.role}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="py-24 bg-slate-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold mb-4">Pertanyaan Umum</h2>
+          </div>
+          <div className="space-y-4">
+            {[
+              { q: "Apakah soal-soal di SiapCPNS sesuai dengan ujian CPNS terbaru?", a: "Ya, tim kurator kami secara rutin memperbarui bank soal sesuai dengan kisi-kisi terbaru dari BKN." },
+              { q: "Bisakah saya mencoba gratis sebelum berlangganan?", a: "Tentu! Paket Gratis kami memberikan akses ke fitur dasar tanpa batas waktu." },
+              { q: "Bagaimana cara pembayaran untuk paket premium?", a: "Kami menerima transfer bank, kartu kredit/debit, dan berbagai metode pembayaran digital." },
+            ].map((f, i) => (
+              <div key={i} className="bg-white p-6 rounded-xl border border-slate-200">
+                <h3 className="font-semibold text-slate-900 mb-2">{f.q}</h3>
+                <p className="text-slate-600 text-sm">{f.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 bg-primary">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">Siap Wujudkan Karir Impian Anda?</h2>
+          <p className="text-primary-foreground/80 text-white/80 mb-8">Bergabung dengan 50.000+ peserta yang sudah mempersiapkan diri dengan SiapCPNS.</p>
+          <Link
+            href={isSignedIn ? "/dashboard" : "/sign-up"}
+            className="inline-flex items-center gap-2 h-12 px-8 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600 transition-all shadow-lg"
+          >
+            {isSignedIn ? "Ke Dashboard" : "Daftar Sekarang — Gratis"} <ArrowRight size={18} />
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-slate-400 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded bg-amber-500 flex items-center justify-center text-white font-bold text-sm">S</div>
+              <span className="font-bold text-white">SiapCPNS</span>
+            </div>
+            <p className="text-sm">© 2024 SiapCPNS. Hak cipta dilindungi.</p>
+          </div>
         </div>
       </footer>
     </div>

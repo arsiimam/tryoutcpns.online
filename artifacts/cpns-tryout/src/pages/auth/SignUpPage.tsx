@@ -1,94 +1,68 @@
-import React, { useState } from "react";
-import { useSignUp } from "@clerk/react";
+import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-import { Eye, EyeOff, Loader2, Mail, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
+import { useAuth } from "../../lib/auth-context";
 
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-
-type View = "options" | "email-form" | "verify";
+type View = "options" | "email-form";
 
 export function SignUpPage() {
-  const { signUp, fetchStatus } = useSignUp();
+  const { refetch, user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
   const [view, setView] = useState<View>("options");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [code, setCode] = useState("");
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const isReady = fetchStatus !== "fetching";
-
-  const handleGoogle = async () => {
-    if (!signUp) return;
-    setGoogleLoading(true);
-    setError("");
-    try {
-      const { error: ssoError } = await signUp.sso({
-        strategy: "oauth_google",
-        redirectUrl: `${window.location.origin}${basePath}/sign-up/sso-callback`,
-      });
-      if (ssoError) {
-        setError(ssoError.longMessage ?? ssoError.message ?? "Gagal mendaftar dengan Google.");
-        setGoogleLoading(false);
-      }
-    } catch (err: any) {
-      setError("Gagal mendaftar dengan Google.");
-      setGoogleLoading(false);
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!isLoading && user) {
+      setLocation(user.role === "admin" ? "/admin/dashboard" : "/dashboard");
     }
+  }, [user, isLoading, setLocation]);
+
+  const handleGoogle = () => {
+    setGoogleLoading(true);
+    window.location.href = "/api/auth/google?flow=signup";
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!signUp) return;
+    if (password !== confirmPassword) {
+      setError("Password dan konfirmasi password tidak cocok.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
-      const { error: pwError } = await signUp.password({ emailAddress: email, password });
-      if (pwError) {
-        setError(pwError.longMessage ?? pwError.message ?? "Pendaftaran gagal.");
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ fullName, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Pendaftaran gagal.");
         return;
       }
-      // Send email verification code
-      const { error: sendError } = await signUp.verifications.sendEmailCode();
-      if (sendError) {
-        setError(sendError.longMessage ?? sendError.message ?? "Gagal mengirim kode verifikasi.");
-        return;
-      }
-      setView("verify");
-    } catch (err: any) {
-      setError(err?.errors?.[0]?.longMessage ?? err?.errors?.[0]?.message ?? "Terjadi kesalahan.");
+      // Session is set on server — refresh auth context then redirect
+      await refetch();
+      setLocation("/dashboard");
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!signUp) return;
-    setLoading(true);
-    setError("");
-    try {
-      const { error: verifyError } = await signUp.verifications.verifyEmailCode({ code });
-      if (verifyError) {
-        setError(verifyError.longMessage ?? verifyError.message ?? "Kode salah atau kadaluarsa.");
-        return;
-      }
-      const { error: finalizeError } = await signUp.finalize();
-      if (finalizeError) {
-        setError(finalizeError.longMessage ?? finalizeError.message ?? "Gagal membuat sesi.");
-        return;
-      }
-      setLocation("/dashboard");
-    } catch (err: any) {
-      setError(err?.errors?.[0]?.longMessage ?? err?.errors?.[0]?.message ?? "Terjadi kesalahan.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (isLoading) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
@@ -112,14 +86,6 @@ export function SignUpPage() {
               <p className="text-slate-500 text-sm mt-1">Isi data di bawah untuk membuat akun</p>
             </>
           )}
-          {view === "verify" && (
-            <>
-              <h1 className="text-2xl font-bold text-slate-900 mt-4">Verifikasi Email</h1>
-              <p className="text-slate-500 text-sm mt-1">
-                Kode dikirim ke <span className="font-semibold text-slate-700">{email}</span>
-              </p>
-            </>
-          )}
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
@@ -130,7 +96,7 @@ export function SignUpPage() {
               <button
                 type="button"
                 onClick={handleGoogle}
-                disabled={!isReady || googleLoading}
+                disabled={googleLoading}
                 className="w-full h-14 flex items-center gap-4 px-5 rounded-xl border-2 border-slate-200 hover:border-primary/40 hover:bg-slate-50 transition-all group disabled:opacity-60"
               >
                 {googleLoading ? (
@@ -140,7 +106,7 @@ export function SignUpPage() {
                 )}
                 <div className="text-left">
                   <div className="font-semibold text-slate-800 text-sm group-hover:text-slate-900">Daftar dengan Google</div>
-                  <div className="text-xs text-slate-400">Cepat, tanpa perlu verifikasi email</div>
+                  <div className="text-xs text-slate-400">Cepat, tanpa verifikasi email</div>
                 </div>
               </button>
 
@@ -170,8 +136,21 @@ export function SignUpPage() {
                 onClick={() => { setError(""); setView("options"); }}
                 className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-2 transition-colors"
               >
-                <ArrowLeft size={15} /> Kembali ke pilihan
+                ← Kembali ke pilihan
               </button>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Nama Lengkap</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  required
+                  autoComplete="name"
+                  placeholder="Nama lengkap Anda"
+                  className="w-full h-11 px-3.5 rounded-xl border border-slate-300 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
@@ -209,40 +188,27 @@ export function SignUpPage() {
                 </div>
               </div>
 
-              {error && (
-                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>
-              )}
-
-              <button
-                type="submit"
-                disabled={!isReady || loading}
-                className="w-full h-11 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {loading && <Loader2 size={16} className="animate-spin" />}
-                Buat Akun
-              </button>
-            </form>
-          )}
-
-          {/* ── VERIFIKASI EMAIL ── */}
-          {view === "verify" && (
-            <form onSubmit={handleVerify} className="space-y-4">
-              <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
-                Cek inbox email kamu dan masukkan kode 6 digit yang dikirimkan. Cek folder spam jika tidak muncul.
-              </div>
-
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Kode Verifikasi</label>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  required
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="123456"
-                  className="w-full h-14 px-3.5 rounded-xl border border-slate-300 text-slate-900 text-center text-2xl font-bold tracking-[0.5em] placeholder:text-slate-300 placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                />
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Konfirmasi Password</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPass ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                    placeholder="Ulangi password"
+                    minLength={8}
+                    className="w-full h-11 px-3.5 pr-10 rounded-xl border border-slate-300 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPass(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showConfirmPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               {error && (
@@ -251,30 +217,20 @@ export function SignUpPage() {
 
               <button
                 type="submit"
-                disabled={!isReady || loading || code.length < 6}
+                disabled={loading}
                 className="w-full h-11 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 size={16} className="animate-spin" />}
-                Verifikasi & Masuk
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setError(""); setCode(""); setView("email-form"); }}
-                className="w-full text-sm text-slate-500 hover:text-slate-700 text-center"
-              >
-                ← Ubah email atau ulangi
+                Daftar
               </button>
             </form>
           )}
         </div>
 
-        {view !== "verify" && (
-          <p className="text-center text-sm text-slate-500 mt-6">
-            Sudah punya akun?{" "}
-            <Link href="/sign-in" className="text-primary font-semibold hover:underline">Masuk</Link>
-          </p>
-        )}
+        <p className="text-center text-sm text-slate-500 mt-6">
+          Sudah punya akun?{" "}
+          <Link href="/sign-in" className="text-primary font-semibold hover:underline">Masuk</Link>
+        </p>
       </div>
     </div>
   );

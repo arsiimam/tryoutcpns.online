@@ -1,12 +1,10 @@
-import React, { useState } from "react";
-import { useSignIn } from "@clerk/react";
+import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { useAuth } from "../../lib/auth-context";
 
 export function SignInPage() {
-  const { signIn, fetchStatus } = useSignIn();
+  const { login, user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
   const [email, setEmail] = useState("");
@@ -16,51 +14,46 @@ export function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const isReady = fetchStatus !== "fetching";
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!isLoading && user) {
+      setLocation(user.role === "admin" ? "/admin/dashboard" : "/dashboard");
+    }
+  }, [user, isLoading, setLocation]);
+
+  // Handle error from URL params (e.g. after Google OAuth failure)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    if (err === "account_not_found") {
+      setError("Akun belum terdaftar. Silakan daftar terlebih dahulu.");
+    } else if (err === "google_failed") {
+      setError("Gagal login dengan Google. Coba lagi.");
+    } else if (err === "google_cancelled") {
+      setError("Login dengan Google dibatalkan.");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!signIn) return;
     setLoading(true);
     setError("");
     try {
-      const { error: pwError } = await signIn.password({ identifier: email, password });
-      if (pwError) {
-        setError(pwError.longMessage ?? pwError.message ?? "Email atau password salah.");
-        return;
-      }
-      if (signIn.status === "complete") {
-        await signIn.finalize();
-        setLocation("/dashboard");
-      } else {
-        setError("Login gagal. Silakan coba lagi.");
-      }
-    } catch (err: any) {
-      setError(err?.errors?.[0]?.longMessage ?? err?.errors?.[0]?.message ?? "Terjadi kesalahan.");
+      await login(email, password);
+      // login() updates auth context; redirect handled by useEffect above
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogle = async () => {
-    if (!signIn) return;
+  const handleGoogle = () => {
     setGoogleLoading(true);
-    setError("");
-    try {
-      const { error: ssoError } = await signIn.sso({
-        strategy: "oauth_google",
-        redirectUrl: `${window.location.origin}${basePath}/sign-in/sso-callback`,
-      });
-      if (ssoError) {
-        setError(ssoError.longMessage ?? ssoError.message ?? "Gagal login dengan Google.");
-        setGoogleLoading(false);
-      }
-      // on success the browser navigates away — no need to setGoogleLoading(false)
-    } catch (err: any) {
-      setError("Gagal login dengan Google.");
-      setGoogleLoading(false);
-    }
+    window.location.href = "/api/auth/google?flow=signin";
   };
+
+  if (isLoading) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
@@ -80,7 +73,7 @@ export function SignInPage() {
           <button
             type="button"
             onClick={handleGoogle}
-            disabled={!isReady || googleLoading || loading}
+            disabled={googleLoading || loading}
             className="w-full h-11 flex items-center justify-center gap-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 font-semibold text-slate-700 transition-all disabled:opacity-60"
           >
             {googleLoading ? (
@@ -143,7 +136,7 @@ export function SignInPage() {
 
             <button
               type="submit"
-              disabled={!isReady || loading || googleLoading}
+              disabled={loading || googleLoading}
               className="w-full h-11 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {loading && <Loader2 size={16} className="animate-spin" />}

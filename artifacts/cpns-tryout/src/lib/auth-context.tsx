@@ -1,13 +1,13 @@
-import React from 'react';
-import { useUser, useClerk } from '@clerk/react';
-import { useLocation } from 'wouter';
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useLocation } from "wouter";
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'participant';
+  role: "admin" | "participant";
   avatar: string;
+  avatarUrl?: string | null;
   subscriptionId?: string | null;
   createdAt?: string;
 }
@@ -15,57 +15,92 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  /** @deprecated Use Clerk's SignIn component instead */
-  login: (email: string, pass: string) => Promise<void>;
+  refetch: () => Promise<void>;
 }
 
-const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function clerkUserToAppUser(clerkUser: ReturnType<typeof useUser>['user']): User | null {
-  if (!clerkUser) return null;
-  const email = clerkUser.primaryEmailAddress?.emailAddress ?? '';
-  // Admin role check via public metadata (can be set in Auth pane)
-  const role = (clerkUser.publicMetadata?.role as string) === 'admin' ? 'admin' : 'participant';
+function apiUserToAppUser(u: {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  avatarUrl?: string | null;
+}): User {
   return {
-    id: clerkUser.id,
-    name: clerkUser.fullName ?? clerkUser.firstName ?? email.split('@')[0] ?? 'Pengguna',
-    email,
-    role,
-    avatar: clerkUser.firstName?.charAt(0).toUpperCase() ?? email.charAt(0).toUpperCase() ?? 'U',
-    subscriptionId: (clerkUser.publicMetadata?.subscriptionId as string) ?? null,
+    id: u.id,
+    name: u.fullName,
+    email: u.email,
+    role: (u.role === "admin" ? "admin" : "participant") as "admin" | "participant",
+    avatar: u.fullName?.charAt(0)?.toUpperCase() ?? u.email.charAt(0).toUpperCase() ?? "U",
+    avatarUrl: u.avatarUrl ?? null,
+    subscriptionId: null,
   };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user: clerkUser, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [, setLocation] = useLocation();
 
-  const user = isLoaded ? clerkUserToAppUser(clerkUser) : null;
-  const isLoading = !isLoaded;
+  const fetchMe = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(apiUserToAppUser(data.user));
+      } else {
+        setUser(null);
+      }
+    } catch {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  const logout = async () => {
-    await signOut();
-    setLocation('/');
+  useEffect(() => {
+    fetchMe();
+  }, [fetchMe]);
+
+  const login = async (email: string, password: string) => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error((data as { error?: string }).error ?? "Login gagal.");
+    }
+    const data = await res.json();
+    setUser(apiUserToAppUser(data.user));
   };
 
-  // Legacy no-op — pages using this should migrate to Clerk SignIn component
-  const login = async (_email: string, _pass: string) => {
-    setLocation('/sign-in');
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } catch {
+      // ignore
+    }
+    setUser(null);
+    setLocation("/");
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, refetch: fetchMe }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const context = React.useContext(AuthContext);
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
