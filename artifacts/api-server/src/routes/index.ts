@@ -5,6 +5,7 @@ import authRouter         from "./auth";
 import adminRouter        from "./admin";
 import adminPlansRouter   from "./admin-plans";
 import adminTxRouter      from "./admin-transactions";
+import adminCmsRouter     from "./admin-cms";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(paymentRouter);
 router.use(adminRouter);
 router.use(adminPlansRouter);
 router.use(adminTxRouter);
+router.use(adminCmsRouter);
 
 export default router;
