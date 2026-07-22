@@ -60,7 +60,8 @@
   padding: 16px 40px; max-width: 1280px; margin: 0 auto;
 }
 .lp-brand { display: flex; align-items: center; gap: 12px; }
-.lp-brand-img { height: 44px; width: auto; display: block; }
+.lp-brand-img { height: 52px; width: auto; display: block; }
+@media (max-width: 900px) { .lp-brand-img { height: 42px; } }
 /* Keep lp-brand-logo only for footer dark bg wrapper */
 .lp-brand-logo {
   width: 44px; height: 44px; border-radius: 12px;
