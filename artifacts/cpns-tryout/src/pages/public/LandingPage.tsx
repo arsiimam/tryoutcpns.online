@@ -177,27 +177,25 @@ export function LandingPage() {
     <div className="tryout-landing">
 
       {/* ===================== NAV ===================== */}
-      <header className="lp-nav" ref={mobileMenuRef as any}>
+      <header className="lp-nav">
         <div className="lp-nav-inner">
           <Link href="/" className="lp-brand">
-            <img src="/logo.png" alt="Tryout CPNS Online" className="lp-brand-img" />
+            <span className="lp-brand-badge">AYO</span>
+            <span className="lp-brand-name">CPNS</span>
           </Link>
 
           <nav className="lp-nav-links">
-            <a href="#fitur" onClick={() => scrollTo("fitur")}>Fitur</a>
-            <a href="#paket" onClick={() => scrollTo("paket")}>Paket</a>
-            <a href="#faq" onClick={() => scrollTo("faq")}>FAQ</a>
+            <a href="#fitur" onClick={() => scrollTo("fitur")}>Keunggulan</a>
             <a href="#testimoni" onClick={() => scrollTo("testimoni")}>Testimoni</a>
+            <a href="#paket" onClick={() => scrollTo("paket")}>Paket</a>
+            <a href="#faq" onClick={() => scrollTo("faq")}>Blog</a>
           </nav>
 
           <div className="lp-nav-right">
             {isSignedIn ? (
-              <Link href="/dashboard" className="lp-btn-primary">Dashboard</Link>
+              <Link href="/dashboard" className="lp-btn-login">Dashboard</Link>
             ) : (
-              <>
-                <Link href="/sign-in" className="lp-btn-ghost-nav">Masuk</Link>
-                <Link href="/sign-up" className="lp-btn-primary">Daftar</Link>
-              </>
+              <Link href="/sign-in" className="lp-btn-login">Login</Link>
             )}
           </div>
 
@@ -207,22 +205,19 @@ export function LandingPage() {
         </div>
 
         {/* Mobile menu */}
-        <div className={`lp-mobile-menu${mobileOpen ? " open" : ""}`} ref={mobileMenuRef}>
-          <a href="#fitur" onClick={() => { scrollTo("fitur"); closeMobile(); }}>Fitur</a>
-          <a href="#paket" onClick={() => { scrollTo("paket"); closeMobile(); }}>Paket</a>
-          <a href="#faq" onClick={() => { scrollTo("faq"); closeMobile(); }}>FAQ</a>
-          <a href="#testimoni" onClick={() => { scrollTo("testimoni"); closeMobile(); }}>Testimoni</a>
-          {isSignedIn ? (
-            <Link href="/dashboard" className="lp-mobile-masuk" onClick={closeMobile}>Dashboard</Link>
-          ) : (
-            <>
-              <Link href="/sign-in" className="lp-mobile-masuk" onClick={closeMobile}>Masuk</Link>
-              <Link href="/sign-up" onClick={closeMobile}>
-                <button className="lp-btn-primary lp-mobile-daftar">Daftar</button>
-              </Link>
-            </>
-          )}
-        </div>
+        {mobileOpen && (
+          <div className="lp-mobile-menu open" ref={mobileMenuRef}>
+            <a href="#fitur" onClick={() => { scrollTo("fitur"); closeMobile(); }}>Keunggulan</a>
+            <a href="#testimoni" onClick={() => { scrollTo("testimoni"); closeMobile(); }}>Testimoni</a>
+            <a href="#paket" onClick={() => { scrollTo("paket"); closeMobile(); }}>Paket</a>
+            <a href="#faq" onClick={() => { scrollTo("faq"); closeMobile(); }}>Blog</a>
+            {isSignedIn ? (
+              <Link href="/dashboard" className="lp-btn-login" onClick={closeMobile}>Dashboard</Link>
+            ) : (
+              <Link href="/sign-in" className="lp-btn-login" onClick={closeMobile}>Login</Link>
+            )}
+          </div>
+        )}
       </header>
 
       {/* ===================== HERO ===================== */}
