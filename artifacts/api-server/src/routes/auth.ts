@@ -1,14 +1,46 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { usersTable, appSettingsTable } from "@workspace/db";
+import { eq, inArray } from "drizzle-orm";
 
 const router = Router();
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "";
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET ?? "";
+/* ------------------------------------------------------------------ */
+/* Google credential cache (populated from DB, env as fallback)        */
+/* ------------------------------------------------------------------ */
+let _credCache: { clientId: string; clientSecret: string; ts: number } | null = null;
+const CRED_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
+async function getGoogleCreds(): Promise<{ clientId: string; clientSecret: string }> {
+  if (_credCache && Date.now() - _credCache.ts < CRED_CACHE_TTL_MS) {
+    return _credCache;
+  }
+
+  const rows = await db
+    .select()
+    .from(appSettingsTable)
+    .where(inArray(appSettingsTable.key, ["google_client_id", "google_client_secret"]));
+
+  const map: Record<string, string> = {};
+  for (const r of rows) map[r.key] = r.value;
+
+  _credCache = {
+    clientId: map["google_client_id"] || process.env.GOOGLE_CLIENT_ID || "",
+    clientSecret: map["google_client_secret"] || process.env.GOOGLE_CLIENT_SECRET || "",
+    ts: Date.now(),
+  };
+  return _credCache;
+}
+
+/** Called by admin route when settings are updated */
+export function invalidateGoogleCredCache() {
+  _credCache = null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
 function getBaseUrl(req: { headers: Record<string, string | string[] | undefined> }): string {
   const devDomain = process.env.REPLIT_DEV_DOMAIN;
   const replitDomains = process.env.REPLIT_DOMAINS;
@@ -38,7 +70,9 @@ function userPayload(u: typeof usersTable.$inferSelect) {
   };
 }
 
-/** POST /api/auth/register */
+/* ------------------------------------------------------------------ */
+/* POST /api/auth/register                                             */
+/* ------------------------------------------------------------------ */
 router.post("/auth/register", async (req, res) => {
   const { fullName, email, password } = req.body as Record<string, string>;
 
@@ -71,10 +105,15 @@ router.post("/auth/register", async (req, res) => {
     .returning();
 
   req.session.userId = user.id;
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((err) => (err ? reject(err) : resolve()));
+  });
   return res.json({ user: userPayload(user) });
 });
 
-/** POST /api/auth/login */
+/* ------------------------------------------------------------------ */
+/* POST /api/auth/login                                                */
+/* ------------------------------------------------------------------ */
 router.post("/auth/login", async (req, res) => {
   const { email, password } = req.body as Record<string, string>;
 
@@ -98,10 +137,15 @@ router.post("/auth/login", async (req, res) => {
   }
 
   req.session.userId = user.id;
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((err) => (err ? reject(err) : resolve()));
+  });
   return res.json({ user: userPayload(user) });
 });
 
-/** POST /api/auth/logout */
+/* ------------------------------------------------------------------ */
+/* POST /api/auth/logout                                               */
+/* ------------------------------------------------------------------ */
 router.post("/auth/logout", (req, res) => {
   req.session.destroy(() => {
     res.clearCookie("sid");
@@ -109,7 +153,9 @@ router.post("/auth/logout", (req, res) => {
   });
 });
 
-/** GET /api/auth/me */
+/* ------------------------------------------------------------------ */
+/* GET /api/auth/me                                                    */
+/* ------------------------------------------------------------------ */
 router.get("/auth/me", async (req, res) => {
   const userId = req.session.userId;
   if (!userId) {
@@ -130,18 +176,24 @@ router.get("/auth/me", async (req, res) => {
   return res.json({ user: userPayload(user) });
 });
 
-/** GET /api/auth/google
- *  Initiate Google OAuth. Pass ?flow=signin or ?flow=signup in query.
- */
-router.get("/auth/google", (req, res) => {
+/* ------------------------------------------------------------------ */
+/* GET /api/auth/google                                                */
+/* ------------------------------------------------------------------ */
+router.get("/auth/google", async (req, res) => {
   const flow = (req.query.flow as string) === "signup" ? "signup" : "signin";
   const base = getBaseUrl(req as any);
   const redirectUri = getRedirectUri(base);
 
+  const { clientId } = await getGoogleCreds();
+
+  if (!clientId) {
+    return res.redirect(`${base}/sign-in?error=google_not_configured`);
+  }
+
   const state = Buffer.from(JSON.stringify({ flow })).toString("base64url");
 
   const params = new URLSearchParams({
-    client_id: GOOGLE_CLIENT_ID,
+    client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
     scope: "openid email profile",
@@ -153,7 +205,9 @@ router.get("/auth/google", (req, res) => {
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
 });
 
-/** GET /api/auth/google/callback */
+/* ------------------------------------------------------------------ */
+/* GET /api/auth/google/callback                                       */
+/* ------------------------------------------------------------------ */
 router.get("/auth/google/callback", async (req, res) => {
   const { code, state } = req.query as { code?: string; state?: string };
   const base = getBaseUrl(req as any);
@@ -174,6 +228,7 @@ router.get("/auth/google/callback", async (req, res) => {
 
   try {
     const redirectUri = getRedirectUri(base);
+    const { clientId, clientSecret } = await getGoogleCreds();
 
     // Exchange code for access token
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -181,8 +236,8 @@ router.get("/auth/google/callback", async (req, res) => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         code,
-        client_id: GOOGLE_CLIENT_ID,
-        client_secret: GOOGLE_CLIENT_SECRET,
+        client_id: clientId,
+        client_secret: clientSecret,
         redirect_uri: redirectUri,
         grant_type: "authorization_code",
       }),
@@ -236,6 +291,9 @@ router.get("/auth/google/callback", async (req, res) => {
     }
 
     req.session.userId = user.id;
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => (err ? reject(err) : resolve()));
+    });
     return res.redirect(`${base}/dashboard`);
   } catch (err) {
     req.log.error({ err }, "Google OAuth callback error");

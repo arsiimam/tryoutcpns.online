@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, FileQuestion, BookOpen, Clock, Settings, CreditCard, Tag, BarChart3, LogOut, Menu, X, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, Users, FileQuestion, BookOpen, Clock, Settings, CreditCard, Tag, BarChart3, LogOut, Menu, X, ShieldAlert, SlidersHorizontal } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
 const adminNavItems = [
@@ -14,6 +14,7 @@ const adminNavItems = [
   { icon: Tag, label: "Kupon Promo", href: "/admin/coupons" },
   { icon: BarChart3, label: "Laporan", href: "/admin/reports" },
   { icon: Settings, label: "CMS Web", href: "/admin/cms" },
+  { icon: SlidersHorizontal, label: "Pengaturan", href: "/admin/settings" },
 ];
 
 import { Star } from "lucide-react";

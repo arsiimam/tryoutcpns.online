@@ -34,6 +34,7 @@ import { AdminPaymentsPage } from "./pages/admin/AdminPaymentsPage";
 import { AdminCouponsPage } from "./pages/admin/AdminCouponsPage";
 import { AdminReportsPage } from "./pages/admin/AdminReportsPage";
 import { AdminCmsPage } from "./pages/admin/AdminCmsPage";
+import { AdminSettingsPage } from "./pages/admin/AdminSettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +111,7 @@ function Router() {
       <Route path="/admin/coupons">{() => <AdminGuard component={AdminCouponsPage} />}</Route>
       <Route path="/admin/reports">{() => <AdminGuard component={AdminReportsPage} />}</Route>
       <Route path="/admin/cms">{() => <AdminGuard component={AdminCmsPage} />}</Route>
+      <Route path="/admin/settings">{() => <AdminGuard component={AdminSettingsPage} />}</Route>
 
       {/* Catch all */}
       <Route component={() => <PlaceholderPage title="404 Not Found" />} />

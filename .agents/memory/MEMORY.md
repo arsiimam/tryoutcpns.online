@@ -1,0 +1,1 @@
+- [Session persistence fixes](session-persistence.md) — two bugs that silently break express-session with connect-pg-simple + esbuild
