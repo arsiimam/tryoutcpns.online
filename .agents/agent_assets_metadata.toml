@@ -1,0 +1,20 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "UjUZPH5-UUrRn-vVN7fAo"
+uri = "file://docs/bundle-format.md"
+type = "text"
+title = "Spesifikasi Format Bundle"
+
+[[outputs]]
+id = "8wJLO_xFdETEWMNoNU4ky"
+uri = "file://docs/examples/bundle-twk-example.json"
+type = "unspecified"
+title = "Contoh Bundle JSON — TWK Nasionalisme"
+
+[[outputs]]
+id = "zj16OhkSz2reXur9BodVo"
+uri = "file://docs/examples/bundle-tiu-example.html"
+type = "unspecified"
+title = "Contoh Bundle HTML — TIU Numerik"
