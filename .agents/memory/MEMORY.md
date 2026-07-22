@@ -1,1 +1,2 @@
 - [Session persistence fixes](session-persistence.md) — two bugs that silently break express-session with connect-pg-simple + esbuild
+- [drizzle-kit push no-TTY](drizzle-kit-tty.md) — drizzle-kit push fails in non-interactive shell; create tables via raw psql SQL instead
