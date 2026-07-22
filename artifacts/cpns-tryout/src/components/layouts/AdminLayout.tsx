@@ -28,11 +28,23 @@ const adminNavItems = [
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [location] = useLocation();
   const { user, logout } = useAuth();
 
   const pageSlug = location.split("/").pop() ?? "dashboard";
   const pageLabel = pageSlug.replace(/-/g, " ");
+
+  React.useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
     <div className="min-h-screen flex" style={{ background: "#f6f7fc" }}>
@@ -110,33 +122,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           })}
         </div>
 
-        {/* User footer */}
-        <div
-          className="p-4 shrink-0"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.12)", background: BLUE_D }}
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
-              style={{ background: "rgba(255,255,255,0.2)", color: "#fff" }}
-            >
-              {(user?.name ?? "A")[0].toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-white truncate">{user?.name ?? "Administrator"}</div>
-              <div className="text-xs truncate" style={{ color: "rgba(255,255,255,0.50)" }}>Admin Panel</div>
-            </div>
-          </div>
-          <button
-            onClick={logout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
-            style={{ color: "#fca5a5" }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(239,68,68,0.15)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-          >
-            <LogOut size={15} /> Keluar Sistem
-          </button>
-        </div>
       </aside>
 
       {/* ====== MAIN ====== */}
@@ -156,6 +141,45 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <h1 className="font-semibold capitalize" style={{ color: "#0f172a" }}>
               {pageLabel}
             </h1>
+          </div>
+
+          {/* User dropdown — top right */}
+          <div className="ml-auto relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(o => !o)}
+              className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full hover:bg-slate-100 transition-colors"
+            >
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
+                style={{ background: BLUE, color: "#fff" }}
+              >
+                {(user?.name ?? "A")[0].toUpperCase()}
+              </div>
+              <div className="hidden md:block text-left">
+                <div className="text-sm font-semibold leading-tight" style={{ color: "#0f172a" }}>
+                  {user?.name ?? "Administrator"}
+                </div>
+                <div className="text-xs leading-tight" style={{ color: "#64748b" }}>Admin Panel</div>
+              </div>
+            </button>
+
+            {dropdownOpen && (
+              <div
+                className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50"
+                style={{ top: "100%" }}
+              >
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <div className="font-semibold text-sm text-slate-900 truncate">{user?.name ?? "Administrator"}</div>
+                  <div className="text-xs text-slate-400">Admin Panel</div>
+                </div>
+                <button
+                  onClick={() => { setDropdownOpen(false); logout(); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut size={15} /> Keluar Sistem
+                </button>
+              </div>
+            )}
           </div>
         </header>
 
