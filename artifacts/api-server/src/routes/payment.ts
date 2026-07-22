@@ -4,27 +4,31 @@ import {
   checkTransaction,
   verifyCallback,
   getPaymentMethods,
-  getDuitkuEnv,
+  getDuitkuConfig,
 } from "../lib/duitku";
 import { logger } from "../lib/logger";
 
 const router = Router();
 
-/** GET /api/payment/config
- *  Returns current Duitku environment and available payment methods.
- */
-router.get("/payment/config", (_req, res) => {
-  res.json({
-    environment: getDuitkuEnv(),
-    methods: getPaymentMethods(),
-    merchantConfigured:
-      !!process.env.DUITKU_MERCHANT_CODE && !!process.env.DUITKU_API_KEY,
-  });
+/** GET /api/payment/config */
+router.get("/payment/config", async (_req, res) => {
+  try {
+    const cfg = await getDuitkuConfig();
+    res.json({
+      environment: cfg.environment,
+      methods: getPaymentMethods(),
+      merchantConfigured: !!(cfg.merchantCode && cfg.apiKey),
+    });
+  } catch {
+    res.json({
+      environment: "sandbox",
+      methods: getPaymentMethods(),
+      merchantConfigured: false,
+    });
+  }
 });
 
-/** POST /api/payment/create
- *  Creates a Duitku invoice and returns the payment URL.
- */
+/** POST /api/payment/create */
 router.post("/payment/create", async (req, res) => {
   try {
     const {
@@ -49,10 +53,8 @@ router.post("/payment/create", async (req, res) => {
       return res.status(400).json({ error: "Field wajib tidak lengkap" });
     }
 
-    // Build host for callback & return URLs.
-    // In production use REPLIT_DOMAINS; in dev use REPLIT_DEV_DOMAIN.
     const replitDomains = process.env.REPLIT_DOMAINS;
-    const devDomain = process.env.REPLIT_DEV_DOMAIN;
+    const devDomain     = process.env.REPLIT_DEV_DOMAIN;
     const host = replitDomains
       ? `https://${replitDomains.split(",")[0].trim()}`
       : devDomain
@@ -60,23 +62,23 @@ router.post("/payment/create", async (req, res) => {
         : `http://localhost:${process.env.PORT || 8080}`;
 
     const merchantOrderId = `CPNS-${planId.toUpperCase().replace(/\s+/g, "")}-${Date.now()}`;
-    const finalAmount = Math.max(10000, amount - discountAmount);
+    const finalAmount     = Math.max(10000, amount - discountAmount);
 
+    const cfg = await getDuitkuConfig();
     logger.info(
-      { merchantOrderId, paymentMethod, finalAmount, env: getDuitkuEnv() },
+      { merchantOrderId, paymentMethod, finalAmount, env: cfg.environment },
       "Creating Duitku invoice"
     );
 
     const result = await createInvoice({
       merchantOrderId,
-      paymentAmount: finalAmount,
+      paymentAmount:  finalAmount,
       paymentMethod,
-      productDetails: `SiapCPNS - ${planName}`,
+      productDetails: `Tryout CPNS Online - ${planName}`,
       customerName,
       email,
       callbackUrl: `${host}/api/payment/callback`,
-      returnUrl: `${host}/subscription?status=success&orderId=${merchantOrderId}`,
-      expiryPeriod: 1440,
+      returnUrl:   `${host}/subscription?status=success&orderId=${merchantOrderId}`,
     });
 
     logger.info(
@@ -86,12 +88,12 @@ router.post("/payment/create", async (req, res) => {
 
     return res.json({
       merchantOrderId,
-      paymentUrl: result.paymentUrl,
-      reference: result.reference,
-      vaNumber: result.vaNumber,
-      qrString: result.qrString,
-      amount: finalAmount,
-      statusCode: result.statusCode,
+      paymentUrl:    result.paymentUrl,
+      reference:     result.reference,
+      vaNumber:      result.vaNumber,
+      qrString:      result.qrString,
+      amount:        finalAmount,
+      statusCode:    result.statusCode,
       statusMessage: result.statusMessage,
     });
   } catch (err: unknown) {
@@ -101,15 +103,12 @@ router.post("/payment/create", async (req, res) => {
   }
 });
 
-/** POST /api/payment/callback
- *  Duitku calls this endpoint after a payment completes.
- *  Must return plain text "SUCCESS" with status 200.
- */
-router.post("/payment/callback", (req, res) => {
+/** POST /api/payment/callback */
+router.post("/payment/callback", async (req, res) => {
   try {
     const data = req.body as Record<string, string>;
 
-    if (!verifyCallback(data)) {
+    if (!(await verifyCallback(data))) {
       logger.warn({ body: data }, "Duitku callback signature mismatch");
       return res.status(403).send("INVALID_SIGNATURE");
     }
@@ -117,16 +116,10 @@ router.post("/payment/callback", (req, res) => {
     const { merchantOrderId, resultCode, amount } = data;
 
     if (resultCode === "00") {
-      logger.info(
-        { merchantOrderId, amount },
-        "Payment SUCCESS — activate subscription here"
-      );
+      logger.info({ merchantOrderId, amount }, "Payment SUCCESS — activate subscription here");
       // TODO: activate subscription in DB for the user linked to merchantOrderId
     } else {
-      logger.info(
-        { merchantOrderId, resultCode },
-        "Payment FAILED or PENDING"
-      );
+      logger.info({ merchantOrderId, resultCode }, "Payment FAILED or PENDING");
     }
 
     return res.status(200).send("SUCCESS");
@@ -136,10 +129,7 @@ router.post("/payment/callback", (req, res) => {
   }
 });
 
-/** GET /api/payment/check/:merchantOrderId?amount=99000
- *  Checks the status of a specific transaction.
- *  amount query param is required by Duitku for signature.
- */
+/** GET /api/payment/check/:merchantOrderId?amount=99000 */
 router.get("/payment/check/:merchantOrderId", async (req, res) => {
   try {
     const { merchantOrderId } = req.params;

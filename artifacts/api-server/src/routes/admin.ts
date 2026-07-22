@@ -3,11 +3,12 @@ import { db } from "@workspace/db";
 import { usersTable, appSettingsTable, userSubscriptionsTable } from "@workspace/db";
 import { eq, inArray, desc } from "drizzle-orm";
 import { invalidateGoogleCredCache } from "./auth";
+import { invalidateDuitkuCredCache } from "../lib/duitku";
 
 const router = Router();
 
 /* ------------------------------------------------------------------ */
-/* Middleware — require authenticated admin                             */
+/* Middleware                                                           */
 /* ------------------------------------------------------------------ */
 async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   const userId = req.session.userId;
@@ -26,35 +27,70 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 /* ------------------------------------------------------------------ */
-/* GET /api/admin/settings                                             */
+/* Helpers                                                             */
 /* ------------------------------------------------------------------ */
-router.get("/admin/settings", requireAdmin, async (_req, res) => {
+function maskSecret(s: string): string {
+  if (!s) return "";
+  if (s.length <= 8) return "*".repeat(s.length);
+  return s.slice(0, 4) + "*".repeat(s.length - 8) + s.slice(-4);
+}
+
+async function getAllSettings(): Promise<Record<string, string>> {
   const rows = await db.select().from(appSettingsTable);
   const map: Record<string, string> = {};
   for (const r of rows) map[r.key] = r.value;
+  return map;
+}
 
-  const dbClientId = map["google_client_id"] ?? "";
+async function upsertSetting(key: string, value: string) {
+  await db
+    .insert(appSettingsTable)
+    .values({ key, value })
+    .onConflictDoUpdate({
+      target: appSettingsTable.key,
+      set: { value, updatedAt: new Date() },
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/* GET /api/admin/settings                                             */
+/* ------------------------------------------------------------------ */
+router.get("/admin/settings", requireAdmin, async (_req, res) => {
+  const map = await getAllSettings();
+
+  // ---- Google OAuth ----
+  const dbClientId     = map["google_client_id"]     ?? "";
   const dbClientSecret = map["google_client_secret"] ?? "";
+  const clientId       = dbClientId     || process.env.GOOGLE_CLIENT_ID     || "";
+  const clientSecret   = dbClientSecret || process.env.GOOGLE_CLIENT_SECRET || "";
 
-  // Effective values (DB wins; fallback to env)
-  const clientId = dbClientId || process.env.GOOGLE_CLIENT_ID || "";
-  const clientSecret = dbClientSecret || process.env.GOOGLE_CLIENT_SECRET || "";
+  // ---- Duitku ----
+  const dbMerchantCode  = map["duitku_merchant_code"]  ?? "";
+  const dbApiKey        = map["duitku_api_key"]         ?? "";
+  const dbEnvironment   = map["duitku_environment"]     ?? "";
+  const dbExpiryPeriod  = map["duitku_expiry_period"]   ?? "";
 
-  // Mask the secret for the response
-  function maskSecret(s: string) {
-    if (!s) return "";
-    if (s.length <= 8) return "*".repeat(s.length);
-    return s.slice(0, 4) + "*".repeat(s.length - 8) + s.slice(-4);
-  }
+  const merchantCode  = dbMerchantCode || process.env.DUITKU_MERCHANT_CODE || "";
+  const apiKey        = dbApiKey       || process.env.DUITKU_API_KEY        || "";
+  const environment   = dbEnvironment  || process.env.DUITKU_ENV            || "sandbox";
+  const expiryPeriod  = dbExpiryPeriod || "1440";
 
   return res.json({
-    google_client_id: clientId,
-    google_client_secret_masked: maskSecret(clientSecret),
-    google_client_secret_source: dbClientSecret
-      ? "database"
-      : process.env.GOOGLE_CLIENT_SECRET
-        ? "environment"
-        : "none",
+    /* Google */
+    google_client_id:              clientId,
+    google_client_secret_masked:   maskSecret(clientSecret),
+    google_client_secret_source:   dbClientSecret
+      ? "database" : process.env.GOOGLE_CLIENT_SECRET ? "environment" : "none",
+
+    /* Duitku */
+    duitku_merchant_code:          merchantCode,
+    duitku_api_key_masked:         maskSecret(apiKey),
+    duitku_api_key_source:         dbApiKey
+      ? "database" : process.env.DUITKU_API_KEY ? "environment" : "none",
+    duitku_environment:            environment === "production" ? "production" : "sandbox",
+    duitku_expiry_period:          expiryPeriod,
+    duitku_merchant_code_source:   dbMerchantCode
+      ? "database" : process.env.DUITKU_MERCHANT_CODE ? "environment" : "none",
   });
 });
 
@@ -63,32 +99,51 @@ router.get("/admin/settings", requireAdmin, async (_req, res) => {
 /* ------------------------------------------------------------------ */
 router.put("/admin/settings", requireAdmin, async (req, res) => {
   const body = req.body as {
-    google_client_id?: string;
+    /* Google */
+    google_client_id?:     string;
     google_client_secret?: string;
+    /* Duitku */
+    duitku_merchant_code?: string;
+    duitku_api_key?:       string;
+    duitku_environment?:   string;
+    duitku_expiry_period?: string;
   };
 
-  const updates: { key: string; value: string }[] = [];
+  let googleChanged = false;
+  let duitkuChanged = false;
 
+  // ---- Google ----
   if (typeof body.google_client_id === "string") {
-    updates.push({ key: "google_client_id", value: body.google_client_id.trim() });
+    await upsertSetting("google_client_id", body.google_client_id.trim());
+    googleChanged = true;
   }
-  // Only update secret if a non-empty value was sent
-  if (typeof body.google_client_secret === "string" && body.google_client_secret.trim() !== "") {
-    updates.push({ key: "google_client_secret", value: body.google_client_secret.trim() });
-  }
-
-  for (const u of updates) {
-    await db
-      .insert(appSettingsTable)
-      .values({ key: u.key, value: u.value })
-      .onConflictDoUpdate({
-        target: appSettingsTable.key,
-        set: { value: u.value, updatedAt: new Date() },
-      });
+  if (typeof body.google_client_secret === "string" && body.google_client_secret.trim()) {
+    await upsertSetting("google_client_secret", body.google_client_secret.trim());
+    googleChanged = true;
   }
 
-  // Bust the in-memory credential cache in auth.ts
-  invalidateGoogleCredCache();
+  // ---- Duitku ----
+  if (typeof body.duitku_merchant_code === "string") {
+    await upsertSetting("duitku_merchant_code", body.duitku_merchant_code.trim());
+    duitkuChanged = true;
+  }
+  if (typeof body.duitku_api_key === "string" && body.duitku_api_key.trim()) {
+    await upsertSetting("duitku_api_key", body.duitku_api_key.trim());
+    duitkuChanged = true;
+  }
+  if (typeof body.duitku_environment === "string") {
+    const env = body.duitku_environment === "production" ? "production" : "sandbox";
+    await upsertSetting("duitku_environment", env);
+    duitkuChanged = true;
+  }
+  if (typeof body.duitku_expiry_period === "string") {
+    const mins = Math.max(5, Math.min(10080, Number(body.duitku_expiry_period) || 1440));
+    await upsertSetting("duitku_expiry_period", String(mins));
+    duitkuChanged = true;
+  }
+
+  if (googleChanged) invalidateGoogleCredCache();
+  if (duitkuChanged) invalidateDuitkuCredCache();
 
   return res.json({ ok: true });
 });
@@ -104,7 +159,6 @@ router.get("/admin/users", requireAdmin, async (_req, res) => {
 
   const userIds = users.map((u) => u.id);
 
-  // Fetch latest subscription per user (ordered desc so first hit = latest)
   const subs =
     userIds.length > 0
       ? await db
@@ -114,8 +168,7 @@ router.get("/admin/users", requireAdmin, async (_req, res) => {
           .orderBy(desc(userSubscriptionsTable.createdAt))
       : [];
 
-  // Keep only the latest subscription per userId
-  const latestSub = new Map<string, typeof subs[0]>();
+  const latestSub = new Map<string, (typeof subs)[0]>();
   for (const s of subs) {
     if (!latestSub.has(s.userId)) latestSub.set(s.userId, s);
   }
@@ -132,9 +185,9 @@ router.get("/admin/users", requireAdmin, async (_req, res) => {
       createdAt: u.createdAt,
       subscription: sub
         ? {
-            planId: sub.planId,
-            planName: sub.planName,
-            status: sub.status,
+            planId:    sub.planId,
+            planName:  sub.planName,
+            status:    sub.status,
             startedAt: sub.startedAt,
             expiresAt: sub.expiresAt,
           }
@@ -146,8 +199,7 @@ router.get("/admin/users", requireAdmin, async (_req, res) => {
 });
 
 /* ------------------------------------------------------------------ */
-/* POST /api/admin/users/:id/subscription                             */
-/* Manually assign / update a subscription for a user                 */
+/* POST /api/admin/users/:id/subscription                              */
 /* ------------------------------------------------------------------ */
 router.post("/admin/users/:id/subscription", requireAdmin, async (req, res) => {
   const { id: userId } = req.params;
@@ -161,7 +213,7 @@ router.post("/admin/users/:id/subscription", requireAdmin, async (req, res) => {
     return res.status(400).json({ error: "planId, planName, dan durationDays diperlukan." });
   }
 
-  const now = new Date();
+  const now      = new Date();
   const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
   await db.insert(userSubscriptionsTable).values({
