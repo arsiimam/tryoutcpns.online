@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tryout CPNS - Simulasi CAT Terbaik</title>
+<style>
+  :root{
+    --blue-600:#4f5eea;
+    --blue-700:#4147d5;
+    --blue-50:#eef1ff;
+    --blue-100:#e2e6ff;
+    --purple-600:#7c3aed;
+    --ink-900:#0f172a;
+    --ink-700:#334155;
+    --ink-500:#64748b;
+    --ink-400:#94a3b8;
+    --border:#e2e8f0;
+    --bg-soft:#f6f7fc;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    color:var(--ink-900);
+    background:#fff;
+    line-height:1.5;
+  }
+  a{text-decoration:none;color:inherit;}
+  .container{max-width:1280px;margin:0 auto;padding:0 40px;}
+  @media (max-width:768px){.container{padding:0 20px;}}
+  .btn-primary{
+    background:var(--blue-600);color:#fff;padding:10px 22px;
+    border-radius:10px;font-weight:600;font-size:15px;border:none;cursor:pointer;
+    transition:background .15s ease;
+  }
+  .btn-primary:hover{background:var(--blue-700);}
+
+  /* NAV */
+  header.nav{
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;background:#fff;z-index:50;
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 40px;max-width:1280px;margin:0 auto;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-logo{
+    width:44px;height:44px;border-radius:12px;
+    background:linear-gradient(135deg,var(--blue-600),var(--blue-700));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:16px;
+  }
+  .brand-text .title{font-weight:700;font-size:18px;color:var(--ink-900);}
+  .brand-text .sub{font-size:12px;color:var(--ink-400);}
+  nav.links{display:flex;gap:36px;font-size:15px;color:var(--ink-700);}
+  nav.links a:hover{color:var(--blue-600);}
+  .nav-right{display:flex;align-items:center;gap:20px;}
+  .btn-ghost-nav{font-size:15px;color:var(--ink-700);cursor:pointer;}
+  .hamburger{
+    display:none;background:none;border:none;padding:6px;color:var(--ink-900);cursor:pointer;
+  }
+  .mobile-menu{
+    display:none;flex-direction:column;gap:2px;
+    padding:8px 20px 20px;border-top:1px solid var(--border);
+  }
+  .mobile-menu a{
+    padding:14px 4px;font-size:16px;color:var(--ink-700);border-bottom:1px solid var(--border);
+  }
+  .mobile-menu a.mobile-masuk{border-bottom:none;color:var(--ink-900);font-weight:600;padding-top:16px;}
+  .mobile-menu .mobile-daftar{width:100%;margin-top:8px;padding:14px;font-size:16px;}
+  .mobile-menu.open{display:flex;}
+  @media (max-width:900px){
+    nav.links{display:none;}
+    .nav-right{display:none;}
+    .hamburger{display:flex;}
+    .nav-inner{padding:14px 20px;}
+    .brand-logo{width:38px;height:38px;font-size:14px;}
+    .brand-text .title{font-size:16px;}
+  }
+
+  /* HERO */
+  .hero{
+    background:linear-gradient(180deg,var(--bg-soft) 0%,#ffffff 70%);
+    padding:80px 0 60px;
+  }
+  .hero-grid{
+    display:grid;grid-template-columns:1.05fr 1fr;gap:60px;align-items:center;
+  }
+  @media (max-width:980px){
+    .hero-grid{grid-template-columns:1fr;}
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--blue-100);color:var(--blue-700);
+    font-size:13px;font-weight:600;padding:8px 16px;border-radius:999px;
+    margin-bottom:24px;
+  }
+  .badge svg, .btn-lg-primary svg, .btn-lg-ghost svg, .timer svg,
+  .next-link svg, .faq-q .chev svg, .contact-item svg{
+    flex-shrink:0;display:inline-block;vertical-align:middle;
+  }
+  h1.hero-title{
+    font-size:56px;line-height:1.08;font-weight:800;margin:0 0 24px;
+    letter-spacing:-0.5px;
+  }
+  h1.hero-title .accent{color:var(--blue-600);display:block;}
+  @media (max-width:600px){ h1.hero-title{font-size:38px;} }
+  .hero-desc{font-size:18px;color:var(--ink-500);max-width:520px;margin-bottom:32px;}
+  .hero-ctas{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:44px;}
+  .btn-lg-primary{
+    background:var(--blue-600);color:#fff;padding:16px 28px;border-radius:12px;
+    font-weight:600;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    border:none;cursor:pointer;transition:background .15s ease, transform .15s ease;
+  }
+  .btn-lg-primary:hover{background:var(--blue-700);transform:translateY(-1px);}
+  .btn-lg-ghost{
+    background:#fff;border:1px solid var(--border);color:var(--ink-900);
+    padding:16px 26px;border-radius:12px;font-weight:600;font-size:16px;
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;
+  }
+  .btn-lg-ghost:hover{border-color:var(--blue-600);color:var(--blue-600);}
+  .stats{display:flex;gap:56px;}
+  .stat .num{font-size:30px;font-weight:800;color:var(--ink-900);}
+  .stat .lbl{font-size:14px;color:var(--ink-500);}
+  @media (max-width:600px){.stats{gap:32px;}}
+
+  /* HERO CARD */
+  .hero-card-wrap{position:relative;}
+  .hero-card{
+    background:#fff;border-radius:20px;box-shadow:0 20px 50px rgba(30,41,90,0.14);
+    border:1px solid var(--border);padding:28px;position:relative;z-index:2;
+  }
+  .hero-card::before, .hero-card::after{
+    content:"";position:absolute;inset:0;border-radius:20px;
+    background:var(--blue-100);z-index:-1;
+  }
+  .hero-card-inner-wrap{position:relative;}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+  .card-header-left{display:flex;align-items:center;gap:12px;}
+  .mini-logo{
+    width:38px;height:38px;border-radius:10px;background:var(--blue-600);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;
+  }
+  .card-header-left .lbl{font-weight:700;font-size:16px;}
+  .timer{
+    display:inline-flex;align-items:center;gap:6px;background:#fee2e2;color:#dc2626;
+    padding:6px 14px;border-radius:999px;font-weight:700;font-size:14px;
+  }
+  .qbox{background:var(--bg-soft);border-radius:14px;padding:22px;}
+  .qnum{color:var(--blue-600);font-weight:700;font-size:12px;letter-spacing:0.5px;margin-bottom:10px;}
+  .qtext{font-size:17px;font-weight:600;color:var(--ink-900);margin-bottom:18px;}
+  .opt{
+    display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--border);
+    border-radius:10px;padding:14px 16px;margin-bottom:10px;font-size:15px;color:var(--ink-700);
+  }
+  .opt .letter{
+    width:24px;height:24px;border-radius:50%;border:1px solid var(--ink-400);
+    display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;
+  }
+  .opt.selected{background:var(--blue-50);border-color:var(--blue-600);color:var(--blue-700);font-weight:600;}
+  .opt.selected .letter{background:var(--blue-600);border-color:var(--blue-600);color:#fff;}
+  .qnav{display:flex;align-items:center;justify-content:space-between;margin-top:18px;}
+  .qnums{display:flex;gap:8px;}
+  .qnums span{
+    width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:600;background:#dcfce7;color:#16a34a;
+  }
+  .qnums span.gray{background:var(--bg-soft);color:var(--ink-400);}
+  .qnums span.active{background:var(--blue-600);color:#fff;}
+  .next-link{font-size:14px;font-weight:600;color:var(--ink-700);display:inline-flex;align-items:center;gap:6px;}
+
+  /* FEATURES */
+  .section{padding:96px 0;}
+  .section-soft{background:var(--bg-soft);}
+  .eyebrow{
+    text-align:center;color:var(--blue-600);font-weight:700;font-size:13px;
+    letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;
+  }
+  h2.section-title{text-align:center;font-size:38px;font-weight:800;margin:0 0 16px;}
+  p.section-sub{text-align:center;color:var(--ink-500);font-size:17px;max-width:600px;margin:0 auto 56px;}
+  .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
+  @media (max-width:980px){.feature-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:600px){.feature-grid{grid-template-columns:1fr;}}
+  .feature-card{
+    background:#fff;border:1px solid var(--border);border-radius:16px;padding:32px 26px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .feature-card.highlight{border-color:var(--blue-600);box-shadow:0 10px 30px rgba(79,94,234,0.12);}
+  .feature-icon{
+    width:52px;height:52px;border-radius:12px;background:var(--blue-50);
+    display:flex;align-items:center;justify-content:center;margin-bottom:20px;color:var(--blue-600);
+  }
+  .feature-icon.filled{background:var(--blue-600);color:#fff;}
+  .feature-card h3{font-size:18px;font-weight:700;margin:0 0 10px;}
+  .feature-card p{font-size:14.5px;color:var(--ink-500);margin:0;}
+
+  /* PRICING */
+  .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:stretch;}
+  @media (max-width:980px){.pricing-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto;}}
+  .price-card{
+    background:#fff;border:1px solid var(--border);border-radius:18px;padding:36px 32px;
+    display:flex;flex-direction:column;position:relative;
+  }
+  .price-card.popular{border:2px solid var(--blue-600);box-shadow:0 20px 45px rgba(79,94,234,0.18);}
+  .popular-badge{
+    position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+    background:var(--blue-600);color:#fff;font-size:13px;font-weight:700;
+    padding:6px 18px;border-radius:999px;display:flex;align-items:center;gap:6px;
+  }
+  .plan-tag{
+    display:inline-block;font-size:13px;font-weight:600;padding:5px 14px;border-radius:999px;
+    background:var(--bg-soft);color:var(--ink-700);margin-bottom:18px;
+  }
+  .plan-tag.blue{background:var(--blue-100);color:var(--blue-700);}
+  .plan-tag.purple{background:#f3e8ff;color:var(--purple-600);}
+  .price{font-size:38px;font-weight:800;margin-bottom:2px;}
+  .price small{font-size:17px;font-weight:600;color:var(--ink-500);}
+  .price-period{color:var(--ink-500);font-size:14px;margin-bottom:26px;}
+  .price-features{list-style:none;padding:0;margin:0 0 32px;flex:1;}
+  .price-features li{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--ink-700);margin-bottom:16px;}
+  .price-features li svg{flex-shrink:0;margin-top:2px;color:var(--blue-600);}
+  .price-btn{
+    display:block;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:15px;
+    cursor:pointer;border:none;
+  }
+  .price-btn.dark{background:var(--ink-900);color:#fff;}
+  .price-btn.blue{background:var(--blue-600);color:#fff;}
+  .price-btn.purple{background:var(--purple-600);color:#fff;}
+  .price-btn:hover{filter:brightness(1.08);}
+
+  /* TESTIMONIALS */
+  .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  @media (max-width:900px){.testi-grid{grid-template-columns:1fr;}}
+  .testi-card{background:var(--bg-soft);border-radius:16px;padding:32px;}
+  .testi-quote{color:var(--blue-200,#c7d2fe);color:#bfdbfe;font-size:34px;line-height:1;margin-bottom:12px;font-weight:700;}
+  .stars{color:#f59e0b;font-size:18px;margin-bottom:16px;letter-spacing:2px;}
+  .testi-text{font-size:15.5px;color:var(--ink-700);margin-bottom:24px;}
+  .testi-person{display:flex;align-items:center;gap:12px;}
+  .avatar{
+    width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6366f1,var(--blue-600));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;
+  }
+  .testi-person .name{font-weight:700;font-size:15px;}
+  .testi-person .role{font-size:13px;color:var(--ink-500);}
+
+  /* FAQ */
+  .faq-list{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+  .faq-item{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden;}
+  .faq-q{
+    display:flex;align-items:center;justify-content:space-between;padding:20px 24px;
+    cursor:pointer;font-weight:600;font-size:16px;
+  }
+  .faq-q{align-items:center;}
+  .faq-q .chev{transition:transform .2s ease;color:var(--ink-500);display:inline-flex;align-items:center;}
+  .faq-item.open .faq-q .chev{transform:rotate(180deg);}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .faq-a-inner{padding:0 24px 20px;color:var(--ink-500);font-size:15px;line-height:1.6;}
+  .faq-item.open .faq-a{max-height:220px;}
+
+  /* CTA */
+  .cta{
+    background:linear-gradient(120deg,var(--blue-600),#6d5ff0);
+    border-radius:24px;padding:64px 40px;text-align:center;margin:0 40px;
+    color:#fff;
+  }
+  .cta h2{font-size:36px;font-weight:800;margin:0 0 16px;}
+  .cta p{font-size:17px;opacity:0.92;max-width:520px;margin:0 auto 32px;}
+  .cta .btn-lg-ghost{background:#fff;color:var(--blue-700);border:none;}
+  @media (max-width:768px){.cta{margin:0 20px;padding:48px 24px;}}
+
+  /* FOOTER */
+  footer{background:var(--ink-900);color:#cbd5e1;padding:64px 0 32px;margin-top:96px;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px;}
+  @media (max-width:900px){.footer-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:600px){.footer-grid{grid-template-columns:1fr;}}
+  .footer-brand{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .footer-brand .title{color:#fff;font-weight:700;font-size:17px;}
+  .footer-brand .sub{color:var(--ink-400);font-size:12px;}
+  .footer-desc{font-size:14px;color:var(--ink-400);line-height:1.7;margin-bottom:20px;max-width:320px;}
+  .socials{display:flex;gap:12px;}
+  .socials a{
+    width:38px;height:38px;border-radius:8px;background:#1e293b;
+    display:flex;align-items:center;justify-content:center;color:#cbd5e1;
+  }
+  .socials a:hover{background:var(--blue-600);color:#fff;}
+  footer h4{color:#fff;font-size:15px;font-weight:700;margin:0 0 18px;}
+  footer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;}
+  footer ul a{color:var(--ink-400);font-size:14.5px;}
+  footer ul a:hover{color:#fff;}
+  .contact-item{display:flex;align-items:center;gap:10px;font-size:14.5px;color:var(--ink-400);}
+  .price-features li span{display:inline-flex;align-items:center;}
+  .contact-item svg{flex-shrink:0;color:var(--blue-500,#818cf8);}
+  .footer-bottom{border-top:1px solid #1e293b;padding-top:24px;text-align:center;font-size:13px;color:var(--ink-500);}
+
+  /* ===== MOBILE RESPONSIVE ===== */
+  @media (max-width:768px){
+    .section{padding:64px 0;}
+    h2.section-title{font-size:28px;}
+    p.section-sub{font-size:15px;margin-bottom:40px;}
+    .eyebrow{font-size:12px;}
+
+    .hero{padding:40px 0 40px;}
+    h1.hero-title{font-size:32px;}
+    .hero-desc{font-size:16px;}
+    .hero-ctas{flex-direction:column;align-items:stretch;gap:12px;}
+    .btn-lg-primary,.btn-lg-ghost{width:100%;justify-content:center;padding:14px 20px;font-size:15px;}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:left;}
+    .stat .num{font-size:22px;line-height:1.2;}
+    .stat .lbl{font-size:12.5px;white-space:nowrap;}
+
+    .hero-card{padding:18px;border-radius:16px;}
+    .card-header{margin-bottom:16px;}
+    .mini-logo{width:32px;height:32px;font-size:12px;}
+    .card-header-left .lbl{font-size:14px;}
+    .timer{padding:5px 10px;font-size:12px;}
+    .qbox{padding:16px;}
+    .qtext{font-size:15px;margin-bottom:14px;}
+    .opt{padding:12px 14px;font-size:14px;}
+    .qnav{flex-direction:column;align-items:flex-start;gap:14px;}
+    .qnums{flex-wrap:wrap;}
+    .qnums span{width:26px;height:26px;font-size:12px;}
+
+    .feature-card{padding:24px 20px;}
+    .feature-icon{width:44px;height:44px;}
+
+    .pricing-grid{gap:20px;}
+    .price-card{padding:28px 24px;}
+    .price{font-size:32px;}
+
+    .testi-card{padding:24px 20px;}
+
+    .faq-q{padding:16px 18px;font-size:15px;gap:12px;}
+    .faq-a-inner{padding:0 18px 18px;font-size:14px;}
+
+    .cta{margin:0 20px;padding:40px 20px;border-radius:18px;}
+    .cta h2{font-size:26px;}
+    .cta p{font-size:15px;}
+
+    footer{padding:48px 0 24px;margin-top:64px;}
+    .footer-grid{gap:32px;margin-bottom:32px;}
+  }
+
+  @media (max-width:420px){
+    h1.hero-title{font-size:28px;}
+    .stats{gap:8px;}
+    .stat .num{font-size:19px;}
+    .stat .lbl{font-size:11px;}
+    .qnums span{width:22px;height:22px;font-size:11px;}
+    .price{font-size:28px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <div class="brand-logo">CP</div>
+      <div class="brand-text">
+        <div class="title">Tryout CPNS</div>
+        <div class="sub">Simulasi CAT</div>
+      </div>
+    </div>
+    <nav class="links">
+      <a href="#fitur">Fitur</a>
+      <a href="#paket">Paket</a>
+      <a href="#faq">FAQ</a>
+      <a href="#testimoni">Testimoni</a>
+    </nav>
+    <div class="nav-right">
+      <a class="btn-ghost-nav" href="#">Masuk</a>
+      <button class="btn-primary">Daftar</button>
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Buka menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#fitur">Fitur</a>
+    <a href="#paket">Paket</a>
+    <a href="#faq">FAQ</a>
+    <a href="#testimoni">Testimoni</a>
+    <a class="mobile-masuk" href="#">Masuk</a>
+    <button class="btn-primary mobile-daftar">Daftar</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <div class="badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Platform Simulasi CAT #1</div>
+      <h1 class="hero-title">Lolos CPNS dengan<span class="accent">Simulasi CAT Terbaik</span></h1>
+      <p class="hero-desc">Latihan soal TWK, TIU, dan TKP dengan sistem yang sama persis seperti ujian resmi BKN. Tingkatkan peluang lulus Anda.</p>
+      <div class="hero-ctas">
+        <button class="btn-lg-primary">Mulai Tryout Gratis <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
+        <button class="btn-lg-ghost"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Lihat Demo</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="num">10.000+</div><div class="lbl">Peserta</div></div>
+        <div class="stat"><div class="num">85%</div><div class="lbl">Lolos</div></div>
+        <div class="stat"><div class="num">500+</div><div class="lbl">Soal</div></div>
+      </div>
+    </div>
+
+    <div class="hero-card-wrap">
+      <div class="hero-card">
+        <div class="hero-card-inner-wrap">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="mini-logo">CP</div>
+              <div class="lbl">Simulasi CAT</div>
+            </div>
+            <div class="timer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> 45:23</div>
+          </div>
+          <div class="qbox">
+            <div class="qnum">SOAL NO. 5 DARI 110</div>
+            <div class="qtext">Pancasila sebagai dasar negara Indonesia ditetapkan secara resmi pada tanggal?</div>
+            <div class="opt"><span class="letter">A</span> 1 Juni 1945</div>
+            <div class="opt selected"><span class="letter">B</span> 18 Agustus 1945</div>
+            <div class="opt"><span class="letter">C</span> 17 Agustus 1945</div>
+            <div class="qnav">
+              <div class="qnums">
+                <span>1</span><span>2</span><span>3</span><span>4</span>
+                <span class="active">5</span>
+                <span class="gray">6</span><span class="gray">7</span><span class="gray">8</span>
+              </div>
+              <div class="next-link">Selanjutnya <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="fitur">
+  <div class="container">
+    <div class="eyebrow">Fitur Unggulan</div>
+    <h2 class="section-title">Semua yang Anda butuhkan untuk lulus</h2>
+    <p class="section-sub">Platform yang dirancang khusus untuk memaksimalkan persiapan ujian CPNS Anda.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div>
+        <h3>Simulasi CAT Realistis</h3>
+        <p>Sistem identik dengan ujian resmi BKN: timer, navigasi, dan auto-save.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg></div>
+        <h3>Bank Soal Lengkap</h3>
+        <p>Ribuan soal TWK, TIU, TKP dengan pembahasan mendalam dan kategori terstruktur.</p>
+      </div>
+      <div class="feature-card highlight">
+        <div class="feature-icon filled"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
+        <h3>Analisis Skor Mendalam</h3>
+        <p>Lihat kelemahan dan kelebihan Anda dengan grafik perkembangan per kategori.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg></div>
+        <h3>Soal Berkualitas</h3>
+        <p>Disusun oleh tim ahli berpengalaman sesuai kisi-kisi CPNS terbaru.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-soft" id="paket">
+  <div class="container">
+    <div class="eyebrow">Paket Berlangganan</div>
+    <h2 class="section-title">Pilih paket yang sesuai untuk Anda</h2>
+    <p class="section-sub">Investasi terbaik untuk masa depan karir ASN Anda.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <span class="plan-tag">Paket Gratis</span>
+        <div class="price">Gratis</div>
+        <div class="price-period">Selamanya</div>
+        <ul class="price-features">
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Akses 1 tryout gratis</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Bank soal TWK (terbatas)</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Hasil &amp; skor dasar</li>
+        </ul>
+        <button class="price-btn dark">Mulai Gratis</button>
+      </div>
+
+      <div class="price-card popular">
+        <div class="popular-badge">★ Populer</div>
+        <span class="plan-tag blue">Paket Bulanan</span>
+        <div class="price">Rp 49.000</div>
+        <div class="price-period">30 hari</div>
+        <ul class="price-features">
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Semua tryout terbuka</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Bank soal lengkap TWK/TIU/TKP</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Review &amp; pembahasan</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Analisis skor mendalam</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Ranking nasional</li>
+        </ul>
+        <button class="price-btn blue">Pilih Paket</button>
+      </div>
+
+      <div class="price-card">
+        <span class="plan-tag purple">Paket Premium</span>
+        <div class="price">Rp 149.000</div>
+        <div class="price-period">90 hari</div>
+        <ul class="price-features">
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Semua fitur Paket Bulanan</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Tryout eksklusif tiap minggu</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Konsultasi mentor privat</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Video pembahasan</li>
+          <li><span style="display:inline-flex;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Garansi lulus</li>
+        </ul>
+        <button class="price-btn purple">Pilih Paket</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="testimoni">
+  <div class="container">
+    <div class="eyebrow">Testimoni</div>
+    <h2 class="section-title">Cerita sukses peserta kami</h2>
+
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-quote">"</div>
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"Tryout ini sangat membantu! Simulasinya mirip banget dengan ujian aslinya. Saya jadi lebih percaya diri."</p>
+        <div class="testi-person">
+          <div class="avatar">A</div>
+          <div>
+            <div class="name">Ahmad Fauzi</div>
+            <div class="role">Lolos CPNS 2024</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-quote">"</div>
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"Bank soalnya lengkap dan pembahasannya jelas. Fitur analisis skor bikin tahu kelemahan saya."</p>
+        <div class="testi-person">
+          <div class="avatar">S</div>
+          <div>
+            <div class="name">Siti Nurhaliza</div>
+            <div class="role">Peserta CPNS 2025</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-quote">"</div>
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"Timer dan navigasi soalnya akurat. Auto-save bikin tenang kalau koneksi putus. Recommended!"</p>
+        <div class="testi-person">
+          <div class="avatar">B</div>
+          <div>
+            <div class="name">Budi Santoso</div>
+            <div class="role">Lolos PNS Kemenkeu</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-soft" id="faq">
+  <div class="container">
+    <div class="eyebrow">FAQ</div>
+    <h2 class="section-title">Pertanyaan yang sering diajukan</h2>
+    <br>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">Apa itu Tryout CPNS berbasis CAT? <span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
+        <div class="faq-a"><div class="faq-a-inner">Tryout CPNS berbasis CAT adalah simulasi ujian yang menggunakan sistem Computer Assisted Test, sama persis dengan sistem yang digunakan BKN pada ujian CPNS resmi, lengkap dengan timer, navigasi soal, dan penilaian otomatis.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Bagaimana cara berlangganan? <span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
+        <div class="faq-a"><div class="faq-a-inner">Anda cukup memilih salah satu paket berlangganan yang tersedia, lalu melakukan pembayaran melalui metode yang disediakan. Akses akan langsung aktif setelah pembayaran berhasil dikonfirmasi.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Apakah ada tryout gratis? <span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
+        <div class="faq-a"><div class="faq-a-inner">Ya, kami menyediakan paket gratis dengan akses 1 tryout dan bank soal TWK terbatas sehingga Anda bisa mencoba platform ini sebelum berlangganan.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Bagaimana sistem penilaian CPNS? <span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
+        <div class="faq-a"><div class="faq-a-inner">Untuk TWK dan TIU, jawaban benar bernilai 5 dan jawaban salah atau tidak dijawab bernilai 0. Untuk TKP, setiap jawaban memiliki bobot nilai 1 sampai 5 tergantung tingkat kesesuaiannya.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Apakah hasil tryout saya tersimpan? <span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
+        <div class="faq-a"><div class="faq-a-inner">Ya, seluruh riwayat dan hasil tryout Anda tersimpan otomatis di akun Anda sehingga bisa dilihat dan dianalisis kapan saja.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Apakah aplikasi bisa diakses dari tablet? <span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
+        <div class="faq-a"><div class="faq-a-inner">Bisa. Platform ini responsif dan dapat diakses dengan lancar dari desktop, tablet, maupun smartphone melalui browser.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="cta">
+    <h2>Siap Lolos CPNS?</h2>
+    <p>Bergabung dengan ribuan peserta yang sudah berhasil. Mulai tryout gratis hari ini juga.</p>
+    <button class="btn-lg-ghost">Daftar Sekarang <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <div class="brand-logo">CP</div>
+          <div>
+            <div class="title">Tryout CPNS</div>
+            <div class="sub">Simulasi CAT</div>
+          </div>
+        </div>
+        <p class="footer-desc">Platform tryout CPNS berbasis CAT terdepan di Indonesia. Persiapkan ujian dengan sistem yang sama persis dengan ujian resmi.</p>
+        <div class="socials">
+          <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9v-2.89h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"></path></svg></a>
+          <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+          <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg></a>
+        </div>
+      </div>
+      <div>
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="#">Tryout</a></li>
+          <li><a href="#">Latihan Soal</a></li>
+          <li><a href="#">Ranking</a></li>
+          <li><a href="#">Paket Berlangganan</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Perusahaan</h4>
+        <ul>
+          <li><a href="#">Tentang Kami</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">FAQ</a></li>
+          <li><a href="#">Kontak</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Hubungi Kami</h4>
+        <div class="contact-item" style="margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"></path><path d="M22 6c0-1.1-.9-2-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h16a2 2 0 0 0 2-2V6z"></path><polyline points="22 6 12 13 2 6"></polyline></svg> info@tryoutcpns.id</div>
+        <div class="contact-item" style="margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> +62 812 3456 7890</div>
+        <div class="contact-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Jakarta, Indonesia</div>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 Tryout CPNS. Seluruh hak cipta dilindungi.</div>
+  </div>
+</footer>
+
+<script>
+  var hamburgerBtn = document.getElementById('hamburgerBtn');
+  var mobileMenu = document.getElementById('mobileMenu');
+  hamburgerBtn.addEventListener('click', function(){
+    mobileMenu.classList.toggle('open');
+  });
+  mobileMenu.querySelectorAll('a, button').forEach(function(el){
+    el.addEventListener('click', function(){
+      mobileMenu.classList.remove('open');
+    });
+  });
+
+  document.querySelectorAll('.faq-item').forEach(function(item){
+    item.querySelector('.faq-q').addEventListener('click', function(){
+      var isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(function(o){ o.classList.remove('open'); });
+      if(!isOpen){ item.classList.add('open'); }
+    });
+  });
+</script>
+
+</body>
+</html>
