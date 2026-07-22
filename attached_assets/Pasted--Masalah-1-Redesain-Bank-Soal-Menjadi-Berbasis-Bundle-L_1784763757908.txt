@@ -1,0 +1,172 @@
+# Masalah #1 - Redesain Bank Soal Menjadi Berbasis Bundle
+
+## Latar Belakang
+
+Saat ini halaman **Bank Soal** masih menampilkan setiap soal sebagai satu baris pada tabel. Pendekatan ini tidak cocok untuk aplikasi Tryout CPNS karena nantinya akan terdapat ribuan hingga puluhan ribu soal.
+
+Saya tidak ingin mengelola soal satu per satu. Saya ingin mengelola **Bundle Soal**.
+
+---
+
+## Perubahan Konsep
+
+Ubah konsep **Bank Soal** dari:
+
+```
+Bank Soal
+├── Soal 1
+├── Soal 2
+├── Soal 3
+├── Soal 4
+└── ...
+```
+
+menjadi
+
+```
+Bank Soal
+├── Bundle TWK Nasionalisme
+│      ├── Soal 1
+│      ├── Soal 2
+│      └── ...
+│
+├── Bundle TIU Numerik
+│      ├── Soal 1
+│      └── ...
+│
+└── Bundle TKP Pelayanan Publik
+       ├── Soal 1
+       └── ...
+```
+
+Artinya, halaman Bank Soal hanya menampilkan daftar bundle, bukan daftar soal.
+
+Daftar soal hanya ditampilkan ketika admin membuka sebuah bundle.
+
+---
+
+## Tampilan Bank Soal
+
+Halaman Bank Soal sebaiknya menampilkan daftar bundle seperti berikut:
+
+- Nama Bundle
+- Kategori
+- Jumlah Soal
+- Tanggal Dibuat
+- Terakhir Diubah
+- Status (Draft / Publish)
+- Tombol:
+    - Lihat Soal
+    - Edit
+    - Export
+    - Hapus
+
+Contoh:
+
+Bundle TWK Nasionalisme
+120 Soal
+
+[Lihat Soal]
+[Edit]
+[Export]
+[Hapus]
+
+---
+
+## Import Bundle
+
+Tambahkan tombol:
+
+```
+Import Bundle
+```
+
+Bukan lagi:
+
+```
+Tambah Soal
+```
+
+Saat import, sistem akan membuat satu bundle baru yang langsung berisi seluruh soal di dalam file.
+
+Saya ingin mendukung format berikut:
+
+- JSON (prioritas utama)
+- HTML
+- Excel (.xlsx) (opsional)
+- CSV (opsional)
+
+JSON menjadi format utama karena mampu menyimpan struktur soal yang kompleks.
+
+---
+
+## Export Bundle
+
+Setiap bundle dapat diekspor kembali menjadi:
+
+- JSON
+- HTML
+
+Sehingga bundle dapat dipindahkan ke server lain atau dijadikan backup.
+
+---
+
+## Konten Soal
+
+Sistem import harus mendukung:
+
+- Rich Text
+- HTML
+- Gambar
+- Tabel
+- Bullet & Numbering
+- Superscript
+- Subscript
+- Rumus Matematika (LaTeX)
+- KaTeX / MathJax
+
+Semua format tersebut harus tetap tampil dengan benar setelah proses import.
+
+---
+
+## Preview Sebelum Import
+
+Sebelum proses import dijalankan, sistem harus menampilkan:
+
+- Nama bundle
+- Jumlah soal
+- Jumlah gambar
+- Jumlah error
+- Preview beberapa soal pertama
+
+Jika terdapat error, tampilkan nomor soal beserta penyebabnya.
+
+---
+
+# Format Bundle
+
+Saya juga ingin Replit membuat **spesifikasi format file bundle** yang akan digunakan untuk proses import dan export.
+
+Format tersebut harus terdokumentasi dengan baik sehingga di masa depan saya dapat:
+
+- membuat bundle menggunakan script Python,
+- mengonversi dari Word, Excel, atau HTML,
+- menghasilkan bundle secara otomatis menggunakan AI,
+- mengimpor ribuan soal sekaligus tanpa perlu input manual.
+
+Mohon buatkan spesifikasi format file tersebut beserta beberapa contoh file.
+
+Minimal sediakan:
+
+- Contoh Bundle JSON
+- Contoh Bundle HTML
+- Dokumentasi struktur file
+- Penjelasan setiap field
+- Contoh soal yang berisi:
+  - gambar,
+  - tabel,
+  - rumus matematika,
+  - pembahasan lengkap,
+  - metadata soal.
+
+Format bundle harus dirancang agar mudah dikembangkan di masa depan (future-proof), sehingga jika nanti terdapat penambahan fitur seperti audio, video, atau tipe soal baru, format file tetap kompatibel.

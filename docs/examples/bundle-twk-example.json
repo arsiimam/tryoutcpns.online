@@ -1,0 +1,116 @@
+{
+  "version": "1.0",
+  "bundle": {
+    "name": "TWK Nasionalisme — Pancasila & UUD 1945",
+    "description": "Kumpulan soal pilihan ganda Tes Wawasan Kebangsaan (TWK) materi Nasionalisme, Pancasila, dan UUD 1945 untuk persiapan CPNS.",
+    "category": "TWK",
+    "metadata": {
+      "author": "Tim Redaksi TryoutCPNS",
+      "source": "Kompilasi CPNS 2019–2023",
+      "verified": true,
+      "created_at": "2024-01-15"
+    }
+  },
+  "questions": [
+    {
+      "order": 1,
+      "type": "multiple_choice",
+      "content": "<p>Pancasila sebagai dasar negara Indonesia ditetapkan secara resmi pada tanggal...</p>",
+      "options": [
+        { "key": "A", "text": "1 Juni 1945" },
+        { "key": "B", "text": "18 Agustus 1945" },
+        { "key": "C", "text": "17 Agustus 1945" },
+        { "key": "D", "text": "22 Juni 1945" },
+        { "key": "E", "text": "1 Maret 1945" }
+      ],
+      "correct_answer": "B",
+      "explanation": "<p>Pancasila ditetapkan secara resmi sebagai dasar negara pada tanggal <strong>18 Agustus 1945</strong> ketika PPKI mengesahkan UUD 1945. Tanggal 1 Juni 1945 adalah hari lahir Pancasila (pidato Soekarno), bukan penetapan resmi.</p>",
+      "metadata": {
+        "difficulty": "mudah",
+        "tags": ["pancasila", "sejarah", "ppki"],
+        "source": "CPNS 2021",
+        "year": 2021
+      }
+    },
+    {
+      "order": 2,
+      "type": "multiple_choice",
+      "content": "<p>Perhatikan tabel perbandingan ideologi berikut:</p><table border='1' cellpadding='6' style='border-collapse:collapse;width:100%'><thead><tr><th>Aspek</th><th>Liberalisme</th><th>Komunisme</th><th>Pancasila</th></tr></thead><tbody><tr><td>Kebebasan Individu</td><td>Mutlak</td><td>Sangat terbatas</td><td>Seimbang</td></tr><tr><td>Peran Negara</td><td>Minimal</td><td>Dominan</td><td>Proporsional</td></tr></tbody></table><p>Berdasarkan tabel di atas, pernyataan yang <strong>TEPAT</strong> mengenai Pancasila adalah...</p>",
+      "options": [
+        { "key": "A", "text": "Pancasila cenderung mengikuti paham liberalisme dalam hal kebebasan individu" },
+        { "key": "B", "text": "Pancasila menempatkan kebebasan individu dan peran negara secara seimbang" },
+        { "key": "C", "text": "Pancasila identik dengan komunisme karena mengedepankan kepentingan kolektif" },
+        { "key": "D", "text": "Pancasila tidak relevan dibandingkan ideologi global lainnya" },
+        { "key": "E", "text": "Peran negara dalam Pancasila bersifat dominan seperti komunisme" }
+      ],
+      "correct_answer": "B",
+      "explanation": "<p>Pancasila merupakan ideologi yang menempatkan kebebasan individu dan kepentingan kolektif secara <strong>seimbang</strong>. Berbeda dengan liberalisme yang memberikan kebebasan mutlak, dan komunisme yang membatasi kebebasan individu secara ekstrem. Pancasila menjunjung keselarasan antara hak dan kewajiban warga negara.</p>",
+      "metadata": {
+        "difficulty": "sedang",
+        "tags": ["pancasila", "ideologi", "perbandingan"],
+        "source": "CPNS 2022",
+        "year": 2022
+      }
+    },
+    {
+      "order": 3,
+      "type": "multiple_choice",
+      "content": "<p>Diketahui pasal 28C ayat (1) UUD 1945 berbunyi:</p><blockquote><em>\"Setiap orang berhak mengembangkan diri melalui pemenuhan kebutuhan dasarnya, berhak mendapat pendidikan dan memperoleh manfaat dari ilmu pengetahuan dan teknologi, seni dan budaya, demi meningkatkan kualitas hidupnya dan demi kesejahteraan umat manusia.\"</em></blockquote><p>Hak yang dijamin oleh pasal tersebut termasuk dalam kategori hak...</p>",
+      "options": [
+        { "key": "A", "text": "Hak sipil dan politik" },
+        { "key": "B", "text": "Hak ekonomi, sosial, dan budaya" },
+        { "key": "C", "text": "Hak asasi kolektif" },
+        { "key": "D", "text": "Hak atas pembangunan" },
+        { "key": "E", "text": "Hak solidaritas internasional" }
+      ],
+      "correct_answer": "B",
+      "explanation": "<p>Pasal 28C ayat (1) UUD 1945 menjamin hak atas pendidikan, iptek, seni, dan budaya yang termasuk dalam kategori <strong>hak ekonomi, sosial, dan budaya (Ekosob)</strong> — salah satu dari dua generasi utama hak asasi manusia dalam hukum internasional.</p>",
+      "metadata": {
+        "difficulty": "sedang",
+        "tags": ["uud1945", "ham", "pasal-28"],
+        "source": "CPNS 2023",
+        "year": 2023
+      }
+    },
+    {
+      "order": 4,
+      "type": "multiple_choice",
+      "content": "<p>Sebuah diagram menunjukkan proses pembentukan UUD 1945:</p><ul><li>BPUPKI dibentuk 29 April 1945</li><li>Sidang BPUPKI I: 29 Mei – 1 Juni 1945</li><li>Piagam Jakarta: 22 Juni 1945</li><li>PPKI dibentuk 7 Agustus 1945</li><li>Sidang PPKI: 18 Agustus 1945</li></ul><p>Perubahan yang dilakukan PPKI pada 18 Agustus 1945 terhadap rancangan UUD yang disiapkan BPUPKI adalah...</p>",
+      "options": [
+        { "key": "A", "text": "Menghapus seluruh isi Piagam Jakarta" },
+        { "key": "B", "text": "Mengubah \"tujuh kata\" dalam Piagam Jakarta pada sila pertama Pancasila" },
+        { "key": "C", "text": "Menambahkan pasal-pasal tentang hak asasi manusia" },
+        { "key": "D", "text": "Mengganti sistem pemerintahan dari presidensial ke parlementer" },
+        { "key": "E", "text": "Mengubah nama negara dari Republik Indonesia Serikat menjadi Republik Indonesia" }
+      ],
+      "correct_answer": "B",
+      "explanation": "<p>Pada sidang PPKI tanggal 18 Agustus 1945, dilakukan perubahan penting: <strong>menghapus tujuh kata</strong> dalam Piagam Jakarta pada sila pertama yang semula berbunyi <em>\"Ketuhanan dengan kewajiban menjalankan syariat Islam bagi pemeluk-pemeluknya\"</em> menjadi <em>\"Ketuhanan Yang Maha Esa\"</em>. Perubahan ini dilakukan demi persatuan dan kemajemukan bangsa Indonesia.</p>",
+      "metadata": {
+        "difficulty": "sulit",
+        "tags": ["sejarah", "ppki", "uud1945", "piagam-jakarta"],
+        "source": "CPNS 2022",
+        "year": 2022
+      }
+    },
+    {
+      "order": 5,
+      "type": "multiple_choice",
+      "content": "<p>Dalam konteks bela negara, yang merupakan contoh implementasi sila ke-3 Pancasila <strong>\"Persatuan Indonesia\"</strong> dalam kehidupan berbangsa adalah...</p>",
+      "options": [
+        { "key": "A", "text": "Memaksakan pendapat sendiri dalam musyawarah desa" },
+        { "key": "B", "text": "Mengutamakan kepentingan suku dan daerah asal dalam pengambilan kebijakan nasional" },
+        { "key": "C", "text": "Aktif berpartisipasi dalam kegiatan gotong royong lintas agama dan suku" },
+        { "key": "D", "text": "Hanya bergaul dengan orang-orang yang memiliki latar belakang budaya yang sama" },
+        { "key": "E", "text": "Menyebarkan konten yang membanggakan suku sendiri di media sosial" }
+      ],
+      "correct_answer": "C",
+      "explanation": "<p>Sila ke-3 <strong>Persatuan Indonesia</strong> diwujudkan melalui sikap dan perilaku yang menjunjung kebersamaan melampaui perbedaan suku, agama, ras, dan antar golongan (SARA). Gotong royong lintas agama dan suku merupakan implementasi nyata dari nilai persatuan.</p>",
+      "metadata": {
+        "difficulty": "mudah",
+        "tags": ["pancasila", "sila-3", "persatuan", "bela-negara"],
+        "source": "CPNS 2023",
+        "year": 2023
+      }
+    }
+  ]
+}

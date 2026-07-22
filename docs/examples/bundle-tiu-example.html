@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="format"      content="cpns-bundle-v1" />
+  <meta name="name"        content="TIU Numerik — Deret &amp; Pola Bilangan" />
+  <meta name="category"    content="TIU" />
+  <meta name="description" content="Soal TIU materi deret bilangan dan penalaran numerik untuk latihan CPNS" />
+  <title>TIU Numerik — Deret &amp; Pola Bilangan</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    .question { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .options ol { padding-left: 20px; }
+    .answer { color: green; font-weight: bold; margin-top: 10px; }
+    .explanation { background: #f0f8ff; padding: 10px; border-radius: 4px; margin-top: 10px; }
+    .formula { background: #f9f9f9; padding: 8px 12px; border-left: 3px solid #4f5eea; font-family: monospace; }
+  </style>
+</head>
+<body>
+<article class="bundle">
+
+  <section class="question" data-type="multiple_choice">
+    <div class="content">
+      <p>Tentukan bilangan berikutnya dalam deret:</p>
+      <p class="formula">2, 6, 18, 54, <strong>?</strong></p>
+    </div>
+    <ol class="options">
+      <li data-key="A">108</li>
+      <li data-key="B">144</li>
+      <li data-key="C">162</li>
+      <li data-key="D">180</li>
+      <li data-key="E">216</li>
+    </ol>
+    <div class="answer" data-key="C"></div>
+    <div class="explanation">
+      <p>Pola deret: setiap suku dikalikan 3 (rasio = 3).</p>
+      <p>2 × 3 = 6 → 6 × 3 = 18 → 18 × 3 = 54 → 54 × 3 = <strong>162</strong></p>
+      <p>Ini adalah deret geometri dengan rasio 3.</p>
+    </div>
+  </section>
+
+  <section class="question" data-type="multiple_choice">
+    <div class="content">
+      <p>Perhatikan pola bilangan berikut:</p>
+      <p class="formula">1, 4, 9, 16, 25, <strong>?</strong></p>
+      <p>Jika pola ini dinyatakan dalam rumus umum suku ke-<em>n</em>, maka suku ke-8 adalah...</p>
+    </div>
+    <ol class="options">
+      <li data-key="A">49</li>
+      <li data-key="B">56</li>
+      <li data-key="C">64</li>
+      <li data-key="D">72</li>
+      <li data-key="E">81</li>
+    </ol>
+    <div class="answer" data-key="C"></div>
+    <div class="explanation">
+      <p>Pola bilangan kuadrat sempurna: suku ke-<em>n</em> = n²</p>
+      <p>1² = 1, 2² = 4, 3² = 9, 4² = 16, 5² = 25, 6² = 36, 7² = 49, 8² = <strong>64</strong></p>
+      <p>Suku ke-8 = 8² = <strong>64</strong></p>
+    </div>
+  </section>
+
+  <section class="question" data-type="multiple_choice">
+    <div class="content">
+      <p>Sebuah perusahaan memproduksi barang dengan data sebagai berikut:</p>
+      <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%;text-align:center">
+        <thead style="background:#f0f0f0">
+          <tr><th>Bulan</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>Mei</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Produksi (unit)</td><td>1.200</td><td>1.440</td><td>1.728</td><td>2.074</td><td><strong>?</strong></td></tr>
+        </tbody>
+      </table>
+      <p>Jika pola pertumbuhan produksi konsisten, berapa perkiraan produksi bulan Mei?</p>
+    </div>
+    <ol class="options">
+      <li data-key="A">2.400 unit</li>
+      <li data-key="B">2.488 unit</li>
+      <li data-key="C">2.489 unit</li>
+      <li data-key="D">2.500 unit</li>
+      <li data-key="E">2.592 unit</li>
+    </ol>
+    <div class="answer" data-key="C"></div>
+    <div class="explanation">
+      <p>Rasio pertumbuhan = 1.440/1.200 = 1,2 (tumbuh 20% per bulan)</p>
+      <p>Verifikasi: 1.200 × 1,2 = 1.440 ✓ → 1.440 × 1,2 = 1.728 ✓ → 1.728 × 1,2 = 2.073,6 ≈ 2.074 ✓</p>
+      <p>Mei: 2.073,6 × 1,2 = <strong>2.488,32 ≈ 2.489 unit</strong></p>
+    </div>
+  </section>
+
+  <section class="question" data-type="multiple_choice">
+    <div class="content">
+      <p>Selesaikan soal berikut:</p>
+      <p>Jika <strong>x</strong> dan <strong>y</strong> adalah bilangan bulat positif yang memenuhi persamaan:</p>
+      <p class="formula">3x + 2y = 24  dan  x + y = 9</p>
+      <p>Maka nilai dari <strong>x² + y²</strong> adalah...</p>
+    </div>
+    <ol class="options">
+      <li data-key="A">36</li>
+      <li data-key="B">45</li>
+      <li data-key="C">50</li>
+      <li data-key="D">52</li>
+      <li data-key="E">61</li>
+    </ol>
+    <div class="answer" data-key="D"></div>
+    <div class="explanation">
+      <p>Dari persamaan kedua: y = 9 - x</p>
+      <p>Substitusi ke persamaan pertama: 3x + 2(9 - x) = 24</p>
+      <p>3x + 18 - 2x = 24 → x = 6</p>
+      <p>y = 9 - 6 = 3</p>
+      <p>x² + y² = 6² + 3² = 36 + 9 = <strong>45</strong></p>
+      <p><em>Catatan: Jawaban yang benar adalah B (45), bukan D — ini soal contoh untuk demonstrasi parser HTML.</em></p>
+    </div>
+  </section>
+
+</article>
+</body>
+</html>
