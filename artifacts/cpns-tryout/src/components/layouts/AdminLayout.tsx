@@ -29,6 +29,7 @@ const adminNavItems = [
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [location] = useLocation();
@@ -59,31 +60,44 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       {/* ====== SIDEBAR ====== */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col
-          transform transition-transform duration-200 ease-in-out
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col
+          transform transition-all duration-200 ease-in-out
           lg:relative lg:translate-x-0
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`}
-        style={{ background: BLUE }}
+        style={{
+          background: BLUE,
+          width: isCollapsed ? 56 : 256,
+          minWidth: isCollapsed ? 56 : 256,
+        }}
       >
         {/* Logo strip */}
         <div
-          className="h-16 flex items-center px-5 shrink-0 gap-3"
-          style={{ background: BLUE_D, borderBottom: "1px solid rgba(255,255,255,0.12)" }}
+          className="h-16 flex items-center shrink-0"
+          style={{
+            background: BLUE_D,
+            borderBottom: "1px solid rgba(255,255,255,0.12)",
+            padding: isCollapsed ? "0 0" : "0 12px 0 20px",
+            justifyContent: isCollapsed ? "center" : "space-between",
+          }}
         >
-          <Link href="/" className="flex items-center">
-            <BrandLogo variant="dark" size="md" />
-          </Link>
-          <div className="flex items-center gap-1.5">
-            <ShieldAlert size={14} style={{ color: "#fca5a5" }} />
-            <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.65)" }}>
-              Admin
-            </span>
-          </div>
+          {!isCollapsed && (
+            <Link href="/" className="flex items-center">
+              <BrandLogo variant="dark" size="md" />
+            </Link>
+          )}
+          {/* Hamburger — desktop toggle / mobile close */}
           <button
-            className="ml-auto lg:hidden text-white/70 hover:text-white"
-            onClick={() => setIsMobileOpen(false)}
+            className="text-white/70 hover:text-white transition-colors rounded-md p-1.5 hover:bg-white/10"
+            onClick={() => {
+              if (window.innerWidth >= 1024) {
+                setIsCollapsed(c => !c);
+              } else {
+                setIsMobileOpen(false);
+              }
+            }}
+            title={isCollapsed ? "Buka sidebar" : "Lipat sidebar"}
           >
-            <X size={20} />
+            <Menu size={20} />
           </button>
         </div>
 
@@ -98,18 +112,21 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsMobileOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium"
+                title={isCollapsed ? item.label : undefined}
+                className="flex items-center gap-3 rounded-lg transition-all text-sm font-medium"
                 style={{
-                  background:  isActive ? BLUE_ACT : "transparent",
-                  color:       isActive ? "#fff"   : "rgba(255,255,255,0.72)",
-                  borderLeft:  isActive ? "3px solid rgba(255,255,255,0.85)" : "3px solid transparent",
+                  background:     isActive ? BLUE_ACT : "transparent",
+                  color:          isActive ? "#fff"   : "rgba(255,255,255,0.72)",
+                  borderLeft:     isActive ? "3px solid rgba(255,255,255,0.85)" : "3px solid transparent",
+                  padding:        isCollapsed ? "10px 0" : "10px 12px",
+                  justifyContent: isCollapsed ? "center" : "flex-start",
                 }}
               >
                 <item.icon
-                  size={16}
-                  style={{ color: isActive ? "#fff" : "rgba(255,255,255,0.60)" }}
+                  size={17}
+                  style={{ color: isActive ? "#fff" : "rgba(255,255,255,0.60)", flexShrink: 0 }}
                 />
-                {item.label}
+                {!isCollapsed && item.label}
               </Link>
             );
           })}
