@@ -1,9 +1,12 @@
 import React from "react";
 import { Link } from "wouter";
-import { CheckCircle2, BookOpen, Clock, Users, ArrowRight, Star } from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import { subscriptions } from "../../data/dummy-cpns-data";
+import { useUser } from "@clerk/react";
 
 export function LandingPage() {
+  const { isSignedIn } = useUser();
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
       {/* Navbar */}
@@ -22,12 +25,20 @@ export function LandingPage() {
             <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
           </nav>
           <div className="flex gap-3">
-            <Link href="/login" className="px-4 py-2 text-sm font-medium text-primary hover:bg-slate-100 rounded-md transition-colors">
-              Masuk
-            </Link>
-            <Link href="/register" className="px-4 py-2 text-sm font-medium bg-primary text-white hover:bg-primary/90 rounded-md transition-colors shadow-sm">
-              Daftar Gratis
-            </Link>
+            {isSignedIn ? (
+              <Link href="/dashboard" className="px-4 py-2 text-sm font-semibold bg-primary text-white hover:bg-primary/90 rounded-md transition-colors shadow-sm">
+                Ke Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/sign-in" className="px-4 py-2 text-sm font-medium text-primary hover:bg-slate-100 rounded-md transition-colors">
+                  Masuk
+                </Link>
+                <Link href="/sign-up" className="px-4 py-2 text-sm font-medium bg-primary text-white hover:bg-primary/90 rounded-md transition-colors shadow-sm">
+                  Daftar Gratis
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -51,9 +62,15 @@ export function LandingPage() {
             pembahasan mendalam, dan analisis skor berbasis AI untuk memastikan Anda siap hadapi ujian sebenarnya.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-            <Link href="/register" className="h-12 px-8 flex items-center justify-center gap-2 bg-primary text-white text-base font-semibold rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl">
-              Mulai Tryout Gratis <ArrowRight size={18} />
-            </Link>
+            {isSignedIn ? (
+              <Link href="/dashboard" className="h-12 px-8 flex items-center justify-center gap-2 bg-primary text-white text-base font-semibold rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl">
+                Ke Dashboard <ArrowRight size={18} />
+              </Link>
+            ) : (
+              <Link href="/sign-up" className="h-12 px-8 flex items-center justify-center gap-2 bg-primary text-white text-base font-semibold rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl">
+                Mulai Tryout Gratis <ArrowRight size={18} />
+              </Link>
+            )}
             <a href="#harga" className="h-12 px-8 flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-200 text-base font-semibold rounded-lg hover:bg-slate-50 transition-all">
               Lihat Paket Premium
             </a>
@@ -124,7 +141,7 @@ export function LandingPage() {
                 </ul>
 
                 <Link 
-                  href="/register" 
+                  href={isSignedIn ? "/subscription" : "/sign-up"}
                   className={`
                     w-full h-12 flex items-center justify-center rounded-lg font-semibold transition-all
                     ${plan.name === 'Gold' 
@@ -132,7 +149,7 @@ export function LandingPage() {
                       : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}
                   `}
                 >
-                  Pilih Paket {plan.name}
+                  {isSignedIn ? `Pilih Paket ${plan.name}` : `Daftar & Pilih ${plan.name}`}
                 </Link>
               </div>
             ))}
@@ -157,7 +174,7 @@ export function LandingPage() {
             <ul className="space-y-2 text-sm">
               <li><a href="#" className="hover:text-white">Tryout CAT</a></li>
               <li><a href="#" className="hover:text-white">Bank Soal</a></li>
-              <li><a href="#" className="hover:text-white">Harga Paket</a></li>
+              <li><a href="#harga" className="hover:text-white">Harga Paket</a></li>
             </ul>
           </div>
           <div>

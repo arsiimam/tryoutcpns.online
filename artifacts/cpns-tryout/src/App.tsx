@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Route, Switch, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk } from "@clerk/react";
+import { ClerkProvider, AuthenticateWithRedirectCallback, useClerk } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 
@@ -11,8 +11,8 @@ import { PricingPage } from "./pages/public/PricingPage";
 import { FaqPage } from "./pages/public/FaqPage";
 import { ContactPage } from "./pages/public/ContactPage";
 
-import { LoginPage } from "./pages/auth/LoginPage";
-import { RegisterPage } from "./pages/auth/RegisterPage";
+import { SignInPage } from "./pages/auth/SignInPage";
+import { SignUpPage } from "./pages/auth/SignUpPage";
 import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
 
 import { ParticipantDashboard } from "./pages/participant/DashboardPage";
@@ -109,27 +109,12 @@ const clerkAppearance = {
   },
 };
 
-function SignInPage() {
+function SSOCallback() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4">
-      <SignIn
-        routing="path"
-        path={`${basePath}/sign-in`}
-        signUpUrl={`${basePath}/sign-up`}
-      />
-    </div>
-  );
-}
-
-function SignUpPage() {
-  return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4">
-      <SignUp
-        routing="path"
-        path={`${basePath}/sign-up`}
-        signInUrl={`${basePath}/sign-in`}
-      />
-    </div>
+    <AuthenticateWithRedirectCallback
+      signInForceRedirectUrl={`${basePath}/dashboard`}
+      signUpForceRedirectUrl={`${basePath}/dashboard`}
+    />
   );
 }
 
@@ -189,14 +174,16 @@ function Router() {
       <Route path="/faq" component={FaqPage} />
       <Route path="/contact" component={ContactPage} />
 
-      {/* Clerk Auth Routes — required for OAuth callbacks */}
-      <Route path="/sign-in/*?" component={SignInPage} />
-      <Route path="/sign-up/*?" component={SignUpPage} />
+      {/* Auth Routes */}
+      <Route path="/sign-in" component={SignInPage} />
+      <Route path="/sign-up" component={SignUpPage} />
+      <Route path="/sign-in/sso-callback" component={SSOCallback} />
+      <Route path="/sign-up/sso-callback" component={SSOCallback} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
 
-      {/* Legacy auth routes redirect to Clerk pages */}
+      {/* Legacy redirects */}
       <Route path="/login">{() => <Redirect to="/sign-in" />}</Route>
       <Route path="/register">{() => <Redirect to="/sign-up" />}</Route>
-      <Route path="/forgot-password" component={ForgotPasswordPage} />
 
       {/* Participant Routes — admin gets redirected to admin dashboard */}
       <Route path="/dashboard" component={DashboardGuard} />
@@ -239,6 +226,8 @@ function ClerkProviderWithRoutes() {
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
+      afterSignInUrl={`${basePath}/dashboard`}
+      afterSignUpUrl={`${basePath}/dashboard`}
       localization={{
         signIn: {
           start: {
