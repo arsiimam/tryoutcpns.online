@@ -22,16 +22,16 @@ export function BrandLogo({ variant = "light", size = "md" }: BrandLogoProps) {
   const isLight = variant === "light";
   const isSm = size === "sm";
 
-  const CYAN = "#00c8e8";
-  const NAVY = isLight ? "#0d1f6e" : "#ffffff";
+  const BLUE   = isLight ? "#4f5eea" : "#7c8ff5";
+  const NAVY   = isLight ? "#0f172a" : "#ffffff";
 
-  const tryoutFontSize = isSm ? 13 : 17;
-  const cpnsFontSize   = isSm ? 17 : 22;
-  const dotFontSize    = isSm ? 9  : 11;
-  const gap            = isSm ? 4  : 6;
-  const borderPx       = isSm ? 1.5 : 2;
-  const padX           = isSm ? [5, 9]  : [7, 13];
-  const padY           = isSm ? [2, 2]  : [3, 3];
+  const tryoutFontSize = isSm ? 11 : 14;
+  const cpnsFontSize   = isSm ? 14 : 18;
+  const dotFontSize    = isSm ? 8  : 9;
+  const gap            = isSm ? 3  : 4;
+  const borderPx       = isSm ? 1.5 : 1.5;
+  const padX           = isSm ? [4, 7]  : [5, 10];
+  const padY           = isSm ? [1, 1]  : [2, 2];
 
   return (
     <div
@@ -60,7 +60,7 @@ export function BrandLogo({ variant = "light", size = "md" }: BrandLogoProps) {
       {/* Capsule: CPNS + .online */}
       <div
         style={{
-          border: `${borderPx}px solid ${CYAN}`,
+          border: `${borderPx}px solid ${BLUE}`,
           borderRadius: "4px 999px 999px 4px",
           paddingLeft:  padX[0],
           paddingRight: padX[1],
@@ -77,7 +77,7 @@ export function BrandLogo({ variant = "light", size = "md" }: BrandLogoProps) {
             fontFamily: "'Inter', sans-serif",
             fontWeight: 800,
             fontSize: cpnsFontSize,
-            color: CYAN,
+            color: BLUE,
             letterSpacing: "0.04em",
             lineHeight: 1.1,
             textTransform: "uppercase",
@@ -90,7 +90,7 @@ export function BrandLogo({ variant = "light", size = "md" }: BrandLogoProps) {
             fontFamily: "'Inter', sans-serif",
             fontWeight: 600,
             fontSize: dotFontSize,
-            color: CYAN,
+            color: BLUE,
             letterSpacing: "0.06em",
             lineHeight: 1.2,
             opacity: 0.9,
