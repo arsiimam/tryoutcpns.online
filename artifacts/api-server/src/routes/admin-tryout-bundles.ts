@@ -35,7 +35,7 @@ async function syncCounts(tryoutId: number) {
 ═══════════════════════════════════════════════════════ */
 
 /* LIST */
-router.get("/api/admin/tryouts", async (_req, res) => {
+router.get("/admin/tryouts", async (_req, res) => {
   const bundles = await db.select().from(tryoutBundlesTable).orderBy(desc(tryoutBundlesTable.createdAt));
   // attach section summary per bundle
   const ids = bundles.map(b => b.id);
@@ -50,7 +50,7 @@ router.get("/api/admin/tryouts", async (_req, res) => {
 });
 
 /* CREATE EMPTY BUNDLE */
-router.post("/api/admin/tryouts", async (req, res) => {
+router.post("/admin/tryouts", async (req, res) => {
   const { name, description, category, durationMinutes, passingGrade, settings } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama tryout wajib diisi." });
   const [bundle] = await db.insert(tryoutBundlesTable).values({
@@ -64,7 +64,7 @@ router.post("/api/admin/tryouts", async (req, res) => {
 });
 
 /* GET SINGLE BUNDLE (with sections + questions) */
-router.get("/api/admin/tryouts/:id", async (req, res) => {
+router.get("/admin/tryouts/:id", async (req, res) => {
   const id = Number(req.params.id);
   const [bundle] = await db.select().from(tryoutBundlesTable).where(eq(tryoutBundlesTable.id, id));
   if (!bundle) return res.status(404).json({ error: "Bundle tryout tidak ditemukan." });
@@ -80,7 +80,7 @@ router.get("/api/admin/tryouts/:id", async (req, res) => {
 });
 
 /* UPDATE BUNDLE METADATA */
-router.put("/api/admin/tryouts/:id", async (req, res) => {
+router.put("/admin/tryouts/:id", async (req, res) => {
   const id = Number(req.params.id);
   const { name, description, category, durationMinutes, passingGrade, settings } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama tryout wajib diisi." });
@@ -96,7 +96,7 @@ router.put("/api/admin/tryouts/:id", async (req, res) => {
 });
 
 /* TOGGLE STATUS */
-router.put("/api/admin/tryouts/:id/status", async (req, res) => {
+router.put("/admin/tryouts/:id/status", async (req, res) => {
   const id = Number(req.params.id);
   const { status } = req.body;
   if (!["draft", "published"].includes(status))
@@ -109,7 +109,7 @@ router.put("/api/admin/tryouts/:id/status", async (req, res) => {
 });
 
 /* DUPLICATE BUNDLE */
-router.post("/api/admin/tryouts/:id/duplicate", async (req, res) => {
+router.post("/admin/tryouts/:id/duplicate", async (req, res) => {
   const id = Number(req.params.id);
   const [original] = await db.select().from(tryoutBundlesTable).where(eq(tryoutBundlesTable.id, id));
   if (!original) return res.status(404).json({ error: "Bundle tidak ditemukan." });
@@ -161,7 +161,7 @@ router.post("/api/admin/tryouts/:id/duplicate", async (req, res) => {
 });
 
 /* DELETE BUNDLE */
-router.delete("/api/admin/tryouts/:id", async (req, res) => {
+router.delete("/admin/tryouts/:id", async (req, res) => {
   const id = Number(req.params.id);
   const [bundle] = await db.delete(tryoutBundlesTable).where(eq(tryoutBundlesTable.id, id)).returning();
   if (!bundle) return res.status(404).json({ error: "Bundle tidak ditemukan." });
@@ -171,7 +171,7 @@ router.delete("/api/admin/tryouts/:id", async (req, res) => {
 /* ═══════════════════════════════════════════════════════
    PREVIEW IMPORT (no DB write)
 ═══════════════════════════════════════════════════════ */
-router.post("/api/admin/tryouts/preview", async (req, res) => {
+router.post("/admin/tryouts/preview", async (req, res) => {
   const { content, format = "json" } = req.body;
   if (!content) return res.status(400).json({ error: "Konten file diperlukan." });
   try {
@@ -203,7 +203,7 @@ router.post("/api/admin/tryouts/preview", async (req, res) => {
 /* ═══════════════════════════════════════════════════════
    IMPORT (parse + save)
 ═══════════════════════════════════════════════════════ */
-router.post("/api/admin/tryouts/import", async (req, res) => {
+router.post("/admin/tryouts/import", async (req, res) => {
   const { content, format = "json" } = req.body;
   if (!content) return res.status(400).json({ error: "Konten file diperlukan." });
 
@@ -260,7 +260,7 @@ router.post("/api/admin/tryouts/import", async (req, res) => {
 /* ═══════════════════════════════════════════════════════
    EXPORT
 ═══════════════════════════════════════════════════════ */
-router.get("/api/admin/tryouts/:id/export", async (req, res) => {
+router.get("/admin/tryouts/:id/export", async (req, res) => {
   const id     = Number(req.params.id);
   const format = (req.query.format as string) ?? "json";
 

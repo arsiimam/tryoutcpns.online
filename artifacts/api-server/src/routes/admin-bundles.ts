@@ -28,7 +28,7 @@ function syncCount(bundleId: number) {
 ══════════════════════════════════════════════════════════ */
 
 /* LIST */
-router.get("/api/admin/bundles", async (_req, res) => {
+router.get("/admin/bundles", async (_req, res) => {
   const bundles = await db
     .select()
     .from(questionBundlesTable)
@@ -37,7 +37,7 @@ router.get("/api/admin/bundles", async (_req, res) => {
 });
 
 /* CREATE EMPTY BUNDLE */
-router.post("/api/admin/bundles", async (req, res) => {
+router.post("/admin/bundles", async (req, res) => {
   const { name, description, category } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama bundle wajib diisi." });
   const [bundle] = await db
@@ -48,7 +48,7 @@ router.post("/api/admin/bundles", async (req, res) => {
 });
 
 /* ── Preview import (parse only, no DB write) ─────────────── */
-router.post("/api/admin/bundles/preview", async (req, res) => {
+router.post("/admin/bundles/preview", async (req, res) => {
   const { content, format = "json" } = req.body;
   if (!content) return res.status(400).json({ error: "Konten file diperlukan." });
 
@@ -74,7 +74,7 @@ router.post("/api/admin/bundles/preview", async (req, res) => {
 });
 
 /* ── Import bundle (parse + save) ────────────────────────── */
-router.post("/api/admin/bundles/import", async (req, res) => {
+router.post("/admin/bundles/import", async (req, res) => {
   const { content, format = "json" } = req.body;
   if (!content) return res.status(400).json({ error: "Konten file diperlukan." });
 
@@ -117,7 +117,7 @@ router.post("/api/admin/bundles/import", async (req, res) => {
 });
 
 /* GET SINGLE BUNDLE */
-router.get("/api/admin/bundles/:id", async (req, res) => {
+router.get("/admin/bundles/:id", async (req, res) => {
   const id = Number(req.params.id);
   const [bundle] = await db.select().from(questionBundlesTable).where(eq(questionBundlesTable.id, id));
   if (!bundle) return res.status(404).json({ error: "Bundle tidak ditemukan." });
@@ -125,7 +125,7 @@ router.get("/api/admin/bundles/:id", async (req, res) => {
 });
 
 /* UPDATE BUNDLE METADATA */
-router.put("/api/admin/bundles/:id", async (req, res) => {
+router.put("/admin/bundles/:id", async (req, res) => {
   const id = Number(req.params.id);
   const { name, description, category } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama bundle wajib diisi." });
@@ -139,7 +139,7 @@ router.put("/api/admin/bundles/:id", async (req, res) => {
 });
 
 /* TOGGLE STATUS */
-router.put("/api/admin/bundles/:id/status", async (req, res) => {
+router.put("/admin/bundles/:id/status", async (req, res) => {
   const id = Number(req.params.id);
   const { status } = req.body;
   if (!["draft", "published"].includes(status))
@@ -154,7 +154,7 @@ router.put("/api/admin/bundles/:id/status", async (req, res) => {
 });
 
 /* DELETE BUNDLE */
-router.delete("/api/admin/bundles/:id", async (req, res) => {
+router.delete("/admin/bundles/:id", async (req, res) => {
   const id = Number(req.params.id);
   const [bundle] = await db
     .delete(questionBundlesTable)
@@ -169,7 +169,7 @@ router.delete("/api/admin/bundles/:id", async (req, res) => {
 ══════════════════════════════════════════════════════════ */
 
 /* LIST QUESTIONS IN BUNDLE */
-router.get("/api/admin/bundles/:id/questions", async (req, res) => {
+router.get("/admin/bundles/:id/questions", async (req, res) => {
   const bundleId = Number(req.params.id);
   const questions = await db
     .select()
@@ -180,7 +180,7 @@ router.get("/api/admin/bundles/:id/questions", async (req, res) => {
 });
 
 /* DELETE A QUESTION */
-router.delete("/api/admin/bundles/:id/questions/:qid", async (req, res) => {
+router.delete("/admin/bundles/:id/questions/:qid", async (req, res) => {
   const bundleId = Number(req.params.id);
   const qid      = Number(req.params.qid);
   await db.delete(questionsTable).where(eq(questionsTable.id, qid));
@@ -192,7 +192,7 @@ router.delete("/api/admin/bundles/:id/questions/:qid", async (req, res) => {
    EXPORT
 ══════════════════════════════════════════════════════════ */
 
-router.get("/api/admin/bundles/:id/export", async (req, res) => {
+router.get("/admin/bundles/:id/export", async (req, res) => {
   const id     = Number(req.params.id);
   const format = (req.query.format as string) ?? "json";
 
