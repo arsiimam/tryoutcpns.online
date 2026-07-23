@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHash } from "node:crypto";
 import { db } from "@workspace/db";
 import { appSettingsTable } from "@workspace/db";
 import { inArray } from "drizzle-orm";
@@ -73,9 +73,9 @@ function getBaseUrl(env: "sandbox" | "production"): string {
   return env === "production" ? DUITKU_PRODUCTION_BASE : DUITKU_SANDBOX_BASE;
 }
 
-/** HMAC-SHA256 — current Duitku signature algorithm */
-function hmacSha256(str: string, secret: string): string {
-  return createHmac("sha256", secret).update(str).digest("hex");
+/** MD5 — Duitku signature algorithm (apiKey is concatenated into the string) */
+function md5(str: string): string {
+  return createHash("md5").update(str).digest("hex");
 }
 
 /** Format a Date as "YYYY-MM-DD HH:mm:ss" in local time (as Duitku expects) */
@@ -124,7 +124,7 @@ export async function createInvoice(
 
   const baseUrl   = getBaseUrl(cfg.environment);
   const datetime  = formatDatetime(new Date());
-  const signature = hmacSha256(cfg.merchantCode + params.paymentAmount + datetime, cfg.apiKey);
+  const signature = md5(cfg.merchantCode + params.paymentAmount + datetime + cfg.apiKey);
 
   const maskedKey = cfg.apiKey.slice(0, 4) + "****" + cfg.apiKey.slice(-4);
   console.log("[duitku] env:", cfg.environment, "| merchantCode:", cfg.merchantCode);
@@ -176,7 +176,7 @@ export async function checkTransaction(
   if (!cfg.merchantCode) throw new Error("Duitku Merchant Code belum dikonfigurasi.");
   if (!cfg.apiKey)       throw new Error("Duitku API Key belum dikonfigurasi.");
 
-  const signature = hmacSha256(cfg.merchantCode + merchantOrderId + amount, cfg.apiKey);
+  const signature = md5(cfg.merchantCode + merchantOrderId + amount + cfg.apiKey);
   const res = await fetch(`${getBaseUrl(cfg.environment)}/transactionStatus`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -192,7 +192,7 @@ export async function verifyCallback(data: Record<string, string>): Promise<bool
   try {
     const cfg = await getDuitkuConfig();
     if (!cfg.merchantCode || !cfg.apiKey) return false;
-    const expected = hmacSha256(cfg.merchantCode + data.amount + data.merchantOrderId, cfg.apiKey);
+    const expected = md5(cfg.merchantCode + data.amount + data.merchantOrderId + cfg.apiKey);
     return data.signature === expected;
   } catch {
     return false;
