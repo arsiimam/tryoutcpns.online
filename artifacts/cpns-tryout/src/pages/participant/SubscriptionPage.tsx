@@ -2,8 +2,19 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader, StatusBadge } from "../../components/ui/shared";
-import { dummyApi, SubscriptionInfo } from "../../lib/dummy-api";
-import { Subscription, Payment } from "../../data/dummy-cpns-data";
+/* ── Real-API types ── */
+interface ActiveSub {
+  id: string; planId: string; planName: string;
+  status: string; startedAt: string; expiresAt: string; daysLeft: number;
+}
+interface Plan {
+  id: string; name: string; price: number; originalPrice: number;
+  durationDays: number; benefits: string[]; colorTag: string;
+}
+interface Transaction {
+  id: string; merchantOrderId: string; planId: string; planName: string;
+  amount: number; status: string; paymentMethod: string | null; createdAt: string;
+}
 import { useAuth } from "../../lib/auth-context";
 import {
   CheckCircle2,
@@ -81,9 +92,9 @@ export function SubscriptionPage() {
   const { user } = useAuth();
   const [location] = useLocation();
 
-  const [activeSub, setActiveSub] = useState<SubscriptionInfo | null>(null);
-  const [plans, setPlans]         = useState<Subscription[]>([]);
-  const [payments, setPayments]   = useState<Payment[]>([]);
+  const [activeSub, setActiveSub] = useState<ActiveSub | null>(null);
+  const [plans, setPlans]         = useState<Plan[]>([]);
+  const [payments, setPayments]   = useState<Transaction[]>([]);
   const [loading, setLoading]     = useState(true);
 
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null);
@@ -104,19 +115,24 @@ export function SubscriptionPage() {
   const [verifying, setVerifying]         = useState(false);
   const [verifyResult, setVerifyResult]   = useState<{ statusCode: string; statusMessage: string } | null>(null);
 
-  /* Load data */
+  /* Load data from real APIs */
   useEffect(() => {
     async function load() {
       if (!user) return;
-      const [sub, allPlans, pays] = await Promise.all([
-        dummyApi.getUserSubscription(user.id),
-        dummyApi.getSubscriptions(),
-        dummyApi.getPayments(user.id),
-      ]);
-      setActiveSub(sub);
-      setPlans(allPlans);
-      setPayments(pays);
-      setLoading(false);
+      try {
+        const [subRes, plansRes, txRes] = await Promise.all([
+          fetch("/api/participant/subscription", { credentials: "include" }).then((r) => r.json()),
+          fetch("/api/plans").then((r) => r.json()),
+          fetch("/api/participant/transactions", { credentials: "include" }).then((r) => r.json()),
+        ]);
+        setActiveSub(subRes.subscription ?? null);
+        setPlans(plansRes.plans ?? []);
+        setPayments(txRes.transactions ?? []);
+      } catch {
+        /* silent — states stay empty */
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [user]);
@@ -151,16 +167,11 @@ export function SubscriptionPage() {
     }
   }, [location]);
 
-  /* Apply coupon */
+  /* Apply coupon — placeholder until coupon API is implemented */
   const handleApplyCoupon = async () => {
     if (!selectedPlan || !couponCode.trim()) return;
-    const res = await dummyApi.validateCoupon(couponCode, selectedPlan.id);
-    if (res.valid) {
-      setDiscount(res.discount);
-    } else {
-      setDiscount(0);
-      setCheckoutError(res.message);
-    }
+    setDiscount(0);
+    setCheckoutError("Sistem kupon belum tersedia. Silakan lanjutkan tanpa kupon.");
   };
 
   /* Checkout — create Duitku invoice then redirect */
@@ -201,7 +212,7 @@ export function SubscriptionPage() {
     }
   };
 
-  const openCheckout = (plan: Subscription) => {
+  const openCheckout = (plan: Plan) => {
     setSelectedPlan(plan);
     setSelectedMethod("");
     setCouponCode("");
@@ -284,7 +295,7 @@ export function SubscriptionPage() {
             </div>
             <div>
               <div className="mb-1 text-xs font-medium uppercase tracking-wider text-white/80">Paket Aktif</div>
-              <h2 className="text-3xl font-bold">{activeSub.name}</h2>
+              <h2 className="text-3xl font-bold">{activeSub.planName}</h2>
             </div>
           </div>
           <div className="w-full rounded-xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm md:w-1/3">
@@ -292,9 +303,17 @@ export function SubscriptionPage() {
               <span className="text-white/80">Sisa masa aktif</span>
               <span className="font-bold text-amber-400">{activeSub.daysLeft} Hari</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
-              <div className="h-full rounded-full bg-amber-400" style={{ width: "45%" }} />
-            </div>
+            {(() => {
+              const total = Math.max(1, Math.round(
+                (new Date(activeSub.expiresAt).getTime() - new Date(activeSub.startedAt).getTime()) / 86400000
+              ));
+              const pct = Math.min(100, Math.round((activeSub.daysLeft / total) * 100));
+              return (
+                <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
+                  <div className="h-full rounded-full bg-amber-400" style={{ width: `${pct}%` }} />
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -304,7 +323,7 @@ export function SubscriptionPage() {
         <h3 className="mb-6 text-xl font-bold text-slate-900">Pilih Paket Belajar</h3>
         <div className="grid gap-6 md:grid-cols-3">
           {plans.map((plan) => {
-            const isCurrent = activeSub?.id === plan.id;
+            const isCurrent = activeSub?.planId === plan.id;
             return (
               <div
                 key={plan.id}
@@ -323,7 +342,7 @@ export function SubscriptionPage() {
                   <div className="text-3xl font-black text-slate-900">
                     {plan.price === 0 ? "Gratis" : `Rp ${fmt(plan.price)}`}
                   </div>
-                  {plan.price > 0 && <div className="text-sm text-slate-500">/{plan.duration} hari</div>}
+                  {plan.price > 0 && <div className="text-sm text-slate-500">/{plan.durationDays} hari</div>}
                 </div>
                 <ul className="mb-6 flex-1 space-y-3 text-sm">
                   {plan.benefits.map((b, i) => (
@@ -380,11 +399,11 @@ export function SubscriptionPage() {
               ) : (
                 payments.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.invoiceNo}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.merchantOrderId}</td>
                     <td className="px-4 py-3 text-slate-600">{new Date(p.createdAt).toLocaleDateString("id-ID")}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{p.subscriptionId}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800">{p.planName}</td>
                     <td className="px-4 py-3 font-semibold text-slate-800">Rp {fmt(p.amount)}</td>
-                    <td className="px-4 py-3 text-slate-600">{p.method}</td>
+                    <td className="px-4 py-3 text-slate-600">{p.paymentMethod ?? "—"}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={p.status} />
                     </td>

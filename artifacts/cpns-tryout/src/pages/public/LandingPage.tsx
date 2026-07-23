@@ -62,6 +62,19 @@ function scrollTo(id: string) {
 /* ------------------------------------------------------------------ */
 /* Main component                                                      */
 /* ------------------------------------------------------------------ */
+interface ApiPlan {
+  id: string; name: string; price: number; originalPrice: number;
+  durationDays: number; benefits: string[]; colorTag: string;
+}
+
+function colorToClass(tag: string, price: number) {
+  if (price === 0) return { tagClass: "", btnClass: "dark" };
+  if (tag === "gold") return { tagClass: "purple", btnClass: "purple" };
+  if (tag === "emerald") return { tagClass: "blue", btnClass: "blue" };
+  if (tag === "blue") return { tagClass: "blue", btnClass: "blue" };
+  return { tagClass: "", btnClass: "dark" };
+}
+
 export function LandingPage() {
   const { user } = useAuth();
   const isSignedIn = !!user;
@@ -70,8 +83,17 @@ export function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [selectedOpt, setSelectedOpt] = useState<string>("B");
+  const [apiPlans, setApiPlans] = useState<ApiPlan[]>([]);
 
   const timer = useCountdown(45 * 60 + 23);
+
+  /* Load plans from API */
+  useEffect(() => {
+    fetch("/api/plans")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.plans?.length) setApiPlans(d.plans); })
+      .catch(() => {/* keep hardcoded fallback */});
+  }, []);
 
   function closeMobile() { setMobileOpen(false); }
   function toggleFaq(i: number) { setOpenFaq(p => (p === i ? null : i)); }
@@ -118,54 +140,40 @@ export function LandingPage() {
     },
   ];
 
-  /* ---- Price plans ---- */
-  const plans = [
-    {
-      tag: "Paket Gratis",
-      tagClass: "",
-      price: "Gratis",
-      period: "Selamanya",
-      features: ["Akses 1 tryout gratis", "Bank soal TWK (terbatas)", "Hasil & skor dasar"],
-      btnClass: "dark",
-      btnLabel: "Mulai Gratis",
-      popular: false,
-      href: "/sign-up",
-    },
-    {
-      tag: "Paket Bulanan",
-      tagClass: "blue",
-      price: "Rp 49.000",
-      period: "30 hari",
-      features: [
-        "Semua tryout terbuka",
-        "Bank soal lengkap TWK/TIU/TKP",
-        "Review & pembahasan",
-        "Analisis skor mendalam",
-        "Ranking nasional",
-      ],
-      btnClass: "blue",
-      btnLabel: "Pilih Paket",
-      popular: true,
-      href: isSignedIn ? "/subscription" : "/sign-up",
-    },
-    {
-      tag: "Paket Premium",
-      tagClass: "purple",
-      price: "Rp 149.000",
-      period: "90 hari",
-      features: [
-        "Semua fitur Paket Bulanan",
-        "Tryout eksklusif tiap minggu",
-        "Konsultasi mentor privat",
-        "Video pembahasan",
-        "Garansi lulus",
-      ],
-      btnClass: "purple",
-      btnLabel: "Pilih Paket",
-      popular: false,
-      href: isSignedIn ? "/subscription" : "/sign-up",
-    },
-  ];
+  /* ---- Price plans — from API if available, else hardcoded fallback ---- */
+  const plans = apiPlans.length > 0
+    ? apiPlans.map((p, i) => {
+        const { tagClass, btnClass } = colorToClass(p.colorTag, p.price);
+        const isPopular = apiPlans.length >= 3 ? i === 1 : p.colorTag === "blue";
+        return {
+          tag:      p.name,
+          tagClass,
+          price:    p.price === 0 ? "Gratis" : `Rp ${new Intl.NumberFormat("id-ID").format(p.price)}`,
+          period:   p.price === 0 ? "Selamanya" : `${p.durationDays} hari`,
+          features: p.benefits.length ? p.benefits : ["Akses fitur lengkap"],
+          btnClass,
+          btnLabel: p.price === 0 ? "Mulai Gratis" : "Pilih Paket",
+          popular:  isPopular,
+          href:     p.price === 0 ? "/sign-up" : isSignedIn ? "/subscription" : "/sign-up",
+        };
+      })
+    : [
+        {
+          tag: "Paket Gratis", tagClass: "", price: "Gratis", period: "Selamanya",
+          features: ["Akses 1 tryout gratis", "Bank soal TWK (terbatas)", "Hasil & skor dasar"],
+          btnClass: "dark", btnLabel: "Mulai Gratis", popular: false, href: "/sign-up",
+        },
+        {
+          tag: "Paket Bulanan", tagClass: "blue", price: "Rp 49.000", period: "30 hari",
+          features: ["Semua tryout terbuka", "Bank soal lengkap TWK/TIU/TKP", "Review & pembahasan", "Analisis skor mendalam", "Ranking nasional"],
+          btnClass: "blue", btnLabel: "Pilih Paket", popular: true, href: isSignedIn ? "/subscription" : "/sign-up",
+        },
+        {
+          tag: "Paket Premium", tagClass: "purple", price: "Rp 149.000", period: "90 hari",
+          features: ["Semua fitur Paket Bulanan", "Tryout eksklusif tiap minggu", "Konsultasi mentor privat", "Video pembahasan", "Garansi lulus"],
+          btnClass: "purple", btnLabel: "Pilih Paket", popular: false, href: isSignedIn ? "/subscription" : "/sign-up",
+        },
+      ];
 
   /* ---- Hero card options ---- */
   const options = [

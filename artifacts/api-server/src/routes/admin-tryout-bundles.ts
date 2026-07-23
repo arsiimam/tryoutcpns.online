@@ -2,6 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 import { db } from "@workspace/db";
 import { tryoutBundlesTable, tryoutSectionsTable, tryoutQuestionsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
+import { importLimiter } from "../lib/rate-limit";
 
 const router = Router();
 
@@ -168,10 +169,23 @@ router.delete("/admin/tryouts/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+/* DELETE QUESTION from a tryout */
+router.delete("/admin/tryouts/:id/questions/:qid", async (req, res) => {
+  const tryoutId = Number(req.params.id);
+  const qid      = Number(req.params.qid);
+  const [q] = await db
+    .delete(tryoutQuestionsTable)
+    .where(eq(tryoutQuestionsTable.id, qid))
+    .returning();
+  if (!q) return res.status(404).json({ error: "Soal tidak ditemukan." });
+  await syncCounts(tryoutId);
+  res.json({ success: true });
+});
+
 /* ═══════════════════════════════════════════════════════
    PREVIEW IMPORT (no DB write)
 ═══════════════════════════════════════════════════════ */
-router.post("/admin/tryouts/preview", async (req, res) => {
+router.post("/admin/tryouts/preview", importLimiter, async (req, res) => {
   const { content, format = "json" } = req.body;
   if (!content) return res.status(400).json({ error: "Konten file diperlukan." });
   try {
@@ -203,7 +217,7 @@ router.post("/admin/tryouts/preview", async (req, res) => {
 /* ═══════════════════════════════════════════════════════
    IMPORT (parse + save)
 ═══════════════════════════════════════════════════════ */
-router.post("/admin/tryouts/import", async (req, res) => {
+router.post("/admin/tryouts/import", importLimiter, async (req, res) => {
   const { content, format = "json" } = req.body;
   if (!content) return res.status(400).json({ error: "Konten file diperlukan." });
 

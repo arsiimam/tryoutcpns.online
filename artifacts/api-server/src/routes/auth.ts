@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
 import { usersTable, appSettingsTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
+import { authLimiter } from "../lib/rate-limit";
 
 const router = Router();
 
@@ -73,7 +74,7 @@ function userPayload(u: typeof usersTable.$inferSelect) {
 /* ------------------------------------------------------------------ */
 /* POST /api/auth/register                                             */
 /* ------------------------------------------------------------------ */
-router.post("/auth/register", async (req, res) => {
+router.post("/auth/register", authLimiter, async (req, res) => {
   const { fullName, email, password } = req.body as Record<string, string>;
 
   if (!fullName?.trim() || !email?.trim() || !password) {
@@ -115,7 +116,7 @@ router.post("/auth/register", async (req, res) => {
 /* ------------------------------------------------------------------ */
 /* POST /api/auth/login                                                */
 /* ------------------------------------------------------------------ */
-router.post("/auth/login", async (req, res) => {
+router.post("/auth/login", authLimiter, async (req, res) => {
   const { email, password } = req.body as Record<string, string>;
 
   if (!email?.trim() || !password) {

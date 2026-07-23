@@ -2,6 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 import { db } from "@workspace/db";
 import { questionBundlesTable, questionsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
+import { importLimiter } from "../lib/rate-limit";
 
 const router = Router();
 
@@ -48,7 +49,7 @@ router.post("/admin/bundles", async (req, res) => {
 });
 
 /* ── Preview import (parse only, no DB write) ─────────────── */
-router.post("/admin/bundles/preview", async (req, res) => {
+router.post("/admin/bundles/preview", importLimiter, async (req, res) => {
   const { content, format = "json" } = req.body;
   if (!content) return res.status(400).json({ error: "Konten file diperlukan." });
 
@@ -74,7 +75,7 @@ router.post("/admin/bundles/preview", async (req, res) => {
 });
 
 /* ── Import bundle (parse + save) ────────────────────────── */
-router.post("/admin/bundles/import", async (req, res) => {
+router.post("/admin/bundles/import", importLimiter, async (req, res) => {
   const { content, format = "json" } = req.body;
   if (!content) return res.status(400).json({ error: "Konten file diperlukan." });
 

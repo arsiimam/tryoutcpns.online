@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { AdminLayout } from "../../components/layouts/AdminLayout";
 import { PageHeader } from "../../components/ui/shared";
-import { Search, Eye, Crown, RefreshCw } from "lucide-react";
+import { Search, Eye, Crown, RefreshCw, Plus, Loader2, AlertTriangle } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 
 /* ------------------------------------------------------------------ */
@@ -90,6 +90,8 @@ function RoleBadge({ role }: { role: string }) {
   );
 }
 
+interface Plan { id: string; name: string; durationDays: number; price: number; }
+
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
@@ -99,9 +101,18 @@ export function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
+  /* ── Grant subscription state ── */
+  const [grantUser, setGrantUser] = useState<AdminUser | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [grantPlanId, setGrantPlanId] = useState("");
+  const [grantDays, setGrantDays] = useState(30);
+  const [grantSaving, setGrantSaving] = useState(false);
+  const [grantError, setGrantError] = useState("");
+  const [grantOk, setGrantOk] = useState(false);
+
   function load() {
     setLoading(true);
-    fetch("/api/admin/users")
+    fetch("/api/admin/users", { credentials: "include" })
       .then((r) => r.json())
       .then((data: { users: AdminUser[] }) => {
         setUsers(data.users ?? []);
@@ -110,7 +121,48 @@ export function AdminUsersPage() {
       .catch(() => setLoading(false));
   }
 
+  /* Load plans for grant modal */
+  useEffect(() => {
+    fetch("/api/plans")
+      .then((r) => r.json())
+      .then((d) => setPlans((d.plans ?? []).filter((p: Plan) => p.price > 0)))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => { load(); }, []);
+
+  function openGrant(u: AdminUser) {
+    setGrantUser(u);
+    setGrantPlanId(plans[0]?.id ?? "");
+    setGrantDays(plans[0]?.durationDays ?? 30);
+    setGrantError("");
+    setGrantOk(false);
+    setGrantSaving(false);
+  }
+
+  async function handleGrant() {
+    if (!grantUser || !grantPlanId) return;
+    const plan = plans.find((p) => p.id === grantPlanId);
+    if (!plan) return;
+    setGrantSaving(true);
+    setGrantError("");
+    try {
+      const r = await fetch(`/api/admin/users/${grantUser.id}/subscription`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId: plan.id, planName: plan.name, durationDays: grantDays }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error ?? "Gagal memberi langganan.");
+      setGrantOk(true);
+      load(); // refresh user list
+    } catch (e: any) {
+      setGrantError(e.message);
+    } finally {
+      setGrantSaving(false);
+    }
+  }
 
   const filtered = users.filter(
     (u) =>
@@ -248,13 +300,22 @@ export function AdminUsersPage() {
 
                         {/* Action */}
                         <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => setSelectedUser(u)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                            title="Lihat detail"
-                          >
-                            <Eye size={16} />
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => openGrant(u)}
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                              title="Beri Langganan"
+                            >
+                              <Plus size={16} />
+                            </button>
+                            <button
+                              onClick={() => setSelectedUser(u)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              title="Lihat detail"
+                            >
+                              <Eye size={16} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -331,6 +392,95 @@ export function AdminUsersPage() {
                     </button>
                   </Dialog.Close>
                 </div>
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+      {/* ── Grant Subscription Modal ── */}
+      <Dialog.Root open={!!grantUser} onOpenChange={(open) => !open && setGrantUser(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl p-6 w-[90vw] max-w-sm z-50">
+            {grantUser && (
+              <>
+                <Dialog.Title className="text-lg font-bold mb-1 text-slate-800">
+                  Beri Langganan
+                </Dialog.Title>
+                <p className="text-sm text-slate-500 mb-5">
+                  Pengguna: <span className="font-semibold text-slate-700">{grantUser.fullName}</span>
+                </p>
+
+                {grantOk ? (
+                  <div className="flex flex-col items-center gap-3 py-4 text-center">
+                    <Crown size={36} className="text-amber-500" />
+                    <p className="font-semibold text-emerald-700">Langganan berhasil diberikan!</p>
+                    <Dialog.Close asChild>
+                      <button className="mt-2 px-4 py-2 bg-primary text-white rounded-lg font-medium text-sm">
+                        Tutup
+                      </button>
+                    </Dialog.Close>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-4 mb-5">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Paket</label>
+                        {plans.length === 0 ? (
+                          <p className="text-sm text-slate-400">Belum ada paket aktif. Buat paket di menu Langganan.</p>
+                        ) : (
+                          <select
+                            value={grantPlanId}
+                            onChange={(e) => {
+                              setGrantPlanId(e.target.value);
+                              const p = plans.find((pl) => pl.id === e.target.value);
+                              if (p) setGrantDays(p.durationDays);
+                            }}
+                            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                          >
+                            {plans.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Durasi (hari)
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={3650}
+                          value={grantDays}
+                          onChange={(e) => setGrantDays(Number(e.target.value))}
+                          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        />
+                      </div>
+                    </div>
+
+                    {grantError && (
+                      <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 mb-4">
+                        <AlertTriangle size={14} /> {grantError}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Dialog.Close asChild>
+                        <button className="flex-1 py-2 border rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+                          Batal
+                        </button>
+                      </Dialog.Close>
+                      <button
+                        onClick={handleGrant}
+                        disabled={grantSaving || plans.length === 0}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-primary text-white rounded-lg text-sm font-semibold disabled:opacity-50"
+                      >
+                        {grantSaving ? <><Loader2 size={14} className="animate-spin" /> Menyimpan…</> : "Beri Langganan"}
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </Dialog.Content>

@@ -11,6 +11,7 @@ import {
   paymentTransactionsTable,
   userSubscriptionsTable,
   usersTable,
+  subscriptionPlansTable,
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
@@ -140,10 +141,19 @@ router.post("/payment/callback", async (req, res) => {
       .returning();
 
     if (isSuccess && tx?.userId) {
-      // Activate subscription for the user
-      // Look up plan duration from subscription_plans, fallback to 30 days
-      const now      = new Date();
-      const expires  = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      // Look up plan duration from subscription_plans; fallback 30 days
+      let durationDays = 30;
+      try {
+        const [plan] = await db
+          .select({ durationDays: subscriptionPlansTable.durationDays })
+          .from(subscriptionPlansTable)
+          .where(eq(subscriptionPlansTable.id, tx.planId))
+          .limit(1);
+        if (plan?.durationDays) durationDays = plan.durationDays;
+      } catch { /* keep default */ }
+
+      const now     = new Date();
+      const expires = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
       await db.insert(userSubscriptionsTable).values({
         userId:    tx.userId,
         planId:    tx.planId,
@@ -152,7 +162,7 @@ router.post("/payment/callback", async (req, res) => {
         startedAt: now,
         expiresAt: expires,
       });
-      logger.info({ merchantOrderId, userId: tx.userId, planId: tx.planId }, "Subscription activated");
+      logger.info({ merchantOrderId, userId: tx.userId, planId: tx.planId, durationDays }, "Subscription activated");
     }
 
     logger.info({ merchantOrderId, resultCode, newStatus }, "Payment callback processed");

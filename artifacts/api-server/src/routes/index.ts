@@ -8,12 +8,16 @@ import adminTxRouter       from "./admin-transactions";
 import adminCmsRouter      from "./admin-cms";
 import adminBundlesRouter       from "./admin-bundles";
 import adminTryoutBundlesRouter from "./admin-tryout-bundles";
+import publicPlansRouter   from "./public-plans";
+import participantRouter   from "./participant";
 
 const router: IRouter = Router();
 
 router.use(authRouter);
 router.use(healthRouter);
 router.use(paymentRouter);
+router.use(publicPlansRouter);
+router.use(participantRouter);
 router.use(adminRouter);
 router.use(adminPlansRouter);
 router.use(adminTxRouter);
