@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader, StatusBadge } from "../../components/ui/shared";
-import { dummyApi } from "../../lib/dummy-api";
-import { Tryout } from "../../data/dummy-cpns-data";
+interface Tryout {
+  id: string; title: string; description: string; duration: number;
+  composition: { TWK: number; TIU: number; TKP: number };
+  passingScore: { total: number; TWK: number; TIU: number; TKP: number };
+  isAccessibleFree: boolean; status: string; schedule?: string;
+}
 import { Link, useLocation } from "wouter";
 import { Clock, FileText, Target, PlayCircle, Lock } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
@@ -15,14 +19,19 @@ export function TryoutListPage() {
 
   useEffect(() => {
     async function load() {
-      const data = await dummyApi.getTryouts("published");
-      setTryouts(data);
-      setLoading(false);
+      if (!user) return;
+      try {
+        const data = await fetch("/api/participant/tryouts", { credentials: "include" }).then(r => r.json());
+        setTryouts(data.tryouts ?? []);
+      } catch { } finally { setLoading(false); }
     }
     load();
-  }, []);
+  }, [user]);
 
-  const hasPremium = user?.subscriptionId === "sub-2" || user?.subscriptionId === "sub-3";
+  const hasPremium = !!(
+    user?.subscription?.status === "active" &&
+    new Date(user?.subscription?.expiresAt ?? 0) > new Date()
+  );
 
   if (loading) {
     return (

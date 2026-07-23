@@ -52,13 +52,14 @@ router.get("/admin/tryouts", async (_req, res) => {
 
 /* CREATE EMPTY BUNDLE */
 router.post("/admin/tryouts", async (req, res) => {
-  const { name, description, category, durationMinutes, passingGrade, settings } = req.body;
+  const { name, description, category, durationMinutes, passingGrade, settings, isFree } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama tryout wajib diisi." });
   const [bundle] = await db.insert(tryoutBundlesTable).values({
     name: name.trim(), description, category,
     durationMinutes: durationMinutes ?? 100,
     passingGrade: passingGrade ?? 0,
     settings: settings ?? null,
+    isFree: isFree ?? false,
     status: "draft",
   }).returning();
   res.status(201).json({ ...bundle, sections: [] });
@@ -83,13 +84,14 @@ router.get("/admin/tryouts/:id", async (req, res) => {
 /* UPDATE BUNDLE METADATA */
 router.put("/admin/tryouts/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { name, description, category, durationMinutes, passingGrade, settings } = req.body;
+  const { name, description, category, durationMinutes, passingGrade, settings, isFree } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama tryout wajib diisi." });
   const [bundle] = await db.update(tryoutBundlesTable).set({
     name: name.trim(), description, category,
     durationMinutes: durationMinutes ?? 100,
     passingGrade: passingGrade ?? 0,
     settings: settings ?? null,
+    isFree: isFree ?? false,
     updatedAt: new Date(),
   }).where(eq(tryoutBundlesTable.id, id)).returning();
   if (!bundle) return res.status(404).json({ error: "Bundle tidak ditemukan." });

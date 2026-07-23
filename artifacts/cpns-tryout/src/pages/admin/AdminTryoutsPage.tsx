@@ -14,7 +14,7 @@ interface Bundle {
   id: number; name: string; description: string | null;
   category: string | null; durationMinutes: number;
   passingGrade: number; status: "draft" | "published";
-  totalQuestions: number; createdAt: string; updatedAt: string;
+  isFree: boolean; totalQuestions: number; createdAt: string; updatedAt: string;
   sections: Section[];
 }
 interface PreviewResult {
@@ -54,13 +54,15 @@ export function AdminTryoutsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [cName, setCName] = useState(""); const [cDesc, setCDesc] = useState("");
   const [cCat,  setCCat]  = useState("SKD"); const [cDur,  setCDur]  = useState(100);
-  const [cPass, setCPass] = useState(311); const [cSaving, setCSaving] = useState(false);
+  const [cPass, setCPass] = useState(311); const [cFree, setCFree] = useState(false);
+  const [cSaving, setCSaving] = useState(false);
 
   /* edit modal */
   const [editB,    setEditB]    = useState<Bundle | null>(null);
   const [eName,    setEName]    = useState(""); const [eDesc, setEDesc] = useState("");
   const [eCat,     setECat]     = useState(""); const [eDur,  setEDur]  = useState(100);
-  const [ePass,    setEPass]    = useState(0);  const [eSaving, setESaving] = useState(false);
+  const [ePass,    setEPass]    = useState(0);  const [eFree, setEFree] = useState(false);
+  const [eSaving, setESaving] = useState(false);
 
   /* ── load ─────────────────────────────────────────────── */
   const load = async () => {
@@ -115,13 +117,13 @@ export function AdminTryoutsPage() {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: cName, description: cDesc, category: cCat,
-                             durationMinutes: cDur, passingGrade: cPass }),
+                             durationMinutes: cDur, passingGrade: cPass, isFree: cFree }),
     });
     setCSaving(false);
     if (r.ok) {
       const b = await r.json();
       setBundles(p => [b, ...p]);
-      setShowCreate(false); setCName(""); setCDesc(""); setCCat("SKD"); setCDur(100); setCPass(311);
+      setShowCreate(false); setCName(""); setCDesc(""); setCCat("SKD"); setCDur(100); setCPass(311); setCFree(false);
     }
   };
 
@@ -129,6 +131,7 @@ export function AdminTryoutsPage() {
   const openEdit = (b: Bundle) => {
     setEditB(b); setEName(b.name); setEDesc(b.description ?? "");
     setECat(b.category ?? ""); setEDur(b.durationMinutes); setEPass(b.passingGrade);
+    setEFree(b.isFree ?? false);
   };
   const doEdit = async () => {
     if (!editB) return;
@@ -137,7 +140,7 @@ export function AdminTryoutsPage() {
       method: "PUT", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: eName, description: eDesc, category: eCat,
-                             durationMinutes: eDur, passingGrade: ePass }),
+                             durationMinutes: eDur, passingGrade: ePass, isFree: eFree }),
     });
     setESaving(false);
     if (r.ok) { const u = await r.json(); setBundles(p => p.map(x => x.id === u.id ? { ...x, ...u } : x)); setEditB(null); }
@@ -478,6 +481,11 @@ export function AdminTryoutsPage() {
               <textarea value={cDesc} onChange={e => setCDesc(e.target.value)} rows={2}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
             </Field>
+            <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-slate-700">
+              <input type="checkbox" checked={cFree} onChange={e => setCFree(e.target.checked)}
+                className="w-4 h-4 rounded accent-blue-600" />
+              <span>Akses <strong>Gratis</strong> (tidak perlu berlangganan)</span>
+            </label>
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 border rounded-lg text-sm font-medium">Batal</button>
               <button onClick={doCreate} disabled={cSaving || !cName.trim()}
@@ -519,6 +527,11 @@ export function AdminTryoutsPage() {
               <textarea value={eDesc} onChange={e => setEDesc(e.target.value)} rows={2}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
             </Field>
+            <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-slate-700">
+              <input type="checkbox" checked={eFree} onChange={e => setEFree(e.target.checked)}
+                className="w-4 h-4 rounded accent-blue-600" />
+              <span>Akses <strong>Gratis</strong> (tidak perlu berlangganan)</span>
+            </label>
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => setEditB(null)} className="px-4 py-2 border rounded-lg text-sm font-medium">Batal</button>
               <button onClick={doEdit} disabled={eSaving}

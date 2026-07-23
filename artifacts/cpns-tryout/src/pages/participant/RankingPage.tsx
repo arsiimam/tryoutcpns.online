@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader } from "../../components/ui/shared";
-import { dummyApi, RankingEntry } from "../../lib/dummy-api";
-import { Tryout } from "../../data/dummy-cpns-data";
+interface RankingEntry { rank: number; userId: string; userName: string; total: number; TWK: number; TIU: number; TKP: number; date: string; isMe?: boolean; }
+interface Tryout { id: string; title: string; }
 import { useAuth } from "../../lib/auth-context";
 import { Trophy, Medal } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -16,16 +16,18 @@ export function RankingPage() {
 
   useEffect(() => {
     async function load() {
-      const [rankData, toData] = await Promise.all([
-        dummyApi.getRanking(),
-        dummyApi.getTryouts()
-      ]);
-      setRanking(rankData);
-      setTryouts(toData);
-      setLoading(false);
+      try {
+        const qs = selectedTryout !== "all" ? `?tryoutId=${selectedTryout}` : "";
+        const [rankRes, toRes] = await Promise.all([
+          fetch(`/api/participant/ranking${qs}`, { credentials: "include" }).then(r => r.json()),
+          fetch("/api/participant/tryouts", { credentials: "include" }).then(r => r.json()),
+        ]);
+        setRanking(rankRes.ranking ?? []);
+        setTryouts(toRes.tryouts ?? []);
+      } catch { } finally { setLoading(false); }
     }
     load();
-  }, []);
+  }, [selectedTryout]);
 
   if (loading) {
     return (

@@ -2,8 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader } from "../../components/ui/shared";
-import { dummyApi } from "../../lib/dummy-api";
-import { Tryout } from "../../data/dummy-cpns-data";
+interface Tryout {
+  id: string; title: string; description: string; duration: number;
+  composition: { TWK: number; TIU: number; TKP: number };
+  passingScore: { total: number; TWK: number; TIU: number; TKP: number };
+  isAccessibleFree: boolean; status: string;
+}
 import { Clock, FileText, Target, AlertCircle, ArrowLeft } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
@@ -17,16 +21,13 @@ export function TryoutDetailPage() {
 
   useEffect(() => {
     async function load() {
-      if (params?.id) {
-        try {
-          const data = await dummyApi.getTryoutById(params.id);
-          setTryout(data);
-        } catch (e) {
-          console.error(e);
-        } finally {
-          setLoading(false);
-        }
-      }
+      if (!params?.id) return;
+      try {
+        const r = await fetch(`/api/participant/tryouts/${params.id}`, { credentials: "include" });
+        if (!r.ok) throw new Error("Not found");
+        const data = await r.json();
+        setTryout(data.tryout);
+      } catch { } finally { setLoading(false); }
     }
     load();
   }, [params?.id]);
@@ -35,9 +36,14 @@ export function TryoutDetailPage() {
     if (!tryout || !user) return;
     setStarting(true);
     try {
-      const session = await dummyApi.startTryout(tryout.id, user.id);
-      setLocation(`/tryout/${tryout.id}/start?session=${session.id}`);
-    } catch (e) {
+      const r = await fetch(`/api/participant/tryouts/${tryout.id}/sessions`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error ?? "Gagal memulai tryout.");
+      setLocation(`/tryout/${tryout.id}/start?session=${data.session.id}`);
+    } catch (e: any) {
       console.error(e);
       setStarting(false);
     }

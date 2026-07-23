@@ -1,5 +1,14 @@
+// @refresh reset
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
+
+export interface UserSubscription {
+  planId: string;
+  planName: string;
+  status: string;
+  expiresAt: string;
+  daysLeft: number;
+}
 
 export interface User {
   id: string;
@@ -9,6 +18,7 @@ export interface User {
   avatar: string;
   avatarUrl?: string | null;
   subscriptionId?: string | null;
+  subscription?: UserSubscription | null;
   createdAt?: string;
 }
 
@@ -28,6 +38,7 @@ function apiUserToAppUser(u: {
   email: string;
   role: string;
   avatarUrl?: string | null;
+  subscription?: UserSubscription | null;
 }): User {
   return {
     id: u.id,
@@ -36,7 +47,8 @@ function apiUserToAppUser(u: {
     role: (u.role === "admin" ? "admin" : "participant") as "admin" | "participant",
     avatar: u.fullName?.charAt(0)?.toUpperCase() ?? u.email.charAt(0).toUpperCase() ?? "U",
     avatarUrl: u.avatarUrl ?? null,
-    subscriptionId: null,
+    subscriptionId: u.subscription?.planId ?? null,
+    subscription: u.subscription ?? null,
   };
 }
 

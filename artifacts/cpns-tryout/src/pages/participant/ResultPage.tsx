@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
-import { dummyApi } from "../../lib/dummy-api";
-import { Result } from "../../data/dummy-cpns-data";
+
+interface Result {
+  id: string; sessionId: string; tryoutId: string; tryoutName?: string;
+  score: { TWK: number; TIU: number; TKP: number; total: number };
+  passed: boolean; rank: number; totalParticipants: number; completedAt: string;
+}
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { CheckCircle2, XCircle, Trophy, Target, ArrowRight, Eye } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
@@ -16,15 +20,16 @@ export function ResultPage() {
 
   useEffect(() => {
     async function load() {
-      // Dummy ambil dari results
-      const data = await dummyApi.getResults('usr-1');
-      if (data.length > 0) {
-        setResult(data[0]);
-      }
-      setLoading(false);
+      if (!sessionId) { setLoading(false); return; }
+      try {
+        const r = await fetch(`/api/participant/results/${sessionId}`, { credentials: "include" });
+        if (!r.ok) throw new Error("Result not found");
+        const data = await r.json();
+        setResult(data.result);
+      } catch { } finally { setLoading(false); }
     }
     load();
-  }, [params?.id]);
+  }, [sessionId]);
 
   if (loading || !result) {
     return (

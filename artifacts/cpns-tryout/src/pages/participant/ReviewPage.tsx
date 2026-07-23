@@ -1,34 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader } from "../../components/ui/shared";
-import { dummyApi } from "../../lib/dummy-api";
-import { Question, Category, SubCategory } from "../../data/dummy-cpns-data";
+interface ReviewQuestion {
+  id: string; text: string; categoryId: string;
+  options: { key: string; text: string }[];
+  correctAnswer: string | null; explanation: string;
+  userAnswer: string | null; isCorrect: boolean;
+  isFavorite?: boolean;
+}
 import { useAuth } from "../../lib/auth-context";
 import { Heart, CheckCircle2, XCircle, Search, Filter } from "lucide-react";
 
 export function ReviewPage() {
   const { user } = useAuth();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [questions, setQuestions] = useState<ReviewQuestion[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"semua" | "salah" | "favorit">("semua");
   const [openExplanation, setOpenExplanation] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     async function load() {
-      const [qs, cats] = await Promise.all([
-        dummyApi.getQuestions(),
-        dummyApi.getCategories()
-      ]);
-      setQuestions(qs);
-      setCategories(cats);
-      setLoading(false);
+      try {
+        const r = await fetch("/api/participant/review", { credentials: "include" });
+        const data = await r.json();
+        setQuestions(data.questions ?? []);
+        setSessionId(data.sessionId ?? null);
+      } catch { } finally { setLoading(false); }
     }
     load();
   }, []);
 
-  const toggleFav = async (qId: string) => {
-    await dummyApi.toggleFavorite(qId);
+  const toggleFav = (qId: string) => {
     setQuestions(prev => prev.map(q => q.id === qId ? {...q, isFavorite: !q.isFavorite} : q));
   };
 
@@ -36,10 +39,9 @@ export function ReviewPage() {
     setOpenExplanation(prev => ({...prev, [qId]: !prev[qId]}));
   };
 
-  // Dummy filter logic
   let filteredQs = questions;
   if (tab === "favorit") filteredQs = questions.filter(q => q.isFavorite);
-  if (tab === "salah") filteredQs = questions.filter((q, i) => i % 4 === 0); // Dummy condition for wrong answers
+  if (tab === "salah") filteredQs = questions.filter(q => q.userAnswer !== null && !q.isCorrect);
 
   if (loading) {
     return (
@@ -83,17 +85,16 @@ export function ReviewPage() {
       </div>
 
       <div className="space-y-6">
-        {filteredQs.map((q, idx) => {
-          // Dummy simulation of user answer
-          const isWrong = tab === 'salah' || idx % 4 === 0;
-          const userAns = isWrong ? (q.correctAnswer === 'A' ? 'B' : 'A') : q.correctAnswer;
+        {filteredQs.map((q) => {
+          const userAns = q.userAnswer;
+          const isWrong = q.userAnswer !== null && !q.isCorrect;
           const isExpOpen = openExplanation[q.id];
 
           return (
             <div key={q.id} className="bg-white rounded-xl border shadow-sm overflow-hidden">
               <div className="p-4 bg-slate-50 border-b flex justify-between items-center">
                 <span className="px-2.5 py-1 bg-slate-200 text-slate-700 text-[10px] font-bold rounded-full tracking-wider uppercase">
-                  {categories.find(c => c.id === q.categoryId)?.code || 'Materi'}
+                   {q.categoryId || 'Materi'}
                 </span>
                 <button 
                   onClick={() => toggleFav(q.id)}

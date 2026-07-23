@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, jsonb, boolean, timestamp } from "drizzle-orm/pg-core";
 
 export const tryoutBundlesTable = pgTable("tryout_bundles", {
   id:              serial("id").primaryKey(),
@@ -10,6 +10,7 @@ export const tryoutBundlesTable = pgTable("tryout_bundles", {
   status:          varchar("status", { length: 20 }).notNull().default("draft"),
   settings:        jsonb("settings"),
   totalQuestions:  integer("total_questions").notNull().default(0),
+  isFree:          boolean("is_free").notNull().default(false),
   createdAt:       timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt:       timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -1,8 +1,8 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
-import { usersTable, appSettingsTable } from "@workspace/db";
-import { eq, inArray } from "drizzle-orm";
+import { usersTable, appSettingsTable, userSubscriptionsTable } from "@workspace/db";
+import { eq, inArray, and, desc } from "drizzle-orm";
 import { authLimiter } from "../lib/rate-limit";
 
 const router = Router();
@@ -176,7 +176,31 @@ router.get("/auth/me", async (req, res) => {
     return res.status(401).json({ error: "Pengguna tidak ditemukan." });
   }
 
-  return res.json({ user: userPayload(user) });
+  // Fetch active subscription
+  const [sub] = await db
+    .select()
+    .from(userSubscriptionsTable)
+    .where(
+      and(
+        eq(userSubscriptionsTable.userId, user.id),
+        eq(userSubscriptionsTable.status, "active"),
+      )
+    )
+    .orderBy(desc(userSubscriptionsTable.expiresAt))
+    .limit(1);
+
+  const daysLeft = sub
+    ? Math.max(0, Math.ceil((new Date(sub.expiresAt).getTime() - Date.now()) / 86_400_000))
+    : 0;
+
+  return res.json({
+    user: {
+      ...userPayload(user),
+      subscription: sub
+        ? { planId: sub.planId, planName: sub.planName, status: sub.status, expiresAt: sub.expiresAt, daysLeft }
+        : null,
+    },
+  });
 });
 
 /* ------------------------------------------------------------------ */

@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader, MetricCard } from "../../components/ui/shared";
-import { dummyApi } from "../../lib/dummy-api";
-import { Result } from "../../data/dummy-cpns-data";
+interface Result {
+  id: string; sessionId: string; tryoutId: string; tryoutName?: string;
+  score: { TWK: number; TIU: number; TKP: number; total: number };
+  passed: boolean; rank: number; totalParticipants: number; completedAt: string;
+}
 import { useAuth } from "../../lib/auth-context";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { FileText, Target, CheckCircle, XCircle, ArrowRight } from "lucide-react";
@@ -16,17 +19,12 @@ export function HasilPage() {
 
   useEffect(() => {
     async function load() {
-      if (user) {
-        const data = await dummyApi.getResults(user.id);
-        // Create dummy historical data to make charts look good
-        const dummyHistory = [
-          { id: "res-old-1", sessionId: "ses-old-1", userId: user.id, tryoutId: "to-1", score: { TWK: 50, TIU: 70, TKP: 150, total: 270 }, passed: false, rank: 2500, totalParticipants: 3000, completedAt: "2023-09-01T10:00:00Z" },
-          { id: "res-old-2", sessionId: "ses-old-2", userId: user.id, tryoutId: "to-1", score: { TWK: 60, TIU: 75, TKP: 160, total: 295 }, passed: false, rank: 1800, totalParticipants: 3000, completedAt: "2023-09-15T10:00:00Z" },
-          ...data
-        ];
-        setResults(dummyHistory);
-        setLoading(false);
-      }
+      if (!user) return;
+      try {
+        const r = await fetch("/api/participant/results", { credentials: "include" });
+        const data = await r.json();
+        setResults(data.results ?? []);
+      } catch { } finally { setLoading(false); }
     }
     load();
   }, [user]);

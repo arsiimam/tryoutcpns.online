@@ -1,14 +1,23 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useRoute } from "wouter";
-import { dummyApi } from "../../lib/dummy-api";
-import { Question, TryoutSession } from "../../data/dummy-cpns-data";
 import { Clock, Flag, ChevronLeft, ChevronRight, CheckCircle2, Grid3X3, X } from "lucide-react";
+
+interface ApiQuestion {
+  id: string; text: string; categoryId: string; sectionName?: string;
+  options: { key: string; text: string }[];
+  correctAnswer?: string; explanation?: string; scoreWeight?: number;
+}
+interface ApiSession {
+  id: string; userId: string; tryoutId: number | string; status: string;
+  answers: Record<string, string>; flagged: string[]; timeRemaining?: number | null;
+  startedAt?: string;
+}
 import * as Dialog from "@radix-ui/react-dialog";
 
 export function SessionPage() {
   const [match, params] = useRoute("/tryout/:id/start");
-  const [session, setSession] = useState<TryoutSession | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [session, setSession] = useState<ApiSession | null>(null);
+  const [questions, setQuestions] = useState<ApiQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -21,14 +30,17 @@ export function SessionPage() {
 
   useEffect(() => {
     async function load() {
-      if (sessionId) {
-        const [sesData, qData] = await Promise.all([
-          dummyApi.getSession(sessionId),
-          dummyApi.getQuestions()
-        ]);
-        setSession(sesData);
-        setQuestions(qData);
-        setTimeLeft(100 * 60); // 100 minutes dummy
+      if (!sessionId) return;
+      try {
+        const r = await fetch(`/api/participant/sessions/${sessionId}`, { credentials: "include" });
+        if (!r.ok) throw new Error("Session not found");
+        const data = await r.json();
+        setSession(data.session);
+        setQuestions(data.questions ?? []);
+        setTimeLeft(data.session.timeRemaining ?? 100 * 60);
+      } catch (e) {
+        console.error(e);
+      } finally {
         setLoading(false);
       }
     }
@@ -53,8 +65,12 @@ export function SessionPage() {
   const handleForceSubmit = async () => {
     if (!session) return;
     setSubmitting(true);
-    await dummyApi.submitTryout(session.id);
-    setLocation(`/tryout/${session.tryoutId}/result?session=${session.id}`);
+    try {
+      await fetch(`/api/participant/sessions/${session.id}/submit`, {
+        method: "POST", credentials: "include",
+      });
+    } catch { /* best effort */ }
+    setLocation(`/tryout/${String(session.tryoutId)}/result?session=${session.id}`);
   };
 
   const formatTime = (seconds: number) => {
@@ -68,17 +84,23 @@ export function SessionPage() {
     const qId = questions[currentIndex].id;
     const newAnswers = { ...session.answers, [qId]: optionKey };
     setSession({ ...session, answers: newAnswers });
-    await dummyApi.saveAnswer(session.id, qId, optionKey);
+    fetch(`/api/participant/sessions/${session.id}/answer`, {
+      method: "PUT", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ questionId: qId, answer: optionKey }),
+    }).catch(() => {});
   };
 
   const handleToggleFlag = async () => {
     if (!session || !questions[currentIndex]) return;
     const qId = questions[currentIndex].id;
-    const newFlagged = session.flagged.includes(qId) 
+    const newFlagged = session.flagged.includes(qId)
       ? session.flagged.filter(id => id !== qId)
       : [...session.flagged, qId];
     setSession({ ...session, flagged: newFlagged });
-    await dummyApi.toggleFlag(session.id, qId);
+    fetch(`/api/participant/sessions/${session.id}/flag/${qId}`, {
+      method: "PUT", credentials: "include",
+    }).catch(() => {});
   };
 
   if (loading || !session || questions.length === 0) {

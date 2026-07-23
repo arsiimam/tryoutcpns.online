@@ -1,30 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { MetricCard, PageHeader } from "../../components/ui/shared";
-import { dummyApi, DashboardSummary } from "../../lib/dummy-api";
 import { useAuth } from "../../lib/auth-context";
 import { FileText, Trophy, Target, Clock, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Announcement } from "../../data/dummy-cpns-data";
+
+interface DashboardSummary {
+  totalTryoutsDone: number; averageScore: number; rank: number;
+  subscriptionName: string | null; subscriptionDaysLeft: number;
+  scoreHistory: { tryout: string; score: number }[];
+}
+interface Announcement { id: string; title: string; content: string; isImportant?: boolean; }
 
 export function ParticipantDashboard() {
   const { user } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [recentTryouts, setRecentTryouts] = useState<{id:string;title:string;duration:number;totalQuestions:number;isAccessibleFree:boolean}[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      if (user) {
-        const [sumData, annData] = await Promise.all([
-          dummyApi.getDashboardSummary(user.id),
-          dummyApi.getAnnouncements()
+      if (!user) return;
+      try {
+        const [dashRes, tryRes] = await Promise.all([
+          fetch("/api/participant/dashboard", { credentials: "include" }).then(r => r.json()),
+          fetch("/api/participant/tryouts", { credentials: "include" }).then(r => r.json()),
         ]);
-        setSummary(sumData);
-        setAnnouncements(annData);
-        setLoading(false);
-      }
+        setSummary(dashRes.dashboard);
+        setAnnouncements([]);
+        setRecentTryouts((tryRes.tryouts ?? []).slice(0, 3));
+      } catch { } finally { setLoading(false); }
     }
     load();
   }, [user]);
@@ -120,26 +127,22 @@ export function ParticipantDashboard() {
               <Link href="/tryout" className="text-sm text-primary font-medium hover:underline">Lihat Semua</Link>
             </div>
             <div className="space-y-3">
-              <div className="p-4 border rounded-lg hover:border-primary transition-colors cursor-pointer group">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-semibold text-slate-900 group-hover:text-primary transition-colors">Tryout Akbar #1</h4>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">FREE</span>
-                </div>
-                <div className="flex items-center gap-4 text-xs text-slate-500">
-                  <span className="flex items-center gap-1"><Clock size={12}/> 100 mnt</span>
-                  <span className="flex items-center gap-1"><FileText size={12}/> 110 Soal</span>
-                </div>
-              </div>
-              <div className="p-4 border rounded-lg hover:border-primary transition-colors cursor-pointer group">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-semibold text-slate-900 group-hover:text-primary transition-colors">Premium HOTS #1</h4>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary text-white">PRO</span>
-                </div>
-                <div className="flex items-center gap-4 text-xs text-slate-500">
-                  <span className="flex items-center gap-1"><Clock size={12}/> 100 mnt</span>
-                  <span className="flex items-center gap-1"><FileText size={12}/> 110 Soal</span>
-                </div>
-              </div>
+              {recentTryouts.length === 0 ? (
+                <p className="text-sm text-slate-400 text-center py-4">Belum ada tryout tersedia.</p>
+              ) : recentTryouts.map(t => (
+                <Link key={t.id} href={`/tryout/${t.id}`} className="block p-4 border rounded-lg hover:border-primary transition-colors cursor-pointer group">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold text-slate-900 group-hover:text-primary transition-colors text-sm">{t.title}</h4>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.isAccessibleFree ? 'bg-amber-100 text-amber-800' : 'bg-primary text-white'}`}>
+                      {t.isAccessibleFree ? 'FREE' : 'PRO'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-slate-500">
+                    <span className="flex items-center gap-1"><Clock size={12}/> {t.duration} mnt</span>
+                    <span className="flex items-center gap-1"><FileText size={12}/> {t.totalQuestions} Soal</span>
+                  </div>
+                </Link>
+              ))}
             </div>
             <Link href="/tryout" className="mt-4 w-full h-10 flex items-center justify-center gap-2 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors">
               Mulai Belajar <ArrowRight size={16}/>
