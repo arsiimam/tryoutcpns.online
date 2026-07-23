@@ -104,7 +104,8 @@ router.post("/auth/register", async (req, res) => {
     })
     .returning();
 
-  req.session.userId = user.id;
+  req.session.userId   = user.id;
+  req.session.userRole = user.role;
   await new Promise<void>((resolve, reject) => {
     req.session.save((err) => (err ? reject(err) : resolve()));
   });
@@ -136,7 +137,8 @@ router.post("/auth/login", async (req, res) => {
     return res.status(401).json({ error: "Email atau password salah." });
   }
 
-  req.session.userId = user.id;
+  req.session.userId   = user.id;
+  req.session.userRole = user.role;
   await new Promise<void>((resolve, reject) => {
     req.session.save((err) => (err ? reject(err) : resolve()));
   });
@@ -290,7 +292,8 @@ router.get("/auth/google/callback", async (req, res) => {
       user = created;
     }
 
-    req.session.userId = user.id;
+    req.session.userId   = user.id;
+    req.session.userRole = user.role;
     await new Promise<void>((resolve, reject) => {
       req.session.save((err) => (err ? reject(err) : resolve()));
     });
