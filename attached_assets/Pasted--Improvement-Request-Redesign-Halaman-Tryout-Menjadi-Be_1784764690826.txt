@@ -1,0 +1,312 @@
+# Improvement Request - Redesign Halaman Tryout Menjadi Berbasis Bundle
+
+## Latar Belakang
+
+Saat ini sistem Tryout masih menggunakan konsep pengelolaan soal secara individual.
+
+Saya ingin mengubah konsep tersebut menjadi **Bundle Tryout**, sehingga setiap tryout merupakan satu paket ujian lengkap yang berisi seluruh konfigurasi dan soal.
+
+Administrator tidak perlu lagi membuat tryout dengan menambahkan soal satu per satu.
+
+---
+
+# Konsep Baru
+
+Halaman Tryout **tidak lagi menampilkan daftar soal**.
+
+Halaman Tryout hanya menampilkan daftar **Bundle Tryout**.
+
+Contoh:
+
+```
+Tryout
+
++ Buat Bundle Tryout
++ Import Bundle Tryout
+
+----------------------------------------------------
+
+SKD Nasional #1
+
+110 Soal
+
+TWK : 30
+TIU : 35
+TKP : 45
+
+Durasi : 100 Menit
+
+Status : Publish
+
+[Lihat]
+[Edit]
+[Duplicate]
+[Export]
+[Hapus]
+
+----------------------------------------------------
+
+SKD Nasional #2
+
+110 Soal
+
+Status : Draft
+
+[Lihat]
+[Edit]
+[Duplicate]
+[Export]
+[Hapus]
+```
+
+Dengan konsep ini, administrator mengelola **paket tryout**, bukan mengelola soal satu per satu.
+
+---
+
+# Isi Bundle Tryout
+
+Ketika administrator membuka sebuah Bundle Tryout, seluruh isi tryout baru ditampilkan.
+
+Contoh:
+
+```
+SKD Nasional #1
+
+Informasi Tryout
+-------------------------
+Nama
+Kategori
+Durasi
+Status
+Passing Grade
+Jumlah Peserta
+Tanggal Dibuat
+Tanggal Update
+
+====================================
+
+TWK
+
+1.
+....
+
+2.
+....
+
+3.
+....
+
+====================================
+
+TIU
+
+31.
+....
+
+32.
+....
+
+====================================
+
+TKP
+
+66.
+....
+
+67.
+....
+```
+
+Atau menggunakan tampilan tab:
+
+```
+[Informasi]
+
+[TWK]
+
+[TIU]
+
+[TKP]
+```
+
+---
+
+# Struktur Bundle Tryout
+
+Satu Bundle Tryout merupakan satu paket ujian lengkap.
+
+Bundle dapat berisi:
+
+- Metadata Tryout
+- Pengaturan Tryout
+- Section
+- Daftar Soal
+- Urutan Soal
+- Jawaban
+- Pembahasan
+- Passing Grade
+- Durasi
+- Nilai
+- Pengaturan lainnya
+
+---
+
+# Import Bundle Tryout
+
+Tambahkan tombol:
+
+```
+Import Bundle Tryout
+```
+
+Administrator cukup memilih satu file.
+
+Setelah import selesai, sistem langsung membuat satu Bundle Tryout lengkap tanpa perlu melakukan konfigurasi ulang.
+
+---
+
+## Format Import
+
+Prioritas:
+
+- JSON
+- HTML
+
+Opsional:
+
+- Excel
+- CSV
+
+---
+
+# Preview Sebelum Import
+
+Sebelum import dijalankan, tampilkan informasi:
+
+- Nama Tryout
+- Jumlah Section
+- Jumlah Soal
+- Durasi
+- Status
+- Preview beberapa soal
+- Jumlah gambar
+- Jumlah error
+
+Jika terdapat error, tampilkan nomor soal beserta penyebabnya.
+
+---
+
+# Export Bundle Tryout
+
+Setiap Bundle Tryout dapat diekspor kembali menjadi:
+
+- JSON
+- HTML
+
+Tujuannya agar:
+
+- Backup data
+- Berbagi paket tryout
+- Memindahkan ke server lain
+- Digunakan kembali pada instalasi lain
+
+---
+
+# Duplicate Bundle
+
+Tambahkan fitur:
+
+```
+Duplicate Bundle
+```
+
+Administrator dapat menduplikasi satu tryout menjadi tryout baru.
+
+Contoh:
+
+```
+SKD Nasional #1
+
+↓
+
+Duplicate
+
+↓
+
+SKD Nasional #2
+```
+
+Seluruh konfigurasi dan soal ikut disalin.
+
+---
+
+# Struktur Konten
+
+Setiap soal di dalam Bundle Tryout harus mendukung:
+
+- Rich Text
+- HTML
+- Tabel
+- Gambar
+- Bullet
+- Numbering
+- Superscript
+- Subscript
+- LaTeX
+- KaTeX
+- MathJax
+
+Sehingga soal matematika maupun soal yang memiliki format kompleks tetap tampil dengan baik.
+
+---
+
+# Replit Diminta Mendesain Format File Bundle Tryout
+
+Mohon buatkan standar format file Bundle Tryout yang akan digunakan sebagai format import dan export.
+
+Format tersebut harus terdokumentasi dengan baik.
+
+Minimal mencakup:
+
+- Struktur JSON
+- Struktur HTML
+- Penjelasan setiap field
+- Contoh file
+- Dokumentasi penggunaan
+
+---
+
+# Future Proof
+
+Mohon desain format Bundle Tryout agar mudah dikembangkan di masa depan.
+
+Misalnya apabila nanti ditambahkan:
+
+- Audio
+- Video
+- Essay
+- Drag & Drop
+- Matching
+- Hotspot Question
+- Randomisasi Soal
+- Randomisasi Pilihan Jawaban
+- Bank Soal Dinamis
+- Adaptive Testing
+
+struktur file tetap kompatibel dan tidak perlu diubah secara keseluruhan.
+
+---
+
+# Tujuan
+
+Saya ingin sistem Tryout dikelola berdasarkan **Bundle Tryout**, bukan berdasarkan daftar soal.
+
+Administrator cukup:
+
+- Membuat Bundle Tryout
+- Mengimpor Bundle Tryout
+- Mengekspor Bundle Tryout
+- Menggandakan Bundle Tryout
+- Mengedit Bundle Tryout
+
+sehingga pengelolaan ratusan paket tryout menjadi lebih cepat, rapi, dan mudah dikembangkan.

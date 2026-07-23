@@ -1,161 +1,588 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { Link } from "wouter";
 import { AdminLayout } from "../../components/layouts/AdminLayout";
-import { PageHeader, StatusBadge } from "../../components/ui/shared";
-import { dummyApi } from "../../lib/dummy-api";
-import { Tryout } from "../../data/dummy-cpns-data";
-import { Edit2, Plus, Trash2, X } from "lucide-react";
-import * as Dialog from "@radix-ui/react-dialog";
+import { PageHeader } from "../../components/ui/shared";
+import {
+  Upload, Plus, Eye, Edit2, Trash2, Copy, Download,
+  ChevronDown, FileText, BookOpen, AlertCircle, CheckCircle,
+  Clock, BarChart2, Search, Layers, X,
+} from "lucide-react";
 
+/* ── types ──────────────────────────────────────────────── */
+interface Section { id: number; name: string; category: string | null; questionCount: number; orderNum: number; }
+interface Bundle {
+  id: number; name: string; description: string | null;
+  category: string | null; durationMinutes: number;
+  passingGrade: number; status: "draft" | "published";
+  totalQuestions: number; createdAt: string; updatedAt: string;
+  sections: Section[];
+}
+interface PreviewResult {
+  name: string; category: string | null; durationMinutes: number;
+  sectionCount: number; totalQuestions: number; imageCount: number;
+  errors: { section: string; index: number; message: string }[];
+  sections: { name: string; category: string | null; questionCount: number }[];
+  preview: { content: string; answer: string | null }[];
+}
+
+const API = "/api/admin/tryouts";
+const CATEGORIES = ["SKD", "SKB", "CPNS", "PPPK", "Lainnya"];
+const STATUS_CLS: Record<string, string> = {
+  published: "bg-emerald-100 text-emerald-700",
+  draft:     "bg-amber-100  text-amber-700",
+};
+
+/* ═══════════════════════════════════════════════════════ */
 export function AdminTryoutsPage() {
-  const [tryouts, setTryouts] = useState<Tryout[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editingTryout, setEditingTryout] = useState<Tryout | null>(null);
+  const [bundles,  setBundles]  = useState<Bundle[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [search,   setSearch]   = useState("");
+  const [catF,     setCatF]     = useState("Semua");
+  const [statusF,  setStatusF]  = useState("Semua");
 
-  // Form states
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [status, setStatus] = useState<"draft"|"published">("draft");
-  const [free, setFree] = useState(true);
+  /* import modal */
+  const [showImport,  setShowImport]  = useState(false);
+  const [importStep,  setImportStep]  = useState<"upload"|"preview"|"done">("upload");
+  const [importFile,  setImportFile]  = useState<File | null>(null);
+  const [importFmt,   setImportFmt]   = useState<"json"|"html">("json");
+  const [preview,     setPreview]     = useState<PreviewResult | null>(null);
+  const [impLoading,  setImpLoading]  = useState(false);
+  const [impError,    setImpError]    = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    dummyApi.adminGetTryouts().then(data => {
-      setTryouts(data);
-      setLoading(false);
+  /* create modal */
+  const [showCreate, setShowCreate] = useState(false);
+  const [cName, setCName] = useState(""); const [cDesc, setCDesc] = useState("");
+  const [cCat,  setCCat]  = useState("SKD"); const [cDur,  setCDur]  = useState(100);
+  const [cPass, setCPass] = useState(311); const [cSaving, setCSaving] = useState(false);
+
+  /* edit modal */
+  const [editB,    setEditB]    = useState<Bundle | null>(null);
+  const [eName,    setEName]    = useState(""); const [eDesc, setEDesc] = useState("");
+  const [eCat,     setECat]     = useState(""); const [eDur,  setEDur]  = useState(100);
+  const [ePass,    setEPass]    = useState(0);  const [eSaving, setESaving] = useState(false);
+
+  /* ── load ─────────────────────────────────────────────── */
+  const load = async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(API, { credentials: "include" });
+      if (r.ok) setBundles(await r.json());
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
+
+  /* ── filters ──────────────────────────────────────────── */
+  const filtered = bundles.filter(b =>
+    b.name.toLowerCase().includes(search.toLowerCase()) &&
+    (catF    === "Semua" || b.category === catF) &&
+    (statusF === "Semua" || b.status   === statusF)
+  );
+
+  /* ── delete ───────────────────────────────────────────── */
+  const del = async (b: Bundle) => {
+    if (!confirm(`Hapus tryout "${b.name}"?\nSemua ${b.totalQuestions} soal akan ikut terhapus.`)) return;
+    const r = await fetch(`${API}/${b.id}`, { method: "DELETE", credentials: "include" });
+    if (r.ok) setBundles(p => p.filter(x => x.id !== b.id));
+  };
+
+  /* ── toggle status ────────────────────────────────────── */
+  const toggleStatus = async (b: Bundle) => {
+    const next = b.status === "draft" ? "published" : "draft";
+    const r = await fetch(`${API}/${b.id}/status`, {
+      method: "PUT", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: next }),
     });
-  }, []);
-
-  const openDrawer = (t?: Tryout) => {
-    if (t) {
-      setEditingTryout(t);
-      setTitle(t.title);
-      setDesc(t.description);
-      setStatus(t.status);
-      setFree(t.isAccessibleFree);
-    } else {
-      setEditingTryout(null);
-      setTitle("");
-      setDesc("");
-      setStatus("draft");
-      setFree(true);
-    }
-    setIsDrawerOpen(true);
+    if (r.ok) { const u = await r.json(); setBundles(p => p.map(x => x.id === u.id ? { ...x, ...u } : x)); }
   };
 
-  const handleSave = async () => {
-    if (editingTryout) {
-      const updated = await dummyApi.adminUpdateTryout(editingTryout.id, { title, description: desc, status, isAccessibleFree: free });
-      setTryouts(prev => prev.map(t => t.id === updated.id ? updated : t));
-    } else {
-      const newT = await dummyApi.adminCreateTryout({ 
-        title, description: desc, status, isAccessibleFree: free,
-        duration: 100, passingScore: { TWK: 65, TIU: 80, TKP: 166, total: 311 },
-        composition: { TWK: 30, TIU: 35, TKP: 45 }, schedule: null
+  /* ── duplicate ────────────────────────────────────────── */
+  const duplicate = async (b: Bundle) => {
+    const r = await fetch(`${API}/${b.id}/duplicate`, { method: "POST", credentials: "include" });
+    if (r.ok) { const copy = await r.json(); setBundles(p => [{ ...copy, sections: [] }, ...p]); }
+  };
+
+  /* ── export ───────────────────────────────────────────── */
+  const exportB = (b: Bundle, fmt: "json" | "html") =>
+    window.location.assign(`${API}/${b.id}/export?format=${fmt}`);
+
+  /* ── create ───────────────────────────────────────────── */
+  const doCreate = async () => {
+    if (!cName.trim()) return;
+    setCSaving(true);
+    const r = await fetch(API, {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: cName, description: cDesc, category: cCat,
+                             durationMinutes: cDur, passingGrade: cPass }),
+    });
+    setCSaving(false);
+    if (r.ok) {
+      const b = await r.json();
+      setBundles(p => [b, ...p]);
+      setShowCreate(false); setCName(""); setCDesc(""); setCCat("SKD"); setCDur(100); setCPass(311);
+    }
+  };
+
+  /* ── edit ─────────────────────────────────────────────── */
+  const openEdit = (b: Bundle) => {
+    setEditB(b); setEName(b.name); setEDesc(b.description ?? "");
+    setECat(b.category ?? ""); setEDur(b.durationMinutes); setEPass(b.passingGrade);
+  };
+  const doEdit = async () => {
+    if (!editB) return;
+    setESaving(true);
+    const r = await fetch(`${API}/${editB.id}`, {
+      method: "PUT", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: eName, description: eDesc, category: eCat,
+                             durationMinutes: eDur, passingGrade: ePass }),
+    });
+    setESaving(false);
+    if (r.ok) { const u = await r.json(); setBundles(p => p.map(x => x.id === u.id ? { ...x, ...u } : x)); setEditB(null); }
+  };
+
+  /* ── import: preview ──────────────────────────────────── */
+  const doPreview = async () => {
+    if (!importFile) return;
+    setImpLoading(true); setImpError("");
+    try {
+      const content = await importFile.text();
+      const fmt     = importFile.name.endsWith(".html") ? "html" : "json";
+      setImportFmt(fmt);
+      const r = await fetch(`${API}/preview`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, format: fmt }),
       });
-      setTryouts([newT, ...tryouts]);
-    }
-    setIsDrawerOpen(false);
+      const data = await r.json();
+      if (!r.ok) { setImpError(data.error ?? "Gagal memproses file."); return; }
+      setPreview(data); setImportStep("preview");
+    } catch (e: any) { setImpError(e.message); }
+    finally { setImpLoading(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Hapus tryout ini?")) {
-      await dummyApi.adminDeleteTryout(id);
-      setTryouts(prev => prev.filter(t => t.id !== id));
-    }
+  /* ── import: confirm ──────────────────────────────────── */
+  const doImport = async () => {
+    if (!importFile) return;
+    setImpLoading(true); setImpError("");
+    try {
+      const content = await importFile.text();
+      const r = await fetch(`${API}/import`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, format: importFmt }),
+      });
+      const data = await r.json();
+      if (!r.ok) { setImpError(data.error ?? "Gagal mengimpor."); return; }
+      setImportStep("done"); setBundles(p => [{ ...data.bundle, sections: [] }, ...p]);
+    } catch (e: any) { setImpError(e.message); }
+    finally { setImpLoading(false); }
   };
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  const resetImport = () => {
+    setShowImport(false); setImportStep("upload"); setImportFile(null);
+    setPreview(null); setImpError(""); setImpLoading(false);
+    if (fileRef.current) fileRef.current.value = "";
+  };
 
+  /* ── render ───────────────────────────────────────────── */
   return (
     <AdminLayout>
-      <PageHeader 
-        title="Manajemen Tryout" 
+      <PageHeader
+        title="Manajemen Tryout"
+        description="Kelola paket tryout berbasis bundle."
         action={
-          <button onClick={() => openDrawer()} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">
-            <Plus size={18} /> Buat Tryout Baru
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setShowCreate(true)}
+              className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium hover:bg-slate-50">
+              <Plus size={15} /> Buat Tryout
+            </button>
+            <button onClick={() => setShowImport(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium"
+              style={{ background: "#4f5eea" }}>
+              <Upload size={15} /> Import Bundle
+            </button>
+          </div>
         }
       />
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500 uppercase font-semibold">
-            <tr>
-              <th className="px-4 py-3">Judul Tryout</th>
-              <th className="px-4 py-3">Akses</th>
-              <th className="px-4 py-3">Soal</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {tryouts.map((t) => (
-              <tr key={t.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-900">{t.title}</td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 text-xs font-bold rounded ${t.isAccessibleFree ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                    {t.isAccessibleFree ? 'GRATIS' : 'PREMIUM'}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-slate-600">
-                  {t.composition.TWK + t.composition.TIU + t.composition.TKP} Soal
-                </td>
-                <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => openDrawer(t)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded mr-2"><Edit2 size={16} /></button>
-                  <button onClick={() => handleDelete(t.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded"><Trash2 size={16} /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: "Total Tryout",   val: bundles.length },
+          { label: "Total Soal",     val: bundles.reduce((s, b) => s + b.totalQuestions, 0).toLocaleString() },
+          { label: "Published",      val: bundles.filter(b => b.status === "published").length },
+          { label: "Draft",          val: bundles.filter(b => b.status === "draft").length },
+        ].map(s => (
+          <div key={s.label} className="bg-white rounded-xl border p-4 shadow-sm">
+            <div className="text-2xl font-bold text-slate-900">{s.val}</div>
+            <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Drawer */}
-      <Dialog.Root open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50 animate-in fade-in" />
-          <Dialog.Content className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="flex justify-between items-center p-4 border-b">
-              <Dialog.Title className="font-bold text-lg">{editingTryout ? 'Edit Tryout' : 'Buat Tryout'}</Dialog.Title>
-              <Dialog.Close asChild>
-                <button className="text-slate-400 hover:bg-slate-100 p-2 rounded-full"><X size={20} /></button>
-              </Dialog.Close>
+      {/* Filters */}
+      <div className="bg-white rounded-xl border shadow-sm mb-4 p-4 flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input type="text" placeholder="Cari nama tryout..."
+            value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+        </div>
+        <select value={catF} onChange={e => setCatF(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <option value="Semua">Semua Kategori</option>
+          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+        </select>
+        <select value={statusF} onChange={e => setStatusF(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <option value="Semua">Semua Status</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+        </select>
+      </div>
+
+      {/* Bundle table */}
+      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center text-slate-400">Memuat...</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center text-slate-400">
+            <Layers size={40} className="mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Belum ada bundle tryout</p>
+            <p className="text-sm mt-1">Buat atau import bundle untuk memulai.</p>
+          </div>
+        ) : (
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+              <tr>
+                <th className="px-5 py-3">Nama Tryout</th>
+                <th className="px-4 py-3">Komposisi Soal</th>
+                <th className="px-4 py-3 text-center">Durasi</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Diperbarui</th>
+                <th className="px-4 py-3 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map(b => (
+                <tr key={b.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-5 py-4">
+                    <div className="font-semibold text-slate-900">{b.name}</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {b.category && (
+                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded">
+                          {b.category}
+                        </span>
+                      )}
+                      <span className="text-xs text-slate-400">
+                        {b.totalQuestions} soal total
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    {b.sections.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {b.sections.map(s => (
+                          <span key={s.id}
+                            className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded font-medium">
+                            {s.category ?? s.name}: {s.questionCount}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-slate-300 text-xs">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <div className="flex items-center justify-center gap-1 text-slate-600">
+                      <Clock size={13} className="text-slate-400" />
+                      <span className="font-medium">{b.durationMinutes}</span>
+                      <span className="text-slate-400 text-xs">mnt</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <button onClick={() => toggleStatus(b)}
+                      className={`px-2.5 py-1 text-xs font-bold rounded uppercase cursor-pointer ${STATUS_CLS[b.status]}`}
+                      title="Klik untuk toggle status">
+                      {b.status}
+                    </button>
+                  </td>
+                  <td className="px-4 py-4 text-xs text-slate-400">
+                    {new Date(b.updatedAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center justify-end gap-1">
+                      <Link href={`/admin/tryouts/${b.id}`}>
+                        <button title="Lihat Detail" className="p-1.5 rounded hover:bg-blue-50 text-blue-600"><Eye size={15} /></button>
+                      </Link>
+                      <button title="Edit" onClick={() => openEdit(b)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500"><Edit2 size={15} /></button>
+                      <button title="Duplikasi" onClick={() => duplicate(b)} className="p-1.5 rounded hover:bg-purple-50 text-purple-500"><Copy size={15} /></button>
+                      <ExportMenu b={b} onExport={exportB} />
+                      <button title="Hapus" onClick={() => del(b)} className="p-1.5 rounded hover:bg-red-50 text-red-500"><Trash2 size={15} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* ══ IMPORT MODAL ══ */}
+      {showImport && (
+        <Modal onClose={resetImport} title="Import Bundle Tryout">
+          {importStep === "upload" && (
+            <div className="space-y-5">
+              <p className="text-sm text-slate-500">
+                Upload file bundle tryout lengkap (JSON atau HTML). Seluruh konfigurasi dan soal akan diimpor otomatis.
+              </p>
+              <div onClick={() => fileRef.current?.click()}
+                className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                <Upload size={32} className="mx-auto mb-3 text-slate-300" />
+                {importFile
+                  ? <p className="font-semibold text-slate-700">{importFile.name}</p>
+                  : <><p className="font-medium text-slate-500">Klik untuk pilih file</p>
+                     <p className="text-xs text-slate-400 mt-1">.json atau .html</p></>}
+                <input ref={fileRef} type="file" accept=".json,.html" className="hidden"
+                  onChange={e => { setImportFile(e.target.files?.[0] ?? null); setImpError(""); }} />
+              </div>
+              {impError && <div className="flex gap-2 p-3 bg-red-50 text-red-700 text-sm rounded-lg">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />{impError}</div>}
+              <div className="bg-slate-50 rounded-lg p-3 text-xs text-slate-500">
+                <p className="font-semibold text-slate-600 mb-1">Format file:</p>
+                <p>• <strong>JSON</strong> — lihat <code>docs/examples/tryout-skd-example.json</code></p>
+                <p>• Spesifikasi lengkap: <code>docs/tryout-bundle-format.md</code></p>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button onClick={resetImport} className="px-4 py-2 border rounded-lg text-sm font-medium">Batal</button>
+                <button onClick={doPreview} disabled={!importFile || impLoading}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                  style={{ background: "#4f5eea" }}>
+                  {impLoading ? "Memproses..." : "Preview →"}
+                </button>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 text-sm">
-              <div>
-                <label className="block font-medium mb-1">Judul Tryout</label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full border rounded-lg p-2" />
+          )}
+
+          {importStep === "preview" && preview && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: "Seksi",  val: preview.sectionCount },
+                  { label: "Soal",   val: preview.totalQuestions },
+                  { label: "Gambar", val: preview.imageCount },
+                  { label: "Error",  val: preview.errors.length },
+                ].map(s => (
+                  <div key={s.label} className="bg-slate-50 rounded-lg p-3 text-center">
+                    <div className={`text-xl font-bold ${s.label === "Error" && s.val > 0 ? "text-red-600" : "text-slate-800"}`}>{s.val}</div>
+                    <div className="text-xs text-slate-500">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-sm space-y-1">
+                <p><span className="font-semibold">Nama:</span> {preview.name}</p>
+                {preview.category && <p><span className="font-semibold">Kategori:</span> {preview.category}</p>}
+                <p><span className="font-semibold">Durasi:</span> {preview.durationMinutes} menit</p>
               </div>
               <div>
-                <label className="block font-medium mb-1">Deskripsi</label>
-                <textarea rows={3} value={desc} onChange={e => setDesc(e.target.value)} className="w-full border rounded-lg p-2" />
+                <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Komposisi Seksi</p>
+                <div className="flex flex-wrap gap-2">
+                  {preview.sections.map((s, i) => (
+                    <div key={i} className="px-3 py-1.5 bg-blue-50 rounded-lg text-xs text-blue-700 font-medium">
+                      {s.name}: <strong>{s.questionCount}</strong> soal
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div>
-                <label className="block font-medium mb-1">Status Publish</label>
-                <select value={status} onChange={e => setStatus(e.target.value as any)} className="w-full border rounded-lg p-2 bg-white">
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                </select>
+              {preview.errors.length > 0 && (
+                <div className="bg-red-50 rounded-lg p-3 space-y-1">
+                  <p className="text-sm font-semibold text-red-700 flex items-center gap-1.5">
+                    <AlertCircle size={14} /> {preview.errors.length} soal bermasalah
+                  </p>
+                  {preview.errors.map((e, i) => (
+                    <p key={i} className="text-xs text-red-600">[{e.section}] Soal #{e.index}: {e.message}</p>
+                  ))}
+                </div>
+              )}
+              {preview.preview.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Preview Soal</p>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {preview.preview.map((q, i) => (
+                      <div key={i} className="text-xs bg-slate-50 rounded-lg p-3">
+                        <span className="text-slate-400 mr-2">#{i + 1}</span>
+                        <span className="text-slate-700">{q.content}</span>
+                        {q.answer && <span className="ml-2 text-emerald-600 font-bold">Jwb: {q.answer}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {impError && <div className="flex gap-2 p-3 bg-red-50 text-red-700 text-sm rounded-lg">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />{impError}</div>}
+              <div className="flex justify-end gap-3">
+                <button onClick={() => { setImportStep("upload"); setImpError(""); }}
+                  className="px-4 py-2 border rounded-lg text-sm font-medium">← Kembali</button>
+                <button onClick={doImport} disabled={impLoading}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                  style={{ background: "#4f5eea" }}>
+                  {impLoading ? "Mengimpor..." : `Import ${preview.totalQuestions} Soal`}
+                </button>
               </div>
-              <div>
-                <label className="block font-medium mb-1">Hak Akses</label>
-                <select value={free ? 'true' : 'false'} onChange={e => setFree(e.target.value === 'true')} className="w-full border rounded-lg p-2 bg-white">
-                  <option value="true">Gratis (Semua User)</option>
-                  <option value="false">Premium (Silver/Gold)</option>
-                </select>
-              </div>
-              {/* Add more fields here as needed for composition and passing score */}
             </div>
-            <div className="p-4 border-t bg-slate-50 flex justify-end gap-3">
-              <Dialog.Close asChild>
-                <button className="px-4 py-2 bg-white border rounded-lg font-medium">Batal</button>
-              </Dialog.Close>
-              <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">Simpan</button>
+          )}
+
+          {importStep === "done" && (
+            <div className="text-center py-6 space-y-4">
+              <CheckCircle size={48} className="mx-auto text-emerald-500" />
+              <p className="font-semibold text-slate-800">Bundle tryout berhasil diimpor!</p>
+              <p className="text-sm text-slate-500">
+                <strong>{preview?.name}</strong> — {preview?.totalQuestions} soal dalam {preview?.sectionCount} seksi.
+              </p>
+              <button onClick={resetImport} className="px-6 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "#4f5eea" }}>
+                Tutup
+              </button>
             </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          )}
+        </Modal>
+      )}
+
+      {/* ══ CREATE MODAL ══ */}
+      {showCreate && (
+        <Modal onClose={() => setShowCreate(false)} title="Buat Tryout Baru">
+          <div className="space-y-4">
+            <Field label="Nama Tryout" required>
+              <input value={cName} onChange={e => setCName(e.target.value)} placeholder="SKD Nasional #1"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            </Field>
+            <Field label="Kategori">
+              <select value={cCat} onChange={e => setCCat(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Durasi (menit)">
+                <input type="number" value={cDur} onChange={e => setCDur(Number(e.target.value))} min={1}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              </Field>
+              <Field label="Passing Grade">
+                <input type="number" value={cPass} onChange={e => setCPass(Number(e.target.value))} min={0}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              </Field>
+            </div>
+            <Field label="Deskripsi">
+              <textarea value={cDesc} onChange={e => setCDesc(e.target.value)} rows={2}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            </Field>
+            <div className="flex justify-end gap-3 pt-2">
+              <button onClick={() => setShowCreate(false)} className="px-4 py-2 border rounded-lg text-sm font-medium">Batal</button>
+              <button onClick={doCreate} disabled={cSaving || !cName.trim()}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                style={{ background: "#4f5eea" }}>
+                {cSaving ? "Menyimpan..." : "Buat Tryout"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ══ EDIT MODAL ══ */}
+      {editB && (
+        <Modal onClose={() => setEditB(null)} title="Edit Tryout">
+          <div className="space-y-4">
+            <Field label="Nama Tryout" required>
+              <input value={eName} onChange={e => setEName(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            </Field>
+            <Field label="Kategori">
+              <select value={eCat} onChange={e => setECat(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="">Pilih...</option>
+                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Durasi (menit)">
+                <input type="number" value={eDur} onChange={e => setEDur(Number(e.target.value))} min={1}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              </Field>
+              <Field label="Passing Grade">
+                <input type="number" value={ePass} onChange={e => setEPass(Number(e.target.value))} min={0}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              </Field>
+            </div>
+            <Field label="Deskripsi">
+              <textarea value={eDesc} onChange={e => setEDesc(e.target.value)} rows={2}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            </Field>
+            <div className="flex justify-end gap-3 pt-2">
+              <button onClick={() => setEditB(null)} className="px-4 py-2 border rounded-lg text-sm font-medium">Batal</button>
+              <button onClick={doEdit} disabled={eSaving}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                style={{ background: "#4f5eea" }}>
+                {eSaving ? "Menyimpan..." : "Simpan"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </AdminLayout>
+  );
+}
+
+/* ── Sub-components ─────────────────────────────────────── */
+function ExportMenu({ b, onExport }: { b: Bundle; onExport: (b: Bundle, fmt: "json" | "html") => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button title="Export" onClick={() => setOpen(o => !o)}
+        className="p-1.5 rounded hover:bg-slate-100 text-slate-500 flex items-center gap-0.5">
+        <Download size={15} /><ChevronDown size={11} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 mt-1 w-32 bg-white border rounded-lg shadow-lg z-20 py-1 text-sm">
+            <button onClick={() => { onExport(b, "json"); setOpen(false); }}
+              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2">
+              <FileText size={13} /> JSON
+            </button>
+            <button onClick={() => { onExport(b, "html"); setOpen(false); }}
+              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2">
+              <BookOpen size={13} /> HTML
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b">
+          <h2 className="font-bold text-lg">{title}</h2>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100"><X size={18} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      {children}
+    </div>
   );
 }

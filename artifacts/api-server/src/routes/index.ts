@@ -6,7 +6,8 @@ import adminRouter         from "./admin";
 import adminPlansRouter    from "./admin-plans";
 import adminTxRouter       from "./admin-transactions";
 import adminCmsRouter      from "./admin-cms";
-import adminBundlesRouter  from "./admin-bundles";
+import adminBundlesRouter       from "./admin-bundles";
+import adminTryoutBundlesRouter from "./admin-tryout-bundles";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(adminPlansRouter);
 router.use(adminTxRouter);
 router.use(adminCmsRouter);
 router.use(adminBundlesRouter);
+router.use(adminTryoutBundlesRouter);
 
 export default router;

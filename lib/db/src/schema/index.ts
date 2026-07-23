@@ -5,3 +5,4 @@ export * from "./subscription-plans";
 export * from "./payment-transactions";
 export * from "./question-bundles";
 export * from "./questions";
+export * from "./tryout-bundles";

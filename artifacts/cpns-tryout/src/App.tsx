@@ -29,6 +29,7 @@ import { AdminQuestionsPage } from "./pages/admin/AdminQuestionsPage";
 import { AdminBundleDetailPage } from "./pages/admin/AdminBundleDetailPage";
 import { AdminCategoriesPage } from "./pages/admin/AdminCategoriesPage";
 import { AdminTryoutsPage } from "./pages/admin/AdminTryoutsPage";
+import { AdminTryoutDetailPage } from "./pages/admin/AdminTryoutDetailPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { AdminSubscriptionsPage } from "./pages/admin/AdminSubscriptionsPage";
 import { AdminPaymentsPage } from "./pages/admin/AdminPaymentsPage";
@@ -107,6 +108,7 @@ function Router() {
       <Route path="/admin/questions/:bundleId">{() => <AdminGuard component={AdminBundleDetailPage} />}</Route>
       <Route path="/admin/categories">{() => <AdminGuard component={AdminCategoriesPage} />}</Route>
       <Route path="/admin/tryouts">{() => <AdminGuard component={AdminTryoutsPage} />}</Route>
+      <Route path="/admin/tryouts/:tryoutId">{() => <AdminGuard component={AdminTryoutDetailPage} />}</Route>
       <Route path="/admin/users">{() => <AdminGuard component={AdminUsersPage} />}</Route>
       <Route path="/admin/subscriptions">{() => <AdminGuard component={AdminSubscriptionsPage} />}</Route>
       <Route path="/admin/payments">{() => <AdminGuard component={AdminPaymentsPage} />}</Route>

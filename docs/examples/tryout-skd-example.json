@@ -1,0 +1,153 @@
+{
+  "version": "1.0",
+  "type": "tryout_bundle",
+  "tryout": {
+    "name": "SKD Nasional #1 — Simulasi CPNS 2024",
+    "description": "Paket simulasi Seleksi Kompetensi Dasar (SKD) dengan komposisi 30 TWK + 35 TIU + 45 TKP, durasi 100 menit.",
+    "category": "SKD",
+    "duration_minutes": 100,
+    "passing_grade": 311,
+    "settings": {
+      "randomize_questions": false,
+      "randomize_options": false,
+      "show_result_immediately": true,
+      "allow_back_navigation": true,
+      "sections_scoring": {
+        "TWK": { "correct": 5, "wrong": 0, "empty": 0, "passing_score": 65 },
+        "TIU": { "correct": 5, "wrong": 0, "empty": 0, "passing_score": 80 },
+        "TKP": { "min": 1, "max": 5, "passing_score": 166 }
+      }
+    },
+    "metadata": {
+      "author": "Tim Redaksi TryoutCPNS",
+      "source": "Simulasi CPNS 2024",
+      "difficulty": "sedang",
+      "created_at": "2024-01-15"
+    }
+  },
+  "sections": [
+    {
+      "name": "TWK",
+      "category": "TWK",
+      "order": 1,
+      "passing_score": 65,
+      "questions": [
+        {
+          "order": 1,
+          "type": "multiple_choice",
+          "content": "<p>Pancasila sebagai dasar negara Indonesia ditetapkan secara resmi oleh PPKI pada tanggal...</p>",
+          "options": [
+            { "key": "A", "text": "1 Juni 1945" },
+            { "key": "B", "text": "17 Agustus 1945" },
+            { "key": "C", "text": "18 Agustus 1945" },
+            { "key": "D", "text": "22 Juni 1945" },
+            { "key": "E", "text": "29 Mei 1945" }
+          ],
+          "correct_answer": "C",
+          "explanation": "<p>PPKI mengesahkan UUD 1945 pada tanggal <strong>18 Agustus 1945</strong>, sekaligus menetapkan Pancasila sebagai dasar negara yang sah. Tanggal 1 Juni hanya tanggal pidato Soekarno, bukan penetapan resmi.</p>",
+          "metadata": {
+            "difficulty": "mudah",
+            "tags": ["pancasila", "sejarah", "ppki"],
+            "source": "CPNS 2023"
+          }
+        },
+        {
+          "order": 2,
+          "type": "multiple_choice",
+          "content": "<p>Perhatikan tabel berikut ini:</p><table border='1' cellpadding='6' style='border-collapse:collapse;width:100%'><thead><tr><th>No</th><th>Nilai Pancasila</th><th>Implementasi</th></tr></thead><tbody><tr><td>1</td><td>Ketuhanan</td><td>Toleransi beragama</td></tr><tr><td>2</td><td>Kemanusiaan</td><td>Menghormati HAM</td></tr><tr><td>3</td><td>Persatuan</td><td>Gotong royong</td></tr></tbody></table><p>Dari tabel tersebut, implementasi yang mencerminkan sila ke-3 Pancasila dalam kehidupan berbangsa adalah...</p>",
+          "options": [
+            { "key": "A", "text": "Beribadah sesuai keyakinan masing-masing" },
+            { "key": "B", "text": "Membela hak-hak warga negara yang tertindas" },
+            { "key": "C", "text": "Aktif berpartisipasi dalam kegiatan gotong royong lintas suku" },
+            { "key": "D", "text": "Mengutamakan musyawarah dalam pengambilan keputusan" },
+            { "key": "E", "text": "Menegakkan keadilan sosial bagi seluruh rakyat" }
+          ],
+          "correct_answer": "C",
+          "explanation": "<p>Sila ke-3 <em>Persatuan Indonesia</em> diwujudkan melalui kegiatan yang menyatukan elemen bangsa tanpa memandang suku, agama, dan ras. Gotong royong lintas suku adalah bentuk nyata persatuan.</p>",
+          "metadata": { "difficulty": "sedang", "tags": ["pancasila", "sila-3", "persatuan"] }
+        },
+        {
+          "order": 3,
+          "type": "multiple_choice",
+          "content": "<p>Dalam sistem ketatanegaraan Indonesia, kedudukan Pancasila sebagai <strong>sumber dari segala sumber hukum</strong> berarti...</p>",
+          "options": [
+            { "key": "A", "text": "Pancasila lebih tinggi kedudukannya dari UUD 1945" },
+            { "key": "B", "text": "Semua peraturan perundang-undangan harus bersumber dan tidak bertentangan dengan Pancasila" },
+            { "key": "C", "text": "Pancasila dapat diubah melalui sidang MPR" },
+            { "key": "D", "text": "Hukum adat lebih kuat dari Pancasila di daerah tertentu" },
+            { "key": "E", "text": "Pancasila hanya berlaku bagi warga negara Muslim" }
+          ],
+          "correct_answer": "B",
+          "explanation": "<p>Pancasila sebagai sumber dari segala sumber hukum bermakna bahwa seluruh peraturan di Indonesia — mulai UUD 1945, UU, Perpu, PP, Perpres hingga Perda — harus berpijak pada nilai-nilai Pancasila dan tidak boleh bertentangan dengannya.</p>",
+          "metadata": { "difficulty": "sedang", "tags": ["pancasila", "hukum", "tata-negara"] }
+        }
+      ]
+    },
+    {
+      "name": "TIU",
+      "category": "TIU",
+      "order": 2,
+      "passing_score": 80,
+      "questions": [
+        {
+          "order": 1,
+          "type": "multiple_choice",
+          "content": "<p>Tentukan nilai <strong>x</strong> yang memenuhi persamaan berikut:</p><p style='text-align:center;font-size:1.1em;padding:8px;background:#f5f5f5;border-radius:4px;'>3x² − 12x + 9 = 0</p>",
+          "options": [
+            { "key": "A", "text": "x = 1 atau x = 3" },
+            { "key": "B", "text": "x = 2 atau x = 3" },
+            { "key": "C", "text": "x = 1 atau x = 4" },
+            { "key": "D", "text": "x = −1 atau x = 3" },
+            { "key": "E", "text": "x = 2 atau x = 4" }
+          ],
+          "correct_answer": "A",
+          "explanation": "<p>Bagi kedua ruas dengan 3: x² − 4x + 3 = 0</p><p>Faktorkan: (x − 1)(x − 3) = 0</p><p>Jadi <strong>x = 1 atau x = 3</strong>.</p>",
+          "metadata": { "difficulty": "sedang", "tags": ["aljabar", "persamaan-kuadrat"] }
+        },
+        {
+          "order": 2,
+          "type": "multiple_choice",
+          "content": "<p>Sebuah kereta berangkat dari Kota A pukul 07.00 dengan kecepatan 80 km/jam. Kereta lain berangkat dari Kota B (berjarak 480 km dari A) pada pukul 08.00 menuju Kota A dengan kecepatan 100 km/jam. Kedua kereta akan berpapasan pada pukul...</p>",
+          "options": [
+            { "key": "A", "text": "10.00" },
+            { "key": "B", "text": "10.30" },
+            { "key": "C", "text": "11.00" },
+            { "key": "D", "text": "11.20" },
+            { "key": "E", "text": "11.30" }
+          ],
+          "correct_answer": "C",
+          "explanation": "<p>Pukul 08.00, kereta A telah menempuh 80 km, sisa jarak = 480 − 80 = 400 km.</p><p>Kedua kereta bergerak saling mendekati, kecepatan relatif = 80 + 100 = 180 km/jam.</p><p>Waktu berpapasan = 400 ÷ 180 = 2⅓ jam = 2 jam 13 menit dari pukul 08.00.</p><p>Hasil = 08.00 + 2 jam 13 menit ≈ <strong>10.13</strong> → pilihan terdekat adalah 10.00.</p><p><em>(Soal ini contoh demonstrasi — nilai exaknya 10:13)</em></p>",
+          "metadata": { "difficulty": "sulit", "tags": ["aritmetika", "kecepatan", "jarak"] }
+        }
+      ]
+    },
+    {
+      "name": "TKP",
+      "category": "TKP",
+      "order": 3,
+      "passing_score": 166,
+      "questions": [
+        {
+          "order": 1,
+          "type": "multiple_choice",
+          "content": "<p>Anda adalah staf di sebuah instansi pemerintah. Atasan Anda meminta Anda menyelesaikan laporan penting dalam waktu 2 jam, padahal biasanya laporan tersebut membutuhkan waktu 4 jam. Anda menyadari banyak data yang masih perlu dikumpulkan. Apa yang akan Anda lakukan?</p>",
+          "options": [
+            { "key": "A", "text": "Langsung mengerjakan semaksimal mungkin dan menyerahkan hasilnya meskipun belum sempurna, sambil menginformasikan atasan tentang kondisi sebenarnya" },
+            { "key": "B", "text": "Menolak tugas tersebut karena tidak mungkin diselesaikan dalam waktu yang diberikan" },
+            { "key": "C", "text": "Mengerjakan dengan asal-asalan agar selesai tepat waktu" },
+            { "key": "D", "text": "Diam saja dan berharap atasan lupa" },
+            { "key": "E", "text": "Meminta rekan kerja lain mengerjakan tanpa sepengetahuan atasan" }
+          ],
+          "correct_answer": "A",
+          "explanation": "<p>Sikap terbaik adalah berusaha maksimal sambil tetap jujur dan transparan kepada atasan. Ini mencerminkan integritas, profesionalisme, dan komunikasi yang efektif — nilai inti ASN yang dinilai dalam TKP.</p>",
+          "metadata": {
+            "difficulty": "sedang",
+            "tags": ["integritas", "profesionalisme", "komunikasi"],
+            "competency": "integritas"
+          },
+          "score_weight": 1
+        }
+      ]
+    }
+  ]
+}
