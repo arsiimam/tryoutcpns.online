@@ -10,7 +10,8 @@ import adminBundlesRouter       from "./admin-bundles";
 import adminTryoutBundlesRouter from "./admin-tryout-bundles";
 import publicPlansRouter        from "./public-plans";
 import participantRouter        from "./participant";
-import { participantTryoutRouter } from "./participant-tryout";
+import { participantTryoutRouter }  from "./participant-tryout";
+import { participantPracticeRouter } from "./participant-practice";
 
 const router: IRouter = Router();
 
@@ -19,7 +20,8 @@ router.use(healthRouter);
 router.use(paymentRouter);
 router.use(publicPlansRouter);
 router.use(participantRouter);
-router.use("/participant", participantTryoutRouter);
+router.use("/participant",          participantTryoutRouter);
+router.use("/participant/practice", participantPracticeRouter);
 router.use(adminRouter);
 router.use(adminPlansRouter);
 router.use(adminTxRouter);
