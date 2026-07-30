@@ -1,0 +1,56 @@
+FROM node:22-alpine AS builder
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy workspace files
+COPY pnpm-workspace.yaml ./
+COPY package.json ./
+COPY tsconfig.json ./
+COPY tsconfig.base.json ./
+
+# Copy lib packages
+COPY lib/ ./lib/
+
+# Copy api-server source
+COPY artifacts/api-server/ ./artifacts/api-server/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Build lib packages
+RUN pnpm run typecheck:libs
+
+# Build API server
+RUN pnpm --filter @workspace/api-server run build
+
+# ---------------------------------------------------------------------------
+FROM node:22-alpine AS runner
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy workspace config
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/tsconfig.base.json ./
+
+# Copy lib packages (needed at runtime for pg driver etc.)
+COPY --from=builder /app/lib/ ./lib/
+COPY --from=builder /app/artifacts/api-server/ ./artifacts/api-server/
+
+# Install production dependencies only
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy built dist
+COPY --from=builder /app/artifacts/api-server/dist/ ./artifacts/api-server/dist/
+
+WORKDIR /app/artifacts/api-server
+
+EXPOSE 8080
+
+CMD ["node", "--enable-source-maps", "./dist/index.mjs"]

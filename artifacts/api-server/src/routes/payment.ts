@@ -59,7 +59,12 @@ router.post("/payment/create", async (req, res) => {
       ? `https://${replitDomains.split(",")[0].trim()}`
       : devDomain ? `https://${devDomain}` : `http://localhost:${process.env.PORT || 8080}`;
 
-    const merchantOrderId = `CPNS-${planId.toUpperCase().replace(/\s+/g, "")}-${Date.now()}`;
+    // Duitku limits merchantOrderId to 50 chars.
+    // Format: CPNS-<planSlug>-<epochSeconds>  →  max 5+34+1+10 = 50 chars
+    const epochSec   = Math.floor(Date.now() / 1000).toString(); // 10 digits
+    const maxSlugLen = 50 - 5 - 1 - epochSec.length;            // = 34
+    const planSlug   = planId.toUpperCase().replace(/\s+/g, "").slice(0, maxSlugLen);
+    const merchantOrderId = `CPNS-${planSlug}-${epochSec}`;
     const finalAmount     = Math.max(10000, amount - discountAmount);
     const cfg             = await getDuitkuConfig();
     const expiryMins      = cfg.expiryPeriod;

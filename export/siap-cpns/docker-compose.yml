@@ -1,0 +1,81 @@
+version: "3.9"
+
+# =============================================================================
+# SiapCPNS — Docker Compose (Self-Hosted)
+# Jalankan: docker compose up -d
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: siapcpns-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: siapcpns
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-rahasia_ganti_ini}
+      POSTGRES_DB: siapcpns
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U siapcpns"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # API Server (Express)
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: ./source
+      dockerfile: ../Dockerfile.api
+    container_name: siapcpns-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgres://siapcpns:${DB_PASSWORD:-rahasia_ganti_ini}@db:5432/siapcpns
+      SESSION_SECRET: ${SESSION_SECRET:-session_secret_ganti_ini_min_32_karakter}
+      APP_URL: ${APP_URL:-http://localhost}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      DUITKU_MERCHANT_CODE: ${DUITKU_MERCHANT_CODE:-}
+      DUITKU_API_KEY: ${DUITKU_API_KEY:-}
+    networks:
+      - internal
+      - web
+
+  # ---------------------------------------------------------------------------
+  # Frontend (Nginx serving Vite build)
+  # ---------------------------------------------------------------------------
+  frontend:
+    image: nginx:alpine
+    container_name: siapcpns-frontend
+    restart: unless-stopped
+    volumes:
+      - ./source/artifacts/cpns-tryout/dist/public:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    networks:
+      - web
+
+volumes:
+  postgres_data:
+
+networks:
+  internal:
+    driver: bridge
+  web:
+    driver: bridge

@@ -18,3 +18,9 @@ id = "zj16OhkSz2reXur9BodVo"
 uri = "file://docs/examples/bundle-tiu-example.html"
 type = "unspecified"
 title = "Contoh Bundle HTML — TIU Numerik"
+
+[[outputs]]
+id = "C1-n-fwG93nrN-vZK5P07"
+uri = "file://export/siap-cpns-hosting.zip"
+type = "unspecified"
+title = "siap-cpns-hosting.zip — Paket Lengkap Self-Hosted"

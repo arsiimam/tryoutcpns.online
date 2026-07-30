@@ -23,3 +23,15 @@ timeoutMs = 20000
 
 [userenv.shared]
 DUITKU_ENV = "sandbox"
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[[ports]]
+localPort = 22075
+externalPort = 80
