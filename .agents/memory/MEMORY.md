@@ -2,3 +2,4 @@
 - [drizzle-kit push no-TTY](drizzle-kit-tty.md) — drizzle-kit push fails in non-interactive shell; create tables via raw psql SQL instead
 - [Double /api prefix bug](double-api-prefix.md) — admin-bundles and admin-tryout-bundles routers defined routes with /api/admin/... but router is mounted at /api; fix: use /admin/... paths
 - [Participant router mount path](participant-router-mount.md) — must mount with prefix: router.use("/participant", participantTryoutRouter); admin routers have global requireAdmin that intercepts fallthrough requests
+- [VPS Deployment Config](vps-deployment.md) — port 3009, PM2 --env-file flag, fork mode, aaPanel nginx path, admin script
