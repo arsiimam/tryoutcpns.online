@@ -8,6 +8,7 @@ import adminTxRouter       from "./admin-transactions";
 import adminCmsRouter      from "./admin-cms";
 import adminBundlesRouter       from "./admin-bundles";
 import adminTryoutBundlesRouter from "./admin-tryout-bundles";
+import adminStatsRouter        from "./admin-stats";
 import publicPlansRouter        from "./public-plans";
 import participantRouter        from "./participant";
 import { participantTryoutRouter }  from "./participant-tryout";
@@ -28,5 +29,6 @@ router.use(adminTxRouter);
 router.use(adminCmsRouter);
 router.use(adminBundlesRouter);
 router.use(adminTryoutBundlesRouter);
+router.use(adminStatsRouter);
 
 export default router;
