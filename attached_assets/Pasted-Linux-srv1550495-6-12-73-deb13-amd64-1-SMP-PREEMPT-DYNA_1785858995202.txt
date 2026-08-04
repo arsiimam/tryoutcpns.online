@@ -1,0 +1,89 @@
+Linux srv1550495 6.12.73+deb13-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.73-1 (2026-02-17) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Tue Aug  4 22:50:16 2026 from 114.10.151.101
+root@srv1550495:~# cd /var/www/tryoutcpns
+git pull origin main
+pnpm --filter @workspace/api-server run build
+pm2 delete cpns-api 2>/dev/null || true
+pm2 start ecosystem.config.cjs
+pm2 save
+sleep 3
+pm2 logs cpns-api --lines 10 --nostream
+remote: Enumerating objects: 18, done.
+remote: Counting objects: 100% (18/18), done.
+remote: Compressing objects: 100% (5/5), done.
+remote: Total 11 (delta 6), reused 11 (delta 6), pack-reused 0 (from 0)
+Unpacking objects: 100% (11/11), 146.29 KiB | 2.57 MiB/s, done.
+From https://github.com/arsiimam/tryoutcpns.online
+ * branch            main       -> FETCH_HEAD
+   324d244..d22fedf  main       -> origin/main
+Updating 324d244..d22fedf
+Fast-forward
+ artifacts/api-server/src/index.ts                                    |  17 +++++++++++++++--
+ attached_assets/Screen_Shot_2026-08-04_at_22.46.30_1785858394160.png | Bin 0 -> 158452 bytes
+ ecosystem.config.cjs                                                 |  42 +++++++-----------------------------------
+ 3 files changed, 22 insertions(+), 37 deletions(-)
+ create mode 100644 attached_assets/Screen_Shot_2026-08-04_at_22.46.30_1785858394160.png
+$ node ./build.mjs
+
+  dist/index.mjs                       2.1mb ⚠️
+  dist/pino-worker.mjs               153.4kb
+  dist/pino-file.mjs                 142.1kb
+  dist/pino-pretty.mjs               114.4kb
+  dist/thread-stream-worker.mjs        7.3kb
+  dist/index.mjs.map                   3.5mb
+  dist/pino-worker.mjs.map           256.9kb
+  dist/pino-file.mjs.map             229.0kb
+  dist/pino-pretty.mjs.map           203.6kb
+  dist/thread-stream-worker.mjs.map   12.0kb
+
+⚡ Done in 377ms
+[PM2] Applying action deleteProcessId on app [cpns-api](ids: [ 50 ])
+[PM2] [cpns-api](50) ✓
+┌────┬──────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                     │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 2  │ esa-energy               │ default     │ 0.39.7  │ fork    │ 3890530  │ 5D     │ 1    │ online    │ 0%       │ 60.8mb   │ root     │ disabled │
+│ 3  │ esa-energy-frontend      │ default     │ 0.1.0   │ fork    │ 3973525  │ 4D     │ 3    │ online    │ 0%       │ 102.7mb  │ root     │ disabled │
+│ 42 │ fastpublisher-api        │ default     │ 0.0.0   │ fork    │ 3965737  │ 4D     │ 0    │ online    │ 0%       │ 176.2mb  │ root     │ disabled │
+│ 1  │ invino                   │ default     │ 0.0.0   │ fork    │ 2569477  │ 38D    │ 0    │ online    │ 0%       │ 161.4mb  │ root     │ disabled │
+│ 36 │ reogmix-api              │ default     │ 0.0.1   │ fork    │ 2698956  │ 37D    │ 9    │ online    │ 0%       │ 123.8mb  │ root     │ disabled │
+│ 39 │ reogmix-frontend         │ default     │ 15.5.19 │ fork    │ 2699634  │ 37D    │ 21   │ online    │ 0%       │ 255.7mb  │ root     │ disabled │
+│ 38 │ reogmix-render-worker    │ default     │ 0.0.1   │ fork    │ 2693523  │ 37D    │ 2    │ online    │ 0%       │ 89.9mb   │ root     │ disabled │
+│ 37 │ reogmix-worker           │ default     │ 0.0.1   │ fork    │ 2693500  │ 37D    │ 2    │ online    │ 0%       │ 92.0mb   │ root     │ disabled │
+│ 40 │ sebelah-coffee-api       │ default     │ 0.0.0   │ fork    │ 3232965  │ 22D    │ 17   │ online    │ 0%       │ 149.8mb  │ root     │ disabled │
+│ 0  │ wa-api                   │ default     │ 1.0.0   │ fork    │ 2569471  │ 38D    │ 0    │ online    │ 0%       │ 77.6mb   │ root     │ disabled │
+└────┴──────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2][WARN] Applications cpns-api not running, starting...
+[PM2] App [cpns-api] launched (1 instances)
+┌────┬──────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                     │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 51 │ cpns-api                 │ default     │ 0.0.0   │ cluster │ 22445    │ 0s     │ 0    │ online    │ 0%       │ 40.3mb   │ root     │ disabled │
+│ 2  │ esa-energy               │ default     │ 0.39.7  │ fork    │ 3890530  │ 5D     │ 1    │ online    │ 0%       │ 60.8mb   │ root     │ disabled │
+│ 3  │ esa-energy-frontend      │ default     │ 0.1.0   │ fork    │ 3973525  │ 4D     │ 3    │ online    │ 0%       │ 102.7mb  │ root     │ disabled │
+│ 42 │ fastpublisher-api        │ default     │ 0.0.0   │ fork    │ 3965737  │ 4D     │ 0    │ online    │ 0%       │ 176.2mb  │ root     │ disabled │
+│ 1  │ invino                   │ default     │ 0.0.0   │ fork    │ 2569477  │ 38D    │ 0    │ online    │ 0%       │ 161.4mb  │ root     │ disabled │
+│ 36 │ reogmix-api              │ default     │ 0.0.1   │ fork    │ 2698956  │ 37D    │ 9    │ online    │ 0%       │ 123.8mb  │ root     │ disabled │
+│ 39 │ reogmix-frontend         │ default     │ 15.5.19 │ fork    │ 2699634  │ 37D    │ 21   │ online    │ 0%       │ 255.7mb  │ root     │ disabled │
+│ 38 │ reogmix-render-worker    │ default     │ 0.0.1   │ fork    │ 2693523  │ 37D    │ 2    │ online    │ 0%       │ 89.9mb   │ root     │ disabled │
+│ 37 │ reogmix-worker           │ default     │ 0.0.1   │ fork    │ 2693500  │ 37D    │ 2    │ online    │ 0%       │ 92.0mb   │ root     │ disabled │
+│ 40 │ sebelah-coffee-api       │ default     │ 0.0.0   │ fork    │ 3232965  │ 22D    │ 17   │ online    │ 0%       │ 149.8mb  │ root     │ disabled │
+│ 0  │ wa-api                   │ default     │ 1.0.0   │ fork    │ 2569471  │ 38D    │ 0    │ online    │ 0%       │ 77.6mb   │ root     │ disabled │
+└────┴──────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+[TAILING] Tailing last 10 lines for [cpns-api] process (change the value with --lines option)
+/root/.pm2/logs/cpns-api-error-51.log last 10 lines:
+/root/.pm2/logs/cpns-api-out-51.log last 10 lines:
+51|cpns-ap | 550495","err":{"type":"Error","message":"bind EADDRINUSE null:3001","stack":"Error: bind EADDRINUSE null:3001\n    at listenOnPrimaryHandle (node:net:1989:18)\n    at rr (node:internal/cluster/child:163:12)\n    at Worker.<anonymous> (node:internal/cluster/child:113:7)\n    at process.onInternalMessage (node:internal/cluster/utils:49:5)\n    at process.emit (node:events:536:35)\n    at emit (node:internal/child_process:950:14)\n    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)","errno":-98,"code":"EADDRINUSE","syscall":"bind","address":null,"port":3001},"msg":"Error listening on port"}
+51|cpns-ap | {"level":50,"time":1785858959457,"pid":22532,"hostname":"srv1550495","err":{"type":"Error","message":"bind EADDRINUSE null:3001","stack":"Error: bind EADDRINUSE null:3001\n    at listenOnPrimaryHandle (node:net:1989:18)\n    at rr (node:internal/cluster/child:163:12)\n    at Worker.<anonymous> (node:internal/cluster/child:113:7)\n    at process.onInternalMessage (node:internal/cluster/utils:49:5)\n    at process.emit (node:events:536:35)\n    at emit (node:internal/child_process:950:14)\n    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)","errno":-98,"code":"EADDRINUSE","syscall":"bind","address":null,"port":3001},"msg":"Error listening on port"}
+51|cpns-ap | {"level":50,"time":1785858959815,"pid":22543,"hostname":"srv1550495","err":{"type":"Error","message":"bind EADDRINUSE null:3001","stack":"Error: bind EADDRINUSE null:3001\n    at listenOnPrimaryHandle (node:net:1989:18)\n    at rr (node:internal/cluster/child:163:12)\n    at Worker.<anonymous> (node:internal/cluster/child:113:7)\n    at process.onInternalMessage (node:internal/cluster/utils:49:5)\n    at process.emit (node:events:536:35)\n    at emit (node:internal/child_process:950:14)\n    at process.processTicksAndRejections (node:internal/process/task_queues:83:21)","errno":-98,"code":"EADDRINUSE","syscall":"bind","address":null,"port":3001},"msg":"Error listening on port"}
+
+root@srv1550495:/var/www/tryoutcpns# 
