@@ -1,0 +1,49 @@
+Linux srv1550495 6.12.73+deb13-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.73-1 (2026-02-17) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Tue Aug  4 21:39:25 2026 from 114.10.151.101
+root@srv1550495:~# nginx -v
+sudo systemctl start nginx
+sudo systemctl status nginx
+nginx version: nginx/1.24.0
+Job for nginx.service failed because the control process exited with error code.
+See "systemctl status nginx.service" and "journalctl -xeu nginx.service" for details.
+× nginx.service - LSB: starts the nginx web server
+     Loaded: loaded (/etc/init.d/nginx; generated)
+     Active: failed (Result: exit-code) since Tue 2026-08-04 22:05:00 WIB; 65ms ago
+ Invocation: 8a4a24ab56784f7898e6061f7b38df0e
+       Docs: man:systemd-sysv-generator(8)
+    Process: 17891 ExecStart=/etc/init.d/nginx start (code=exited, status=1/FAILURE)
+   Mem peak: 4.5M
+        CPU: 83ms
+
+Aug 04 22:04:59 srv1550495 systemd[1]: Starting nginx.service - LSB: starts the nginx web server...
+Aug 04 22:05:00 srv1550495 nginx[17891]: Starting nginx... nginx (pid 776115 14219 14218 14217 14216 14215 14214 14213 14212 14211) already running.
+Aug 04 22:05:00 srv1550495 systemd[1]: nginx.service: Control process exited, code=exited, status=1/FAILURE
+Aug 04 22:05:00 srv1550495 systemd[1]: nginx.service: Failed with result 'exit-code'.
+Aug 04 22:05:00 srv1550495 systemd[1]: Failed to start nginx.service - LSB: starts the nginx web server.
+root@srv1550495:~# ps aux | grep nginx
+sudo ss -tlnp | grep :80
+www        14211  0.0  0.1 232552 38368 ?        S    21:36   0:00 nginx: worker process
+www        14212  0.0  0.1 232744 39080 ?        S    21:36   0:00 nginx: worker process
+www        14213  0.0  0.1 232552 38132 ?        S    21:36   0:00 nginx: worker process
+www        14214  0.0  0.1 232552 37904 ?        S    21:36   0:00 nginx: worker process
+www        14215  0.0  0.1 232552 35252 ?        S    21:36   0:00 nginx: worker process
+www        14216  0.0  0.1 232552 37904 ?        S    21:36   0:00 nginx: worker process
+www        14217  0.0  0.1 232552 35252 ?        S    21:36   0:00 nginx: worker process
+www        14218  0.0  0.1 232552 38128 ?        S    21:36   0:00 nginx: worker process
+www        14219  0.0  0.0 210956 14528 ?        S    21:36   0:00 nginx: cache manager process
+root       17932  0.0  0.0   6596  2300 pts/0    S+   22:05   0:00 grep nginx
+root      776115  0.0  0.0 211340 18752 ?        Ss   May02   0:17 nginx: master process /www/server/nginx/sbin/nginx -c /www/server/nginx/conf/nginx.conf
+root     4132561  0.0  0.0   9252  2396 ?        Ss   Aug03   0:00 nginx: master process /www/server/panel/webserver/sbin/webserver -c /www/server/panel/webserver/conf/webserver.conf
+www      4132562  0.0  0.0  13924 10276 ?        S    Aug03   0:00 nginx: worker process
+LISTEN 0      511          0.0.0.0:80         0.0.0.0:*    users:(("nginx",pid=776115,fd=30),("nginx",pid=14218,fd=30),("nginx",pid=14217,fd=30),("nginx",pid=14216,fd=30),("nginx",pid=14215,fd=30),("nginx",pid=14214,fd=30),("nginx",pid=14213,fd=30),("nginx",pid=14212,fd=30),("nginx",pid=14211,fd=30))
+LISTEN 0      511          0.0.0.0:8082       0.0.0.0:*    users:(("node /www/wwwro",pid=3965737,fd=23))                                                                                                                                                                                                     
+LISTEN 0      511                *:8081             *:*    users:(("node /www/wwwro",pid=3232965,fd=28))                                                                                                                                                                                                     
+LISTEN 0      511                *:8080             *:*    users:(("node /www/wwwro",pid=2569471,fd=19))                                                                                                                                                                                                     
+root@srv1550495:~# 
