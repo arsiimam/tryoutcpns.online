@@ -1,0 +1,103 @@
+root@srv1550495:/var/www/tryoutcpns# cd /var/www/tryoutcpns
+git pull origin main
+bash deploy.sh
+From https://github.com/arsiimam/tryoutcpns.online
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+
+=== [1/5] Git pull dari GitHub ===
+From https://github.com/arsiimam/tryoutcpns.online
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+
+=== [2/5] Install dependencies ===
+Scope: all 9 workspace projects
+Already up to date
+Done in 492ms using pnpm v11.17.0
+
+=== [3/5] Build library packages ===
+[ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT] None of the selected packages has a "build" script
+[ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT] None of the selected packages has a "build" script
+[ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT] None of the selected packages has a "build" script
+
+=== [4/5] Build API server ===
+$ node ./build.mjs
+
+  dist/index.mjs                       2.1mb ⚠️
+  dist/pino-worker.mjs               153.4kb
+  dist/pino-file.mjs                 142.1kb
+  dist/pino-pretty.mjs               114.4kb
+  dist/thread-stream-worker.mjs        7.3kb
+  dist/index.mjs.map                   3.5mb
+  dist/pino-worker.mjs.map           256.9kb
+  dist/pino-file.mjs.map             229.0kb
+  dist/pino-pretty.mjs.map           203.6kb
+  dist/thread-stream-worker.mjs.map   12.0kb
+
+⚡ Done in 383ms
+
+=== [5/5] Build frontend ===
+$ vite build --config vite.config.ts
+vite v7.3.6 building client environment for production...
+✓ 2443 modules transformed.
+dist/public/index.html                   1.54 kB │ gzip:   0.61 kB
+dist/public/assets/index-DJBX2mQp.css  161.80 kB │ gzip:  25.66 kB
+dist/public/assets/index-Dkd8kd5B.js   985.25 kB │ gzip: 267.98 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.36s
+
+=== Restart aplikasi dengan PM2 ===
+[PM2] Applying action deleteProcessId on app [cpns-api](ids: [ 46 ])
+[PM2] [cpns-api](46) ✓
+┌────┬──────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                     │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 2  │ esa-energy               │ default     │ 0.39.7  │ fork    │ 3890530  │ 5D     │ 1    │ online    │ 0%       │ 60.3mb   │ root     │ disabled │
+│ 3  │ esa-energy-frontend      │ default     │ 0.1.0   │ fork    │ 3973525  │ 4D     │ 3    │ online    │ 0%       │ 102.3mb  │ root     │ disabled │
+│ 42 │ fastpublisher-api        │ default     │ 0.0.0   │ fork    │ 3965737  │ 4D     │ 0    │ online    │ 0%       │ 176.2mb  │ root     │ disabled │
+│ 1  │ invino                   │ default     │ 0.0.0   │ fork    │ 2569477  │ 38D    │ 0    │ online    │ 0%       │ 161.2mb  │ root     │ disabled │
+│ 36 │ reogmix-api              │ default     │ 0.0.1   │ fork    │ 2698956  │ 37D    │ 9    │ online    │ 0%       │ 124.2mb  │ root     │ disabled │
+│ 39 │ reogmix-frontend         │ default     │ 15.5.19 │ fork    │ 2699634  │ 37D    │ 21   │ online    │ 0%       │ 255.8mb  │ root     │ disabled │
+│ 38 │ reogmix-render-worker    │ default     │ 0.0.1   │ fork    │ 2693523  │ 37D    │ 2    │ online    │ 0%       │ 89.5mb   │ root     │ disabled │
+│ 37 │ reogmix-worker           │ default     │ 0.0.1   │ fork    │ 2693500  │ 37D    │ 2    │ online    │ 0%       │ 91.8mb   │ root     │ disabled │
+│ 40 │ sebelah-coffee-api       │ default     │ 0.0.0   │ fork    │ 3232965  │ 22D    │ 17   │ online    │ 0%       │ 149.8mb  │ root     │ disabled │
+│ 0  │ wa-api                   │ default     │ 1.0.0   │ fork    │ 2569471  │ 38D    │ 0    │ online    │ 0%       │ 77.5mb   │ root     │ disabled │
+└────┴──────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2][WARN] Applications cpns-api not running, starting...
+[PM2] App [cpns-api] launched (1 instances)
+┌────┬──────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                     │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 47 │ cpns-api                 │ default     │ 0.0.0   │ cluster │ 17071    │ 0s     │ 0    │ online    │ 0%       │ 41.1mb   │ root     │ disabled │
+│ 2  │ esa-energy               │ default     │ 0.39.7  │ fork    │ 3890530  │ 5D     │ 1    │ online    │ 0%       │ 60.3mb   │ root     │ disabled │
+│ 3  │ esa-energy-frontend      │ default     │ 0.1.0   │ fork    │ 3973525  │ 4D     │ 3    │ online    │ 0%       │ 102.3mb  │ root     │ disabled │
+│ 42 │ fastpublisher-api        │ default     │ 0.0.0   │ fork    │ 3965737  │ 4D     │ 0    │ online    │ 0%       │ 176.2mb  │ root     │ disabled │
+│ 1  │ invino                   │ default     │ 0.0.0   │ fork    │ 2569477  │ 38D    │ 0    │ online    │ 0%       │ 161.2mb  │ root     │ disabled │
+│ 36 │ reogmix-api              │ default     │ 0.0.1   │ fork    │ 2698956  │ 37D    │ 9    │ online    │ 0%       │ 124.2mb  │ root     │ disabled │
+│ 39 │ reogmix-frontend         │ default     │ 15.5.19 │ fork    │ 2699634  │ 37D    │ 21   │ online    │ 0%       │ 255.8mb  │ root     │ disabled │
+│ 38 │ reogmix-render-worker    │ default     │ 0.0.1   │ fork    │ 2693523  │ 37D    │ 2    │ online    │ 0%       │ 89.5mb   │ root     │ disabled │
+│ 37 │ reogmix-worker           │ default     │ 0.0.1   │ fork    │ 2693500  │ 37D    │ 2    │ online    │ 0%       │ 91.8mb   │ root     │ disabled │
+│ 40 │ sebelah-coffee-api       │ default     │ 0.0.0   │ fork    │ 3232965  │ 22D    │ 17   │ online    │ 0%       │ 149.8mb  │ root     │ disabled │
+│ 0  │ wa-api                   │ default     │ 1.0.0   │ fork    │ 2569471  │ 38D    │ 0    │ online    │ 0%       │ 77.5mb   │ root     │ disabled │
+└────┴──────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+✓ PM2 process 'cpns-api' berjalan
+
+✅ Deploy selesai!
+
+Cek status : pm2 status
+Lihat log  : pm2 logs cpns-api
+Test API   : curl http://localhost:3001/api/healthz
+root@srv1550495:/var/www/tryoutcpns# ls /var/www/tryoutcpns/artifacts/cpns-tryout/dist/public/
+assets  favicon.png  favicon.svg  index.html  logo-dashboard.png  logo-landing.png  logo.png  logo-sm.png  logo.svg  robots.txt
+root@srv1550495:/var/www/tryoutcpns# chmod -R 755 /var/www/tryoutcpns/artifacts/cpns-tryout/dist/public/
+sudo systemctl reload nginx
+nginx.service is not active, cannot reload.
+root@srv1550495:/var/www/tryoutcpns# cat /etc/nginx/sites-available/tryoutcpns | grep root
+cat: /etc/nginx/sites-available/tryoutcpns: No such file or directory
+root@srv1550495:/var/www/tryoutcpns# 
