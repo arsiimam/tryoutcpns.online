@@ -29,7 +29,7 @@ export function SignUpPage() {
 
   const handleGoogle = () => {
     setGoogleLoading(true);
-    window.location.href = "/api/auth/google?flow=signup";
+    window.location.href = "/api/auth/google";
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {

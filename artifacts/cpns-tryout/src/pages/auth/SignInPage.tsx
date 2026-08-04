@@ -25,9 +25,7 @@ export function SignInPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const err = params.get("error");
-    if (err === "account_not_found") {
-      setError("Akun belum terdaftar. Silakan daftar terlebih dahulu.");
-    } else if (err === "google_failed") {
+    if (err === "google_failed") {
       setError("Gagal login dengan Google. Coba lagi.");
     } else if (err === "google_cancelled") {
       setError("Login dengan Google dibatalkan.");
@@ -50,7 +48,7 @@ export function SignInPage() {
 
   const handleGoogle = () => {
     setGoogleLoading(true);
-    window.location.href = "/api/auth/google?flow=signin";
+    window.location.href = "/api/auth/google";
   };
 
   if (isLoading) return null;

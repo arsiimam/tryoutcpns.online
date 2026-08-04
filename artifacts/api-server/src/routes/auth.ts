@@ -207,7 +207,6 @@ router.get("/auth/me", async (req, res) => {
 /* GET /api/auth/google                                                */
 /* ------------------------------------------------------------------ */
 router.get("/auth/google", async (req, res) => {
-  const flow = (req.query.flow as string) === "signup" ? "signup" : "signin";
   const base = getBaseUrl(req as any);
   const redirectUri = getRedirectUri(base);
 
@@ -217,8 +216,6 @@ router.get("/auth/google", async (req, res) => {
     return res.redirect(`${base}/sign-in?error=google_not_configured`);
   }
 
-  const state = Buffer.from(JSON.stringify({ flow })).toString("base64url");
-
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -226,7 +223,6 @@ router.get("/auth/google", async (req, res) => {
     scope: "openid email profile",
     access_type: "offline",
     prompt: "select_account",
-    state,
   });
 
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
@@ -236,18 +232,8 @@ router.get("/auth/google", async (req, res) => {
 /* GET /api/auth/google/callback                                       */
 /* ------------------------------------------------------------------ */
 router.get("/auth/google/callback", async (req, res) => {
-  const { code, state } = req.query as { code?: string; state?: string };
+  const { code } = req.query as { code?: string };
   const base = getBaseUrl(req as any);
-
-  let flow: "signin" | "signup" = "signup";
-  try {
-    if (state) {
-      const parsed = JSON.parse(Buffer.from(state, "base64url").toString());
-      if (parsed.flow === "signin") flow = "signin";
-    }
-  } catch {
-    // default to signup
-  }
 
   if (!code) {
     return res.redirect(`${base}/sign-in?error=google_cancelled`);
@@ -297,14 +283,9 @@ router.get("/auth/google/callback", async (req, res) => {
       .where(eq(usersTable.email, email))
       .limit(1);
 
-    // signin flow: only log in existing users
-    if (flow === "signin" && !existing) {
-      return res.redirect(`${base}/sign-in?error=account_not_found`);
-    }
-
+    // Upsert: login jika sudah ada, daftar otomatis jika belum
     let user = existing;
     if (!user) {
-      // signup flow: create account
       const [created] = await db
         .insert(usersTable)
         .values({
@@ -315,6 +296,14 @@ router.get("/auth/google/callback", async (req, res) => {
         })
         .returning();
       user = created;
+    } else {
+      // Update avatar jika berubah
+      if (googleUser.picture && googleUser.picture !== existing.avatarUrl) {
+        await db
+          .update(usersTable)
+          .set({ avatarUrl: googleUser.picture })
+          .where(eq(usersTable.id, existing.id));
+      }
     }
 
     req.session.userId   = user.id;
