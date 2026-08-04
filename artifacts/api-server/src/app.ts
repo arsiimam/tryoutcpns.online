@@ -18,10 +18,24 @@ const allowedOrigins = (() => {
   }
   const devDomain = process.env.REPLIT_DEV_DOMAIN;
   if (devDomain) list.push(`https://${devDomain}`);
+  // Allow APP_URL (production domain on VPS)
+  const appUrl = process.env.APP_URL;
+  if (appUrl) {
+    list.push(appUrl.replace(/\/$/, ""));
+    // also allow www variant
+    const url = new URL(appUrl.startsWith("http") ? appUrl : `https://${appUrl}`);
+    list.push(`https://www.${url.hostname}`);
+    list.push(`http://www.${url.hostname}`);
+    list.push(`http://${url.hostname}`);
+  }
   return list;
 })();
 
 const app: Express = express();
+
+// Trust reverse proxy (nginx on VPS, Cloudflare, Replit proxy)
+// Required for express-rate-limit to work correctly with X-Forwarded-For
+app.set("trust proxy", 1);
 
 app.use(
   pinoHttp({
