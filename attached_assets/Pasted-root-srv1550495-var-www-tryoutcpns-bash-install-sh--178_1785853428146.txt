@@ -1,0 +1,166 @@
+root@srv1550495:/var/www/tryoutcpns# bash install.sh
+
+╔══════════════════════════════════════════════════════════════╗
+║           SiapCPNS — Installer VPS                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+══► 1/9 — Update sistem & install dependency dasar
+
+══► 2/9 — Install Node.js 22
+2026-08-04 21:23:08 - Installing pre-requisites
+Get:1 file:/etc/apt/mirrors/debian.list Mirrorlist [30 B]
+Get:2 file:/etc/apt/mirrors/debian-security.list Mirrorlist [39 B]                                                                                          
+Hit:7 https://deb.nodesource.com/node_22.x nodistro InRelease                                                  
+Hit:3 https://deb.debian.org/debian trixie InRelease                             
+Hit:4 https://deb.debian.org/debian trixie-updates InRelease
+Hit:5 https://deb.debian.org/debian trixie-backports InRelease
+Hit:6 https://deb.debian.org/debian-security trixie-security InRelease
+Hit:8 https://packages.redis.io/deb trixie InRelease
+7 packages can be upgraded. Run 'apt list --upgradable' to see them.
+apt-transport-https is already the newest version (3.0.3).
+ca-certificates is already the newest version (20250419).
+curl is already the newest version (8.14.1-2+deb13u4).
+gnupg is already the newest version (2.4.7-21+deb13u1).
+Summary:
+  Upgrading: 0, Installing: 0, Removing: 0, Not Upgrading: 7
+Get:1 file:/etc/apt/mirrors/debian.list Mirrorlist [30 B]
+Get:2 file:/etc/apt/mirrors/debian-security.list Mirrorlist [39 B]                                                                                          
+Hit:7 https://deb.nodesource.com/node_22.x nodistro InRelease                                                                          
+Hit:3 https://deb.debian.org/debian trixie InRelease                             
+Hit:4 https://deb.debian.org/debian trixie-updates InRelease
+Hit:5 https://deb.debian.org/debian trixie-backports InRelease
+Hit:6 https://deb.debian.org/debian-security trixie-security InRelease
+Hit:8 https://packages.redis.io/deb trixie InRelease
+7 packages can be upgraded. Run 'apt list --upgradable' to see them.
+2026-08-04 21:23:13 - Repository configured successfully.
+2026-08-04 21:23:13 - To install Node.js, run: apt install nodejs -y
+2026-08-04 21:23:13 - You can use N|solid Runtime as a node.js alternative
+2026-08-04 21:23:13 - To install N|solid Runtime, run: apt install nsolid -y 
+
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+nodejs is already the newest version (22.23.2-1nodesource1).
+0 upgraded, 0 newly installed, 0 to remove and 7 not upgraded.
+[✓] Node.js v24.15.0 berhasil diinstall
+
+══► 3/9 — Install pnpm
+[✓] pnpm 11.17.0 sudah terinstall
+
+══► 4/9 — Install PostgreSQL
+[✓] PostgreSQL sudah terinstall
+
+══► 5/9 — Install PM2
+[✓] PM2 sudah terinstall
+
+══► 6/9 — Install nginx
+[✓] nginx sudah terinstall
+
+══► 7/9 — Clone repository dari GitHub
+[!] Folder /var/www/tryoutcpns sudah ada. Pakai 'bash deploy.sh' untuk update.
+
+══► 8/9 — Setup file .env
+[!] .env sudah ada, dilewati
+
+══► Setup database PostgreSQL
+GRANT
+[✓] Database 'tryoutcpns' dan user 'tryoutcpns_user' siap
+
+  Mengimport schema database...
+psql:/var/www/tryoutcpns/database/schema.sql:7: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+psql:/var/www/tryoutcpns/database/schema.sql:22: NOTICE:  relation "users" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:32: NOTICE:  relation "app_settings" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:50: NOTICE:  relation "subscription_plans" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:64: NOTICE:  relation "user_subscriptions_plan" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:83: NOTICE:  relation "payment_transactions" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:97: NOTICE:  relation "question_bundles" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:114: NOTICE:  relation "questions" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:132: NOTICE:  relation "tryout_bundles" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:146: NOTICE:  relation "tryout_sections" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:163: NOTICE:  relation "tryout_questions" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:179: NOTICE:  relation "tryout_sessions" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:200: NOTICE:  relation "tryout_results" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:209: NOTICE:  relation "user_sessions" already exists, skipping
+CREATE TABLE
+psql:/var/www/tryoutcpns/database/schema.sql:210: NOTICE:  relation "idx_user_sessions_expire" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:215: NOTICE:  relation "idx_users_email" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:216: NOTICE:  relation "idx_user_subscriptions_user_id" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:217: NOTICE:  relation "idx_user_subscriptions_status" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:218: NOTICE:  relation "idx_payment_transactions_user_id" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:219: NOTICE:  relation "idx_payment_transactions_merchant_order" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:220: NOTICE:  relation "idx_questions_bundle_id" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:221: NOTICE:  relation "idx_tryout_sessions_user_id" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:222: NOTICE:  relation "idx_tryout_sessions_tryout_id" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:223: NOTICE:  relation "idx_tryout_results_user_id" already exists, skipping
+CREATE INDEX
+psql:/var/www/tryoutcpns/database/schema.sql:224: NOTICE:  relation "idx_tryout_results_tryout_id" already exists, skipping
+CREATE INDEX
+INSERT 0 0
+INSERT 0 0
+[✓] Schema database berhasil diimport
+
+══► Install dependencies & build
+Scope: all 9 workspace projects
+✓ Lockfile passes supply-chain policies (verified 5d ago)
+Lockfile is up to date, resolution step is skipped
+Already up to date
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+└─ Done in 19ms
+Done in 1.7s using pnpm v11.17.0
+[ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT] None of the selected packages has a "build" script
+[ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT] None of the selected packages has a "build" script
+[ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT] None of the selected packages has a "build" script
+$ node ./build.mjs
+
+  dist/index.mjs                       2.1mb ⚠️
+  dist/pino-worker.mjs               153.4kb
+  dist/pino-file.mjs                 142.1kb
+  dist/pino-pretty.mjs               114.4kb
+  dist/thread-stream-worker.mjs        7.3kb
+  dist/index.mjs.map                   3.5mb
+  dist/pino-worker.mjs.map           256.9kb
+  dist/pino-file.mjs.map             229.0kb
+  dist/pino-pretty.mjs.map           203.6kb
+  dist/thread-stream-worker.mjs.map   12.0kb
+
+⚡ Done in 375ms
+$ vite build --config vite.config.ts
+failed to load config from /var/www/tryoutcpns/artifacts/cpns-tryout/vite.config.ts
+error during build:
+Error: PORT environment variable is required but was not provided.
+    at file:///var/www/tryoutcpns/artifacts/cpns-tryout/node_modules/.vite-temp/vite.config.ts.timestamp-1785853400881-649573dd8ef5b.mjs:10:9
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async node:internal/modules/esm/loader:639:26
+    at async loadConfigFromBundledFile (file:///var/www/tryoutcpns/node_modules/.pnpm/vite@7.3.6_@types+node@25.9.5_jiti@2.7.0_lightningcss@1.32.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:35996:12)
+    at async bundleAndLoadConfigFile (file:///var/www/tryoutcpns/node_modules/.pnpm/vite@7.3.6_@types+node@25.9.5_jiti@2.7.0_lightningcss@1.32.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:35884:17)
+    at async loadConfigFromFile (file:///var/www/tryoutcpns/node_modules/.pnpm/vite@7.3.6_@types+node@25.9.5_jiti@2.7.0_lightningcss@1.32.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:35851:42)
+    at async resolveConfig (file:///var/www/tryoutcpns/node_modules/.pnpm/vite@7.3.6_@types+node@25.9.5_jiti@2.7.0_lightningcss@1.32.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:35500:22)
+    at async createBuilder (file:///var/www/tryoutcpns/node_modules/.pnpm/vite@7.3.6_@types+node@25.9.5_jiti@2.7.0_lightningcss@1.32.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:33955:19)
+    at async CAC.<anonymous> (file:///var/www/tryoutcpns/node_modules/.pnpm/vite@7.3.6_@types+node@25.9.5_jiti@2.7.0_lightningcss@1.32.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/cli.js:629:10)
+/var/www/tryoutcpns/artifacts/cpns-tryout:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @workspace/cpns-tryout@0.0.0 build: `vite build --config vite.config.ts`
+Exit status 1
+root@srv1550495:/var/www/tryoutcpns# 
