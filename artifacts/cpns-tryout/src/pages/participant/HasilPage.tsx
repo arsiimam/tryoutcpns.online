@@ -11,11 +11,21 @@ import { useAuth } from "../../lib/auth-context";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { FileText, Target, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 
+const DEFAULT_PG = { TWK: 65, TIU: 80, TKP: 166 };
+
 export function HasilPage() {
   const { user } = useAuth();
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pg, setPg] = useState(DEFAULT_PG);
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    fetch("/api/participant/passing-grades", { credentials: "include" })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.grades) setPg({ ...DEFAULT_PG, ...d.grades }); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -53,9 +63,9 @@ export function HasilPage() {
   }));
 
   const avgCatScores = [
-    { subject: "TWK", score: results.length ? results.reduce((a,c) => a + c.score.TWK, 0)/results.length : 0, pg: 65 },
-    { subject: "TIU", score: results.length ? results.reduce((a,c) => a + c.score.TIU, 0)/results.length : 0, pg: 80 },
-    { subject: "TKP", score: results.length ? results.reduce((a,c) => a + c.score.TKP, 0)/results.length : 0, pg: 166 }
+    { subject: "TWK", score: results.length ? results.reduce((a,c) => a + c.score.TWK, 0)/results.length : 0, pg: pg.TWK },
+    { subject: "TIU", score: results.length ? results.reduce((a,c) => a + c.score.TIU, 0)/results.length : 0, pg: pg.TIU },
+    { subject: "TKP", score: results.length ? results.reduce((a,c) => a + c.score.TKP, 0)/results.length : 0, pg: pg.TKP }
   ];
 
   return (
@@ -130,9 +140,9 @@ export function HasilPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-slate-700">
                     {new Date(r.completedAt).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
                   </td>
-                  <td className={`px-6 py-4 font-medium ${r.score.TWK >= 65 ? 'text-emerald-600' : 'text-red-600'}`}>{r.score.TWK}</td>
-                  <td className={`px-6 py-4 font-medium ${r.score.TIU >= 80 ? 'text-emerald-600' : 'text-red-600'}`}>{r.score.TIU}</td>
-                  <td className={`px-6 py-4 font-medium ${r.score.TKP >= 166 ? 'text-emerald-600' : 'text-red-600'}`}>{r.score.TKP}</td>
+                  <td className={`px-6 py-4 font-medium ${r.score.TWK >= pg.TWK ? 'text-emerald-600' : 'text-red-600'}`}>{r.score.TWK}</td>
+                  <td className={`px-6 py-4 font-medium ${r.score.TIU >= pg.TIU ? 'text-emerald-600' : 'text-red-600'}`}>{r.score.TIU}</td>
+                  <td className={`px-6 py-4 font-medium ${r.score.TKP >= pg.TKP ? 'text-emerald-600' : 'text-red-600'}`}>{r.score.TKP}</td>
                   <td className="px-6 py-4 font-bold text-slate-900">{r.score.total}</td>
                   <td className="px-6 py-4">
                     {r.passed ? (

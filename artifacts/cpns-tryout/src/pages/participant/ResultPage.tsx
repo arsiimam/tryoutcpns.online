@@ -10,13 +10,23 @@ import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { CheckCircle2, XCircle, Trophy, Target, ArrowRight, Eye } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
 
+const DEFAULT_PG = { TWK: 65, TIU: 80, TKP: 166 };
+
 export function ResultPage() {
   const [match, params] = useRoute("/tryout/:id/result");
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pg, setPg] = useState(DEFAULT_PG);
   const [, setLocation] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const sessionId = searchParams.get('session');
+
+  useEffect(() => {
+    fetch("/api/participant/passing-grades", { credentials: "include" })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.grades) setPg({ ...DEFAULT_PG, ...d.grades }); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -42,9 +52,9 @@ export function ResultPage() {
   }
 
   const chartData = [
-    { name: 'TWK', score: result.score.TWK, passing: 65, full: 150 },
-    { name: 'TIU', score: result.score.TIU, passing: 80, full: 175 },
-    { name: 'TKP', score: result.score.TKP, passing: 166, full: 225 },
+    { name: 'TWK', score: result.score.TWK, passing: pg.TWK, full: 150 },
+    { name: 'TIU', score: result.score.TIU, passing: pg.TIU, full: 175 },
+    { name: 'TKP', score: result.score.TKP, passing: pg.TKP, full: 225 },
   ];
 
   return (
@@ -78,9 +88,9 @@ export function ResultPage() {
             </h3>
             <div className="space-y-6">
               {[
-                { label: 'TWK', name: 'Tes Wawasan Kebangsaan', score: result.score.TWK, pg: 65, max: 150 },
-                { label: 'TIU', name: 'Tes Intelegensia Umum', score: result.score.TIU, pg: 80, max: 175 },
-                { label: 'TKP', name: 'Tes Karakteristik Pribadi', score: result.score.TKP, pg: 166, max: 225 },
+                { label: 'TWK', name: 'Tes Wawasan Kebangsaan', score: result.score.TWK, pg: pg.TWK, max: 150 },
+                { label: 'TIU', name: 'Tes Intelegensia Umum', score: result.score.TIU, pg: pg.TIU, max: 175 },
+                { label: 'TKP', name: 'Tes Karakteristik Pribadi', score: result.score.TKP, pg: pg.TKP, max: 225 },
               ].map(cat => {
                 const passed = cat.score >= cat.pg;
                 const pct = (cat.score / cat.max) * 100;

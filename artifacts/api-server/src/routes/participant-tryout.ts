@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import {
   tryoutBundlesTable, tryoutSectionsTable, tryoutQuestionsTable,
   tryoutSessionsTable, tryoutResultsTable, userSubscriptionsTable,
+  appSettingsTable,
 } from "@workspace/db";
 import { eq, and, desc, sql, gt } from "drizzle-orm";
 
@@ -56,6 +57,27 @@ function buildTryoutCard(tryout: any, sections: any[]) {
     settings: tryout.settings,
   };
 }
+
+/* ─────────────────────────────────────────────
+   GET /participant/passing-grades  (no admin auth)
+   Returns global passing grades from app_settings
+────────────────────────────────────────────── */
+router.get("/passing-grades", requireAuth, async (_req, res) => {
+  try {
+    const defaults = { TWK: 65, TIU: 80, TKP: 166 };
+    const [row] = await db
+      .select({ value: appSettingsTable.value })
+      .from(appSettingsTable)
+      .where(eq(appSettingsTable.key, "passing_grades"));
+    let grades = defaults;
+    if (row?.value) {
+      try { grades = { ...defaults, ...JSON.parse(row.value) }; } catch {}
+    }
+    return res.json({ grades });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 
 /* ─────────────────────────────────────────────
    GET /participant/tryouts
