@@ -101,6 +101,13 @@ router.post("/bundles/:id/submit", requireAuth, async (req: any, res) => {
     if (!answers || typeof answers !== "object")
       return res.status(400).json({ error: "Data jawaban tidak valid." });
 
+    // Enforce published-only gate (same as /bundles/:id/questions)
+    const [bundle] = await db
+      .select({ id: questionBundlesTable.id })
+      .from(questionBundlesTable)
+      .where(and(eq(questionBundlesTable.id, bundleId), eq(questionBundlesTable.status, "published")));
+    if (!bundle) return res.status(404).json({ error: "Bundle tidak ditemukan." });
+
     // Fetch questions to compute correctCount
     const rows = await db
       .select({ id: questionsTable.id, correctAnswer: questionsTable.correctAnswer })
@@ -199,10 +206,11 @@ router.get("/history/:bundleId", requireAuth, async (req: any, res) => {
 
     if (!session) return res.status(404).json({ error: "Belum ada sesi latihan untuk bundle ini." });
 
+    // Enforce published-only gate for review detail as well
     const [bundle] = await db
       .select()
       .from(questionBundlesTable)
-      .where(eq(questionBundlesTable.id, bundleId));
+      .where(and(eq(questionBundlesTable.id, bundleId), eq(questionBundlesTable.status, "published")));
 
     if (!bundle) return res.status(404).json({ error: "Bundle tidak ditemukan." });
 
