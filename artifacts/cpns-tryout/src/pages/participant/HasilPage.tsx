@@ -31,9 +31,16 @@ export function HasilPage() {
     async function load() {
       if (!user) return;
       try {
-        const r = await fetch("/api/participant/results", { credentials: "include" });
-        const data = await r.json();
-        setResults(data.results ?? []);
+        const [resultsRes, pgRes] = await Promise.all([
+          fetch("/api/participant/results", { credentials: "include" }),
+          fetch("/api/participant/settings/passing-grades", { credentials: "include" }),
+        ]);
+        const resultsData = await resultsRes.json();
+        setResults(resultsData.results ?? []);
+        if (pgRes.ok) {
+          const pgData = await pgRes.json();
+          if (pgData.grades) setPg({ ...DEFAULT_PG, ...pgData.grades });
+        }
       } catch { } finally { setLoading(false); }
     }
     load();

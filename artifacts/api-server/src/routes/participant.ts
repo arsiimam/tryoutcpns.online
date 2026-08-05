@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { userSubscriptionsTable, paymentTransactionsTable } from "@workspace/db";
+import { userSubscriptionsTable, paymentTransactionsTable, appSettingsTable } from "@workspace/db";
 import { eq, desc, and, gt } from "drizzle-orm";
 
 const router = Router();
@@ -67,6 +67,23 @@ router.get("/participant/transactions", requireAuth, async (req, res) => {
     res.json({ transactions: rows });
   } catch {
     res.status(500).json({ error: "Gagal mengambil riwayat transaksi." });
+  }
+});
+
+/**
+ * GET /participant/settings/passing-grades — passing grades visible to logged-in participants
+ */
+router.get("/participant/settings/passing-grades", requireAuth, async (_req, res) => {
+  try {
+    const rows = await db.select().from(appSettingsTable).where(eq(appSettingsTable.key, "passing_grades"));
+    const raw = rows[0]?.value ?? null;
+    let grades: Record<string, number> = { TWK: 65, TIU: 80, TKP: 166 };
+    if (raw) {
+      try { grades = { ...grades, ...JSON.parse(raw) }; } catch {}
+    }
+    return res.json({ grades });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

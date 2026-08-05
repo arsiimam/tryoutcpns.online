@@ -32,10 +32,17 @@ export function ResultPage() {
     async function load() {
       if (!sessionId) { setLoading(false); return; }
       try {
-        const r = await fetch(`/api/participant/results/${sessionId}`, { credentials: "include" });
-        if (!r.ok) throw new Error("Result not found");
-        const data = await r.json();
+        const [resultRes, pgRes] = await Promise.all([
+          fetch(`/api/participant/results/${sessionId}`, { credentials: "include" }),
+          fetch("/api/participant/settings/passing-grades", { credentials: "include" }),
+        ]);
+        if (!resultRes.ok) throw new Error("Result not found");
+        const data = await resultRes.json();
         setResult(data.result);
+        if (pgRes.ok) {
+          const pgData = await pgRes.json();
+          if (pgData.grades) setPg({ ...DEFAULT_PG, ...pgData.grades });
+        }
       } catch { } finally { setLoading(false); }
     }
     load();
