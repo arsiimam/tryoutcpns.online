@@ -7,3 +7,4 @@ export * from "./question-bundles";
 export * from "./questions";
 export * from "./tryout-bundles";
 export * from "./tryout-sessions";
+export * from "./coupons";
