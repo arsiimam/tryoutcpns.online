@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Header - Tryout CPNS.Online</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(180deg, #eef4fb 0%, #f7fafd 40%, #ffffff 100%);
+    min-height:100vh;
+  }
+
+  /* Floating rounded nav */
+  .nav-wrap {
+    display:flex;
+    justify-content:center;
+    padding:20px 20px 60px;
+  }
+  nav.pill {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:40px;
+    background:#ffffff;
+    border-radius:999px;
+    box-shadow:0 10px 30px rgba(28,63,102,0.12);
+    padding:6px 14px 6px 22px;
+    max-width:1100px;
+    width:100%;
+  }
+  .nav-logo img { height:52px; width:auto; display:block; }
+
+  .nav-links { display:flex; gap:36px; }
+  .nav-links a {
+    color:#1c3f66;
+    text-decoration:none;
+    font-weight:600;
+    font-size:15px;
+  }
+
+  .btn-login {
+    background:#1c3f66;
+    color:#fff;
+    padding:12px 28px;
+    border-radius:999px;
+    font-weight:700;
+    text-decoration:none;
+    font-size:15px;
+    white-space:nowrap;
+  }
+
+  main { text-align:center; color:#8a97a8; padding-bottom:60px; }
+</style>
+</head>
+<body>
+
+<div class="nav-wrap">
+  <nav class="pill">
+    <div class="nav-logo">
+      <img src="tryout-cpns-logo-transparent.png" alt="Tryout CPNS.Online">
+    </div>
+    <div class="nav-links">
+      <a href="#">Keunggulan</a>
+      <a href="#">Testimoni</a>
+      <a href="#">Paket</a>
+      <a href="#">Blog</a>
+    </div>
+    <a href="#" class="btn-login">Login</a>
+  </nav>
+</div>
+
+<main>
+  <p>Preview header ramping tanpa promo bar &mdash; logo diperkecil sedikit.</p>
+</main>
+
+</body>
+</html>
