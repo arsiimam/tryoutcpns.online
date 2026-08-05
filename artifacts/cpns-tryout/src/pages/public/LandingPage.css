@@ -2,10 +2,10 @@
    Scoped landing page styles — all under .tryout-landing
    =================================================== */
 .tryout-landing {
-  --lp-blue-600: #4f5eea;
-  --lp-blue-700: #4147d5;
-  --lp-blue-50: #eef1ff;
-  --lp-blue-100: #e2e6ff;
+  --lp-blue-600: #4f46e5;
+  --lp-blue-700: #4338ca;
+  --lp-blue-50: #eef2ff;
+  --lp-blue-100: #e0e7ff;
   --lp-purple-600: #7c3aed;
   --lp-ink-900: #0f172a;
   --lp-ink-700: #334155;
@@ -13,7 +13,7 @@
   --lp-ink-400: #94a3b8;
   --lp-border: #e2e8f0;
   --lp-bg-soft: #f6f7fc;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--lp-ink-900);
   background: #fff;
   line-height: 1.5;
@@ -50,23 +50,21 @@
 .lp-btn-lg-ghost:hover { border-color: var(--lp-blue-600); color: var(--lp-blue-600); }
 .lp-btn-ghost-nav { font-size: 15px; color: var(--lp-ink-700); cursor: pointer; background: none; border: none; }
 
-/* NAV */
+/* ===================== NAV ===================== */
 .lp-nav {
   position: sticky; top: 0; z-index: 50;
-  background: transparent;
-  padding: 14px 40px;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(79,70,229,0.08);
+  padding: 0 40px;
+  box-shadow: 0 1px 20px rgba(0,0,0,0.06);
 }
-@media (max-width: 768px) { .lp-nav { padding: 10px 16px; } }
 
 .lp-nav-inner {
   display: flex; align-items: center; justify-content: space-between;
   max-width: 1280px; margin: 0 auto;
-  background: rgba(255,255,255,0.93);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(200,210,240,0.55);
-  border-radius: 999px;
-  padding: 8px 8px 8px 24px;
-  box-shadow: 0 4px 24px rgba(79,94,234,0.09), 0 1px 4px rgba(0,0,0,0.06);
+  height: 64px;
 }
 
 /* Logo */
@@ -74,50 +72,74 @@
   display: flex; align-items: center; text-decoration: none;
   transition: opacity .15s;
 }
-.lp-brand:hover { opacity: 0.82; }
-.lp-brand-img { height: 64px; width: auto; display: block; }
-@media (max-width: 900px) { .lp-brand-img { height: 48px; } }
+.lp-brand:hover { opacity: 0.8; }
 
 .lp-nav-links {
-  display: flex; gap: 32px; font-size: 15px; font-weight: 600; color: var(--lp-ink-900);
+  display: flex; gap: 8px; font-size: 14px; font-weight: 600;
 }
-.lp-nav-links a { transition: color .15s; }
-.lp-nav-links a:hover { color: var(--lp-blue-600); }
+.lp-nav-links a {
+  color: var(--lp-ink-500);
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: color .15s, background .15s;
+}
+.lp-nav-links a:hover { color: var(--lp-ink-900); background: rgba(79,70,229,0.06); }
 
 .lp-nav-right { display: flex; align-items: center; gap: 10px; }
 
-/* Login pill button */
-.lp-btn-login {
-  background: var(--lp-blue-600); color: #fff;
-  padding: 10px 26px; border-radius: 999px;
-  font-weight: 700; font-size: 15px; border: none; cursor: pointer;
-  transition: background .15s ease, transform .1s ease;
+/* Login button — fix specificity: .tryout-landing a overrides bare .lp-btn-login */
+.tryout-landing .lp-btn-login {
+  background: var(--lp-blue-600);
+  color: #fff;
+  padding: 9px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: background .15s ease, transform .1s ease, box-shadow .15s;
   white-space: nowrap;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(79,70,229,0.25);
 }
-.lp-btn-login:hover { background: var(--lp-blue-700); transform: translateY(-1px); }
+.tryout-landing .lp-btn-login:hover {
+  background: var(--lp-blue-700);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+  color: #fff;
+}
 
 .lp-hamburger {
-  display: none; background: none; border: none; padding: 6px; color: var(--lp-ink-900); cursor: pointer;
+  display: none; background: none; border: none;
+  padding: 6px 8px; border-radius: 8px;
+  color: var(--lp-ink-700); cursor: pointer;
+  transition: background .15s;
 }
+.lp-hamburger:hover { background: rgba(79,70,229,0.07); }
 
-/* Mobile menu — slides down below the pill bar */
+/* Mobile menu */
 .lp-mobile-menu {
-  display: none; flex-direction: column; gap: 2px;
-  max-width: 1160px; margin: 8px auto 0;
-  background: rgba(255,255,255,0.97);
-  border: 1px solid rgba(200,210,240,0.55);
-  border-radius: 20px;
-  padding: 12px 20px 20px;
-  box-shadow: 0 8px 24px rgba(79,94,234,0.10);
+  display: none; flex-direction: column; gap: 0;
+  background: #fff;
+  border-top: 1px solid var(--lp-border);
+  padding: 8px 16px 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  position: absolute;
+  top: 64px; left: 0; right: 0;
+  z-index: 49;
 }
 .lp-mobile-menu a {
-  padding: 14px 4px; font-size: 16px; font-weight: 600; color: var(--lp-ink-700);
-  border-bottom: 1px solid var(--lp-border); display: block;
+  padding: 13px 8px; font-size: 15px; font-weight: 600;
+  color: var(--lp-ink-700);
+  border-bottom: 1px solid var(--lp-border);
+  display: block;
 }
-.lp-mobile-menu .lp-mobile-masuk {
-  border-bottom: none; color: var(--lp-ink-900); font-weight: 600; padding-top: 16px;
+.lp-mobile-menu a:last-of-type { border-bottom: none; }
+.tryout-landing .lp-mobile-menu .lp-btn-login {
+  width: 100%; margin-top: 12px; padding: 14px;
+  font-size: 15px; text-align: center; display: block;
+  border-radius: 12px; color: #fff;
 }
-.lp-mobile-menu .lp-btn-login { width: 100%; margin-top: 10px; padding: 14px; font-size: 16px; text-align: center; display: block; border-radius: 12px; }
 .lp-mobile-menu.open { display: flex; }
 
 /* Footer logo */
@@ -135,7 +157,7 @@
 .lp-footer-logo-wrap img { height: 30px; width: auto; display: block; }
 
 @media (max-width: 900px) {
-  .lp-nav { padding: 12px 16px; }
+  .lp-nav { padding: 0 16px; position: relative; }
   .lp-nav-links { display: none; }
   .lp-nav-right { display: none; }
   .lp-hamburger { display: flex; }

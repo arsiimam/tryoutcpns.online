@@ -1,16 +1,9 @@
 /**
- * BrandLogo – pure CSS text logo
+ * BrandLogo – clean modern wordmark
  *
- * Matches the style of the original image:
- *   TRYOUT  [CPNS    ]
- *           [.online ]
- *
- * "TRYOUT" in heavy navy/white, "CPNS" + ".online" inside a
- * rounded-right capsule border in cyan.
- *
- * variant: "light" → navy + cyan (landing page, light bg)
- *          "dark"  → white + cyan (sidebar, dark bg)
- * size:    "md" (default) | "sm" (footer / compact)
+ * variant: "light" → dark text + indigo accent (for white/light backgrounds)
+ *          "dark"  → white text + indigo accent (for dark/colored backgrounds)
+ * size:    "md" (default) | "sm"
  */
 
 interface BrandLogoProps {
@@ -19,85 +12,94 @@ interface BrandLogoProps {
 }
 
 export function BrandLogo({ variant = "light", size = "md" }: BrandLogoProps) {
-  const isLight = variant === "light";
+  const isDark = variant === "dark";
   const isSm = size === "sm";
 
-  const BLUE   = isLight ? "#4f5eea" : "#7c8ff5";
-  const NAVY   = isLight ? "#0f172a" : "#ffffff";
+  const accent      = "#4f46e5";           // indigo-600
+  const textPrimary = isDark ? "#fff"      : "#0f172a";
+  const textMuted   = isDark ? "rgba(255,255,255,0.55)" : "#64748b";
 
-  const tryoutFontSize = isSm ? 11 : 14;
-  const cpnsFontSize   = isSm ? 14 : 18;
-  const dotFontSize    = isSm ? 8  : 9;
-  const gap            = isSm ? 3  : 4;
-  const borderPx       = isSm ? 1.5 : 1.5;
-  const padX           = isSm ? [4, 7]  : [5, 10];
-  const padY           = isSm ? [1, 1]  : [2, 2];
+  const tryoutSize  = isSm ? 9  : 11;
+  const cpnsSize    = isSm ? 17 : 22;
+  const dotSize     = isSm ? 8  : 9;
 
   return (
     <div
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap,
-        lineHeight: 1,
+        gap: isSm ? 5 : 7,
         userSelect: "none",
+        lineHeight: 1,
       }}
     >
-      {/* TRYOUT */}
-      <span
-        style={{
-          fontFamily: "'Inter', sans-serif",
-          fontWeight: 800,
-          fontSize: tryoutFontSize,
-          color: NAVY,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-        }}
-      >
-        TRYOUT
-      </span>
-
-      {/* Capsule: CPNS + .online */}
+      {/* Accent square mark */}
       <div
         style={{
-          border: `${borderPx}px solid ${BLUE}`,
-          borderRadius: "4px 999px 999px 4px",
-          paddingLeft:  padX[0],
-          paddingRight: padX[1],
-          paddingTop:   padY[0],
-          paddingBottom: padY[1],
+          width:  isSm ? 22 : 28,
+          height: isSm ? 22 : 28,
+          borderRadius: isSm ? 5 : 7,
+          background: `linear-gradient(135deg, ${accent} 0%, #6366f1 100%)`,
           display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          gap: 0,
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
         }}
       >
         <span
           style={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
             fontWeight: 800,
-            fontSize: cpnsFontSize,
-            color: BLUE,
-            letterSpacing: "0.04em",
-            lineHeight: 1.1,
-            textTransform: "uppercase",
+            fontSize: isSm ? 10 : 13,
+            color: "#fff",
+            letterSpacing: "-0.02em",
           }}
         >
-          CPNS
+          C
         </span>
+      </div>
+
+      {/* Text group */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
         <span
           style={{
-            fontFamily: "'Inter', sans-serif",
-            fontWeight: 600,
-            fontSize: dotFontSize,
-            color: BLUE,
-            letterSpacing: "0.06em",
-            lineHeight: 1.2,
-            opacity: 0.9,
+            fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+            fontWeight: 500,
+            fontSize: tryoutSize,
+            color: textMuted,
+            letterSpacing: "0.13em",
+            textTransform: "uppercase",
+            lineHeight: 1,
           }}
         >
-          .online
+          TRYOUT
         </span>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+          <span
+            style={{
+              fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+              fontWeight: 800,
+              fontSize: cpnsSize,
+              color: textPrimary,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+            }}
+          >
+            CPNS
+          </span>
+          <span
+            style={{
+              fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+              fontWeight: 500,
+              fontSize: dotSize,
+              color: accent,
+              letterSpacing: "0.01em",
+              lineHeight: 1,
+            }}
+          >
+            .online
+          </span>
+        </div>
       </div>
     </div>
   );
