@@ -275,12 +275,12 @@
   background: #fff; border: 1px solid var(--lp-border); border-radius: 16px; padding: 32px 26px;
   transition: border-color .15s ease, box-shadow .15s ease;
 }
-.lp-feature-card.highlight { border-color: var(--lp-blue-600); box-shadow: 0 10px 30px rgba(79,94,234,0.12); }
+.lp-feature-card.highlight { border-color: var(--lp-orange); box-shadow: 0 10px 30px rgba(232,115,26,0.12); }
 .lp-feature-icon {
-  width: 52px; height: 52px; border-radius: 12px; background: var(--lp-blue-50);
-  display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: var(--lp-blue-600);
+  width: 52px; height: 52px; border-radius: 12px; background: var(--lp-orange-50);
+  display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: var(--lp-orange);
 }
-.lp-feature-icon.filled { background: var(--lp-blue-600); color: #fff; }
+.lp-feature-icon.filled { background: linear-gradient(135deg, var(--lp-orange) 0%, #f4a43a 100%); color: #fff; }
 .lp-feature-card h3 { font-size: 18px; font-weight: 700; margin: 0 0 10px; }
 .lp-feature-card p { font-size: 14.5px; color: var(--lp-ink-500); margin: 0; }
 
