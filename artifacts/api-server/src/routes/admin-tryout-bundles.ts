@@ -1,8 +1,18 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { tryoutBundlesTable, tryoutSectionsTable, tryoutQuestionsTable } from "@workspace/db";
+import { tryoutBundlesTable, tryoutSectionsTable, tryoutQuestionsTable, appSettingsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { importLimiter } from "../lib/rate-limit";
+
+/* ── Global passing grades helper ──────────────────────── */
+async function getGlobalPassingGrades(): Promise<Record<string, number>> {
+  const defaults: Record<string, number> = { TWK: 65, TIU: 80, TKP: 166 };
+  try {
+    const [row] = await db.select().from(appSettingsTable).where(eq(appSettingsTable.key, "passing_grades"));
+    if (row?.value) return { ...defaults, ...JSON.parse(row.value) };
+  } catch {}
+  return defaults;
+}
 
 const router = Router();
 
@@ -230,6 +240,9 @@ router.post("/admin/tryouts/import", importLimiter, async (req, res) => {
   if (!parsed.tryout.name?.trim())
     return res.status(400).json({ error: "Nama tryout tidak ditemukan di file." });
 
+  // Load global passing grades for auto-fill
+  const globalPg = await getGlobalPassingGrades();
+
   const [bundle] = await db.insert(tryoutBundlesTable).values({
     name:            parsed.tryout.name.trim(),
     description:     parsed.tryout.description ?? null,
@@ -242,13 +255,17 @@ router.post("/admin/tryouts/import", importLimiter, async (req, res) => {
 
   let totalImported = 0;
   for (const sec of parsed.sections) {
+    // Auto-fill passingScore from global setting if not specified in the file
+    const catKey = (sec.category ?? "").toUpperCase();
+    const autoPassingScore = sec.passing_score ?? globalPg[catKey] ?? null;
+
     const [section] = await db.insert(tryoutSectionsTable).values({
       tryoutId:         bundle.id,
       name:             sec.name,
       category:         sec.category ?? null,
       orderNum:         sec.order ?? 1,
       timeLimitMinutes: sec.time_limit_minutes ?? null,
-      passingScore:     sec.passing_score ?? null,
+      passingScore:     autoPassingScore,
     }).returning();
 
     if (sec.questions.length) {

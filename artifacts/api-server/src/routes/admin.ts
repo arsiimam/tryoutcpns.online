@@ -149,6 +149,48 @@ router.put("/admin/settings", requireAdmin, async (req, res) => {
 });
 
 /* ------------------------------------------------------------------ */
+/* GET /api/admin/settings/passing-grades                             */
+/* ------------------------------------------------------------------ */
+router.get("/admin/settings/passing-grades", requireAdmin, async (_req, res) => {
+  try {
+    const map = await getAllSettings();
+    const raw = map["passing_grades"] ?? null;
+    // Defaults sesuai standar SKD CPNS nasional
+    let grades: Record<string, number> = { TWK: 65, TIU: 80, TKP: 166 };
+    if (raw) {
+      try { grades = { ...grades, ...JSON.parse(raw) }; } catch {}
+    }
+    return res.json({ grades });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/* PUT /api/admin/settings/passing-grades                             */
+/* ------------------------------------------------------------------ */
+router.put("/admin/settings/passing-grades", requireAdmin, async (req, res) => {
+  try {
+    const { grades } = req.body as { grades: Record<string, number> };
+    if (!grades || typeof grades !== "object")
+      return res.status(400).json({ error: "Data passing grade tidak valid." });
+
+    const sanitized: Record<string, number> = {};
+    for (const [key, val] of Object.entries(grades)) {
+      const n = Number(val);
+      if (key.trim() && !isNaN(n) && n >= 0) sanitized[key.trim().toUpperCase()] = n;
+    }
+    if (Object.keys(sanitized).length === 0)
+      return res.status(400).json({ error: "Tidak ada data passing grade yang valid." });
+
+    await upsertSetting("passing_grades", JSON.stringify(sanitized));
+    return res.json({ ok: true, grades: sanitized });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/* ------------------------------------------------------------------ */
 /* GET /api/admin/users                                                */
 /* ------------------------------------------------------------------ */
 router.get("/admin/users", requireAdmin, async (_req, res) => {

@@ -3,7 +3,7 @@ import { AdminLayout } from "../../components/layouts/AdminLayout";
 import { PageHeader } from "../../components/ui/shared";
 import {
   Eye, EyeOff, Copy, CheckCircle2, Save, RefreshCw,
-  AlertCircle, Zap, Globe, Clock, ShieldCheck,
+  AlertCircle, Zap, Globe, Clock, ShieldCheck, Target,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -106,10 +106,22 @@ function SectionCard({
 /* ------------------------------------------------------------------ */
 /* Main page                                                           */
 /* ------------------------------------------------------------------ */
+
+const CPNS_CATEGORIES = [
+  { key: "TWK", label: "TWK", fullName: "Tes Wawasan Kebangsaan", defaultVal: 65 },
+  { key: "TIU", label: "TIU", fullName: "Tes Intelegensi Umum",   defaultVal: 80 },
+  { key: "TKP", label: "TKP", fullName: "Tes Karakteristik Pribadi", defaultVal: 166 },
+];
+
 export function AdminSettingsPage() {
   const [settings, setSettings] = useState<SettingsData | null>(null);
   const [loading, setLoading]   = useState(true);
   const [toast, setToast]       = useState<ToastState>(null);
+
+  /* Passing Grade state */
+  const [pgGrades, setPgGrades]   = useState<Record<string, string>>({ TWK: "65", TIU: "80", TKP: "166" });
+  const [pgLoading, setPgLoading] = useState(true);
+  const [savingPg, setSavingPg]   = useState(false);
 
   /* Google state */
   const [clientId, setClientId]       = useState("");
@@ -142,11 +154,51 @@ export function AdminSettingsPage() {
     }
   }
 
+  /* ---- fetch passing grades ---- */
+  useEffect(() => {
+    fetch("/api/admin/settings/passing-grades", { credentials: "include" })
+      .then(r => r.json())
+      .then(d => {
+        if (d.grades) {
+          setPgGrades(Object.fromEntries(
+            Object.entries(d.grades as Record<string, number>).map(([k, v]) => [k, String(v)])
+          ));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setPgLoading(false));
+  }, []);
+
   useEffect(() => { loadSettings(); }, []);
 
   function showToast(type: "success" | "error", msg: string) {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 4000);
+  }
+
+  /* ---- save Passing Grade ---- */
+  async function handleSavePg(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingPg(true);
+    try {
+      const grades: Record<string, number> = {};
+      for (const [k, v] of Object.entries(pgGrades)) {
+        const n = Number(v);
+        if (!isNaN(n) && n >= 0) grades[k] = n;
+      }
+      const res = await fetch("/api/admin/settings/passing-grades", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ grades }),
+      });
+      if (!res.ok) throw new Error("Gagal menyimpan.");
+      showToast("success", "Passing grade nasional berhasil disimpan.");
+    } catch {
+      showToast("error", "Gagal menyimpan passing grade. Coba lagi.");
+    } finally {
+      setSavingPg(false);
+    }
   }
 
   /* ---- save Google ---- */
@@ -234,6 +286,67 @@ export function AdminSettingsPage() {
       )}
 
       <div className="max-w-2xl space-y-8">
+
+        {/* ========== PASSING GRADE NASIONAL ========== */}
+        <SectionCard
+          icon={<Target size={22} className="text-emerald-600" />}
+          title="Passing Grade Nasional SKD CPNS"
+          subtitle="Nilai minimum per sub-tes yang menjadi acuan lulus/tidak lulus tryout"
+        >
+          {pgLoading ? (
+            <div className="p-6 flex items-center gap-2 text-sm text-slate-400">
+              <RefreshCw size={15} className="animate-spin" /> Memuat...
+            </div>
+          ) : (
+            <form onSubmit={handleSavePg} className="p-6 space-y-5">
+              <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 text-xs text-emerald-800">
+                <p className="font-semibold mb-1">ℹ️ Informasi</p>
+                <p>Nilai ini digunakan sebagai acuan passing grade di halaman Review Tryout dan otomatis dipakai saat import soal. Nilai default sesuai standar SKD CPNS nasional.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {CPNS_CATEGORIES.map(cat => (
+                  <div key={cat.key}>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">
+                      {cat.label}
+                      <span className="block text-xs font-normal text-slate-400 mt-0.5">{cat.fullName}</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        max={999}
+                        required
+                        value={pgGrades[cat.key] ?? String(cat.defaultVal)}
+                        onChange={e => setPgGrades(prev => ({ ...prev, [cat.key]: e.target.value }))}
+                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-center text-lg font-bold"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1 text-center">Default: {cat.defaultVal}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-1 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setPgGrades({ TWK: "65", TIU: "80", TKP: "166" })}
+                  className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Reset ke default
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPg}
+                  className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                >
+                  {savingPg ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
+                  {savingPg ? "Menyimpan..." : "Simpan Passing Grade"}
+                </button>
+              </div>
+            </form>
+          )}
+        </SectionCard>
 
         {/* ========== DUITKU PAYMENT GATEWAY ========== */}
         <SectionCard
