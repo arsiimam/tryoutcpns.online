@@ -146,12 +146,20 @@ export function HasilPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
-                      onClick={() => setLocation(`/tryout/${r.tryoutId}/result?session=${r.sessionId}`)}
-                      className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium"
-                    >
-                      Detail <ArrowRight size={16} />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setLocation(`/tryout/${r.sessionId}/review`)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+                      >
+                        Review Soal
+                      </button>
+                      <button
+                        onClick={() => setLocation(`/tryout/${r.tryoutId}/result?session=${r.sessionId}`)}
+                        className="inline-flex items-center gap-1 text-slate-500 hover:text-primary font-medium text-sm"
+                      >
+                        Detail <ArrowRight size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

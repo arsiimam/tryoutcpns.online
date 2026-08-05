@@ -21,6 +21,7 @@ import { PracticePage } from "./pages/participant/PracticePage";
 import { HasilPage } from "./pages/participant/HasilPage";
 import { ReviewPage } from "./pages/participant/ReviewPage";
 import { ReviewBundleDetailPage } from "./pages/participant/ReviewBundleDetailPage";
+import { TryoutReviewPage } from "./pages/participant/TryoutReviewPage";
 import { RankingPage } from "./pages/participant/RankingPage";
 import { SubscriptionPage } from "./pages/participant/SubscriptionPage";
 import { ProfilePage } from "./pages/participant/ProfilePage";
@@ -100,6 +101,7 @@ function Router() {
       <Route path="/hasil" component={HasilPage} />
       <Route path="/review" component={ReviewPage} />
       <Route path="/review/:bundleId" component={ReviewBundleDetailPage} />
+      <Route path="/tryout/:sessionId/review" component={TryoutReviewPage} />
       <Route path="/ranking" component={RankingPage} />
       <Route path="/subscription" component={SubscriptionPage} />
       <Route path="/profile" component={ProfilePage} />

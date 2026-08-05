@@ -144,17 +144,23 @@ export function ResultPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
-          <button 
-            onClick={() => setLocation('/review')}
+          <button
+            onClick={() => sessionId && setLocation(`/tryout/${sessionId}/review`)}
             className="flex-1 h-14 flex items-center justify-center gap-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-md"
           >
-            <Eye size={20} /> Review Pembahasan Soal
+            <Eye size={20} /> Review Soal & Pembahasan
           </button>
           <button 
-            onClick={() => setLocation('/dashboard')}
+            onClick={() => setLocation('/hasil')}
             className="flex-1 h-14 flex items-center justify-center gap-2 bg-white text-slate-700 border-2 border-slate-200 font-bold rounded-xl hover:bg-slate-50 transition-colors"
           >
-            Kembali ke Dashboard
+            Riwayat Hasil
+          </button>
+          <button
+            onClick={() => setLocation('/dashboard')}
+            className="sm:w-auto px-6 h-14 flex items-center justify-center gap-2 bg-white text-slate-700 border-2 border-slate-200 font-bold rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            Dashboard
           </button>
         </div>
 

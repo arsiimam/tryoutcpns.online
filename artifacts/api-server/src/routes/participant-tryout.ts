@@ -726,4 +726,141 @@ router.get("/review", requireAuth, async (req: any, res) => {
   }
 });
 
+/* ─────────────────────────────────────────────
+   GET /participant/tryout-review/:sessionId
+   Full question-by-question review with passing grade per section
+────────────────────────────────────────────── */
+router.get("/tryout-review/:sessionId", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.session.userId as string;
+    const sessionId = req.params.sessionId as string;
+
+    // Verify session belongs to this user and is completed
+    const [session] = await db
+      .select()
+      .from(tryoutSessionsTable)
+      .where(and(eq(tryoutSessionsTable.id, sessionId), eq(tryoutSessionsTable.userId, userId)));
+
+    if (!session) return res.status(404).json({ error: "Sesi tidak ditemukan." });
+    if (session.status !== "completed") return res.status(400).json({ error: "Sesi belum selesai." });
+
+    // Get result for scores
+    const [result] = await db
+      .select()
+      .from(tryoutResultsTable)
+      .where(and(eq(tryoutResultsTable.sessionId, sessionId), eq(tryoutResultsTable.userId, userId)));
+
+    if (!result) return res.status(404).json({ error: "Hasil tidak ditemukan." });
+
+    // Get tryout name
+    const [tryout] = await db
+      .select({ name: tryoutBundlesTable.name, passingGrade: tryoutBundlesTable.passingGrade })
+      .from(tryoutBundlesTable)
+      .where(eq(tryoutBundlesTable.id, session.tryoutId));
+
+    // Get sections with passingScore
+    const sections = await db
+      .select()
+      .from(tryoutSectionsTable)
+      .where(eq(tryoutSectionsTable.tryoutId, session.tryoutId))
+      .orderBy(tryoutSectionsTable.orderNum);
+
+    // Get all questions with section info
+    const questions = await db
+      .select({
+        id:            tryoutQuestionsTable.id,
+        orderNum:      tryoutQuestionsTable.orderNum,
+        content:       tryoutQuestionsTable.content,
+        options:       tryoutQuestionsTable.options,
+        correctAnswer: tryoutQuestionsTable.correctAnswer,
+        explanation:   tryoutQuestionsTable.explanation,
+        scoreWeight:   tryoutQuestionsTable.scoreWeight,
+        sectionId:     tryoutSectionsTable.id,
+        sectionName:   tryoutSectionsTable.name,
+        sectionCat:    tryoutSectionsTable.category,
+        passingScore:  tryoutSectionsTable.passingScore,
+      })
+      .from(tryoutQuestionsTable)
+      .innerJoin(tryoutSectionsTable, eq(tryoutQuestionsTable.sectionId, tryoutSectionsTable.id))
+      .where(eq(tryoutQuestionsTable.tryoutId, session.tryoutId))
+      .orderBy(tryoutSectionsTable.orderNum, tryoutQuestionsTable.orderNum);
+
+    const answers = (session.answers as Record<string, string>) ?? {};
+
+    // Build section summaries
+    const sectionScoreMap: Record<number, number> = {
+      // Pre-fill from result
+    };
+
+    // Map category to score from result
+    const catScoreMap: Record<string, number> = {
+      TWK: result.twkScore,
+      TIU: result.tiuScore,
+      TKP: result.tkpScore,
+    };
+
+    const sectionSummaries = sections.map(s => {
+      const cat = (s.category ?? "").toUpperCase();
+      const score = catScoreMap[cat] ?? 0;
+      const pg = s.passingScore ?? null;
+      return {
+        id: s.id,
+        name: s.name,
+        category: s.category,
+        score,
+        passingScore: pg,
+        passed: pg !== null ? score >= pg : null,
+        questionCount: s.questionCount,
+      };
+    });
+
+    // Build question list with user answers
+    const mappedQuestions = questions.map(q => {
+      const userAns = answers[String(q.id)] ?? null;
+      const cat = (q.sectionCat ?? "").toUpperCase();
+      let isCorrect: boolean | null = null;
+      if (cat === "TKP") {
+        // TKP: any answer counts as attempted, no single "correct" answer
+        isCorrect = userAns !== null;
+      } else {
+        isCorrect = userAns !== null && userAns === q.correctAnswer;
+      }
+      return {
+        id:            String(q.id),
+        orderNum:      q.orderNum,
+        content:       q.content,
+        options:       Array.isArray(q.options) ? q.options : [],
+        correctAnswer: q.correctAnswer,
+        explanation:   q.explanation ?? "",
+        sectionId:     q.sectionId,
+        sectionName:   q.sectionName,
+        sectionCat:    (q.sectionCat ?? "").toUpperCase(),
+        userAnswer:    userAns,
+        isCorrect,
+        skipped:       userAns === null,
+      };
+    });
+
+    return res.json({
+      tryout: {
+        name:         tryout.name,
+        passingGrade: tryout.passingGrade,
+      },
+      result: {
+        twkScore:   result.twkScore,
+        tiuScore:   result.tiuScore,
+        tkpScore:   result.tkpScore,
+        totalScore: result.totalScore,
+        passed:     result.passed,
+        rank:       result.rank ?? 0,
+        completedAt: result.createdAt,
+      },
+      sections: sectionSummaries,
+      questions: mappedQuestions,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 export { router as participantTryoutRouter };
