@@ -171,15 +171,20 @@ export function PracticePage() {
     }
     setView("submitting");
     try {
-      await fetch(`/api/participant/practice/bundles/${selectedBundle.id}/submit`, {
+      const r = await fetch(`/api/participant/practice/bundles/${selectedBundle.id}/submit`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers }),
       });
-      navigate(`/review/${selectedBundle.id}`);
+      if (r.ok) {
+        navigate(`/review/${selectedBundle.id}`);
+      } else {
+        // Submit failed — return to selection without losing state
+        setView("session");
+      }
     } catch {
-      exitSession();
+      setView("session");
     }
   };
 

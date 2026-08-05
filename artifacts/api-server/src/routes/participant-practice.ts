@@ -134,8 +134,8 @@ router.get("/history", requireAuth, async (req: any, res) => {
   try {
     const userId = req.session.userId as string;
 
-    // Get latest session per bundle
-    const rows = await db.execute(sql`
+    // Get latest session per bundle using DISTINCT ON
+    const result = await db.execute(sql`
       SELECT DISTINCT ON (ps.bundle_id)
         ps.id            AS session_id,
         ps.bundle_id,
@@ -152,16 +152,19 @@ router.get("/history", requireAuth, async (req: any, res) => {
       ORDER BY ps.bundle_id, ps.completed_at DESC
     `);
 
+    // db.execute returns { rows: [...] } in drizzle-orm/node-postgres
+    const rows = (result as any).rows ?? result ?? [];
+
     const history = (rows as any[]).map(r => ({
-      sessionId:       r.session_id,
-      bundleId:        r.bundle_id,
-      bundleName:      r.bundle_name,
+      sessionId:         r.session_id,
+      bundleId:          r.bundle_id,
+      bundleName:        r.bundle_name,
       bundleDescription: r.bundle_description ?? "",
-      bundleCategory:  r.bundle_category ?? "Lainnya",
-      questionCount:   r.question_count,
-      totalQuestions:  r.total_questions,
-      correctCount:    r.correct_count,
-      completedAt:     r.completed_at,
+      bundleCategory:    r.bundle_category ?? "Lainnya",
+      questionCount:     r.question_count,
+      totalQuestions:    r.total_questions,
+      correctCount:      r.correct_count,
+      completedAt:       r.completed_at,
     }));
 
     return res.json({ history });
