@@ -100,9 +100,9 @@
 
 .lp-nav-right { display: flex; align-items: center; flex-shrink: 0; }
 
-/* Login button — dark navy pill */
+/* Login button — orange */
 .tryout-landing .lp-btn-login {
-  background: #1c3f66;
+  background: linear-gradient(90deg, var(--lp-orange) 0%, #f4a43a 100%);
   color: #fff;
   padding: 12px 28px;
   border-radius: 999px;
@@ -110,12 +110,13 @@
   font-size: 15px;
   border: none;
   cursor: pointer;
-  transition: background .15s ease, transform .1s ease;
+  transition: filter .15s ease, transform .1s ease;
   white-space: nowrap;
   display: inline-block;
+  box-shadow: 0 4px 14px rgba(232,115,26,0.35);
 }
 .tryout-landing .lp-btn-login:hover {
-  background: #153050;
+  filter: brightness(1.07);
   transform: translateY(-1px);
   color: #fff;
 }
