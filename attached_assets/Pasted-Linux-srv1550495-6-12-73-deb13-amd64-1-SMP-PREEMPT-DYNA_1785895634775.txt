@@ -1,0 +1,70 @@
+Linux srv1550495 6.12.73+deb13-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.73-1 (2026-02-17) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Tue Aug  4 23:21:12 2026 from 114.10.151.101
+root@srv1550495:~# cd /var/www/tryoutcpns && bash deploy.sh
+
+=== [1/5] Git pull dari GitHub ===
+remote: Enumerating objects: 28, done.
+remote: Counting objects: 100% (28/28), done.
+remote: Compressing objects: 100% (5/5), done.
+remote: Total 16 (delta 11), reused 16 (delta 11), pack-reused 0 (from 0)
+Unpacking objects: 100% (16/16), 5.31 KiB | 169.00 KiB/s, done.
+From https://github.com/arsiimam/tryoutcpns.online
+ * branch            main       -> FETCH_HEAD
+   9b934ca..a79546e  main       -> origin/main
+Updating 9b934ca..a79546e
+Fast-forward
+ .replit                                                      |   5 +-
+ artifacts/api-server/src/routes/admin-stats.ts               | 175 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ artifacts/api-server/src/routes/index.ts                     |   2 +
+ artifacts/cpns-tryout/src/pages/admin/AdminDashboardPage.tsx | 295 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------
+ 4 files changed, 383 insertions(+), 94 deletions(-)
+ create mode 100644 artifacts/api-server/src/routes/admin-stats.ts
+
+=== [2/5] Install dependencies ===
+Scope: all 9 workspace projects
+Already up to date
+
+   ╭───────────────────────────────────────────────╮
+   │                                               │
+   │     Update available! 11.17.0 → 11.20.0.      │
+   │     Changelog: https://pnpm.io/v/11.20.0      │
+   │   To update, run: corepack use pnpm@11.20.0   │
+   │                                               │
+   ╰───────────────────────────────────────────────╯
+
+Done in 1.2s using pnpm v11.17.0
+
+=== [3/5] Build library packages ===
+[ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT] None of the selected packages has a "build" script
+[ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT] None of the selected packages has a "build" script
+[ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT] None of the selected packages has a "build" script
+
+=== [4/5] Build API server ===
+$ node ./build.mjs
+✘ [ERROR] Could not resolve "../lib/require-admin"
+
+    src/routes/admin-stats.ts:10:29:
+      10 │ import { requireAdmin } from "../lib/require-admin";
+         ╵                              ~~~~~~~~~~~~~~~~~~~~~~
+
+1 error
+Error: Build failed with 1 error:
+src/routes/admin-stats.ts:10:29: ERROR: Could not resolve "../lib/require-admin"
+    at failureErrorWithLog (/var/www/tryoutcpns/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:1467:15)
+    at /var/www/tryoutcpns/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:926:25
+    at /var/www/tryoutcpns/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:1345:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+/var/www/tryoutcpns/artifacts/api-server:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @workspace/api-server@0.0.0 build: `node ./build.mjs`
+Exit status 1
+root@srv1550495:/var/www/tryoutcpns# 
