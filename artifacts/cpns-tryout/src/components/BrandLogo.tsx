@@ -13,7 +13,7 @@ interface BrandLogoProps {
 
 export function BrandLogo({ variant = "light", size = "md" }: BrandLogoProps) {
   const src = variant === "dark" ? "/logo-white.png" : "/logo-navy.png";
-  const height = size === "sm" ? 36 : 52;
+  const height = size === "sm" ? 36 : 60;
 
   return (
     <img
