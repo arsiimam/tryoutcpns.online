@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
 import {
   usersTable,
@@ -7,7 +7,14 @@ import {
   userSubscriptionsTable,
 } from "@workspace/db";
 import { eq, gte, sql, desc, and } from "drizzle-orm";
-import { requireAdmin } from "../lib/require-admin";
+
+async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  const userId = req.session.userId;
+  if (!userId) return res.status(401).json({ error: "Tidak terautentikasi." });
+  const [u] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (!u || u.role !== "admin") return res.status(403).json({ error: "Akses ditolak." });
+  next();
+}
 
 const router = Router();
 
