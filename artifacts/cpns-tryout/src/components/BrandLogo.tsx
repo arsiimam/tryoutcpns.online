@@ -1,8 +1,8 @@
 /**
- * BrandLogo – uses the actual logo PNG asset
+ * BrandLogo – gunakan file PNG sesuai background
  *
- * variant: "light" → logo normal (untuk background terang)
- *          "dark"  → logo normal (PNG sudah transparan, cocok di semua bg)
+ * variant: "light" → logo-navy.png  (untuk background putih/terang)
+ *          "dark"  → logo-white.png (untuk background gelap/berwarna)
  * size:    "md" (default) | "sm"
  */
 
@@ -11,13 +11,14 @@ interface BrandLogoProps {
   size?: "md" | "sm";
 }
 
-export function BrandLogo({ size = "md" }: BrandLogoProps) {
+export function BrandLogo({ variant = "light", size = "md" }: BrandLogoProps) {
+  const src = variant === "dark" ? "/logo-white.png" : "/logo-navy.png";
   const height = size === "sm" ? 36 : 52;
 
   return (
     <img
-      src="/brand-logo.png"
-      alt="Tryout CPNS.Online"
+      src={src}
+      alt="Tryout CPNS Online"
       style={{ height, width: "auto", display: "block" }}
       draggable={false}
     />

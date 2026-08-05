@@ -70,7 +70,7 @@ export function SignUpPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center mb-2">
-            <img src="/brand-logo.png" alt="Tryout CPNS Online" className="h-14 w-auto" />
+            <img src="/logo-navy.png" alt="Tryout CPNS Online" className="h-14 w-auto" />
           </Link>
 
           {view === "options" && (
