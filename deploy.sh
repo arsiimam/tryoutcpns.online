@@ -22,25 +22,19 @@ fi
 [ -z "${SESSION_SECRET:-}" ] && { echo "ERROR: SESSION_SECRET belum diisi di .env"; exit 1; }
 
 echo ""
-echo "=== [1/5] Git pull dari GitHub ==="
+echo "=== [1/4] Git pull dari GitHub ==="
 git pull origin main
 
 echo ""
-echo "=== [2/5] Install dependencies ==="
+echo "=== [2/4] Install dependencies ==="
 pnpm install --frozen-lockfile
 
 echo ""
-echo "=== [3/5] Build library packages ==="
-pnpm --filter @workspace/db run build 2>/dev/null || true
-pnpm --filter @workspace/api-zod run build 2>/dev/null || true
-pnpm --filter @workspace/api-client-react run build 2>/dev/null || true
-
-echo ""
-echo "=== [4/5] Build API server ==="
+echo "=== [3/4] Build API server ==="
 pnpm --filter @workspace/api-server run build
 
 echo ""
-echo "=== [5/5] Build frontend ==="
+echo "=== [4/4] Build frontend ==="
 pnpm --filter @workspace/cpns-tryout run build
 
 echo ""
@@ -48,7 +42,6 @@ echo "=== Restart aplikasi dengan PM2 ==="
 
 if command -v pm2 &>/dev/null; then
   if pm2 describe cpns-api &>/dev/null; then
-    # Sudah berjalan — delete & start ulang agar env vars terbaru terbaca
     pm2 delete cpns-api
   fi
   pm2 start "$APP_DIR/ecosystem.config.cjs"
@@ -56,7 +49,6 @@ if command -v pm2 &>/dev/null; then
   echo "✓ PM2 process 'cpns-api' berjalan"
 else
   echo "⚠  PM2 tidak terinstall. Install dengan: npm install -g pm2"
-  echo "   Lalu jalankan: source .env && pm2 start ecosystem.config.cjs"
   exit 1
 fi
 
