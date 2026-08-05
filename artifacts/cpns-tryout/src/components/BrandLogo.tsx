@@ -16,7 +16,7 @@ export function BrandLogo({ size = "md" }: BrandLogoProps) {
 
   return (
     <img
-      src="/logo.png"
+      src="/brand-logo.png"
       alt="Tryout CPNS.Online"
       style={{ height, width: "auto", display: "block" }}
       draggable={false}
