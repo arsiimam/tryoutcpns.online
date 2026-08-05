@@ -12,7 +12,9 @@ import {
   RotateCcw,
   LayoutGrid,
   Loader2,
+  Send,
 } from "lucide-react";
+import { useLocation } from "wouter";
 
 /* ── Types ────────────────────────────────── */
 interface BundleInfo {
@@ -104,7 +106,7 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 }
 
 /* ── Main Page ────────────────────────────── */
-type View = "selection" | "loading" | "session";
+type View = "selection" | "loading" | "session" | "submitting";
 
 export function PracticePage() {
   const [bundles, setBundles] = useState<BundleInfo[]>([]);
@@ -154,10 +156,31 @@ export function PracticePage() {
     }
   };
 
+  const [, navigate] = useLocation();
+
   const exitSession = () => {
     setView("selection");
     setSelectedBundle(null);
     setQuestions([]);
+  };
+
+  const submitSession = async () => {
+    if (!selectedBundle || Object.keys(answers).length === 0) {
+      exitSession();
+      return;
+    }
+    setView("submitting");
+    try {
+      await fetch(`/api/participant/practice/bundles/${selectedBundle.id}/submit`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers }),
+      });
+      navigate(`/review/${selectedBundle.id}`);
+    } catch {
+      exitSession();
+    }
   };
 
   /* ════════════════════════════════════════════
@@ -307,6 +330,15 @@ export function PracticePage() {
             title="Ulangi dari awal"
           >
             <RotateCcw size={15} />
+          </button>
+
+          <button
+            onClick={submitSession}
+            disabled={view === "submitting"}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
+          >
+            <Send size={14} />
+            {view === "submitting" ? "Menyimpan..." : "Selesai & Review"}
           </button>
         </div>
       </div>
