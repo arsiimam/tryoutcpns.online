@@ -652,25 +652,24 @@ router.get("/dashboard", requireAuth, async (req: any, res) => {
 });
 
 /* ─────────────────────────────────────────────
-   GET /participant/ranking?tryoutId=123
+   GET /participant/ranking?tryoutId=<uuid>
+   Mengembalikan:
+   - ranking[]      : top-100 user nyata
+   - myActualRank   : rank user termasuk dummy pool
+   - totalParticipants: user nyata + dummy total
+   - distribution[] : histogram untuk chart
 ────────────────────────────────────────────── */
 router.get("/ranking", requireAuth, async (req: any, res) => {
   try {
-    const userId = req.session.userId as string;
-    const tryoutId = req.query.tryoutId ? Number(req.query.tryoutId) : null;
+    const userId   = req.session.userId as string;
+    const tryoutId = req.query.tryoutId as string | undefined;
 
+    // ── Top-100 leaderboard (user nyata saja) ──────────────────────────────
     let rankingRows: any[];
-
     if (tryoutId) {
       rankingRows = await db.execute(sql`
-        SELECT
-          tr.user_id,
-          u.full_name,
-          tr.total_score,
-          tr.twk_score,
-          tr.tiu_score,
-          tr.tkp_score,
-          tr.created_at
+        SELECT tr.user_id, u.full_name,
+               tr.total_score, tr.twk_score, tr.tiu_score, tr.tkp_score, tr.created_at
         FROM tryout_results tr
         JOIN users u ON u.id = tr.user_id
         WHERE tr.tryout_id = ${tryoutId}
@@ -679,14 +678,12 @@ router.get("/ranking", requireAuth, async (req: any, res) => {
       `).then(r => r.rows);
     } else {
       rankingRows = await db.execute(sql`
-        SELECT
-          tr.user_id,
-          u.full_name,
-          AVG(tr.total_score)::int AS total_score,
-          AVG(tr.twk_score)::int   AS twk_score,
-          AVG(tr.tiu_score)::int   AS tiu_score,
-          AVG(tr.tkp_score)::int   AS tkp_score,
-          MAX(tr.created_at) AS created_at
+        SELECT tr.user_id, u.full_name,
+               AVG(tr.total_score)::int AS total_score,
+               AVG(tr.twk_score)::int   AS twk_score,
+               AVG(tr.tiu_score)::int   AS tiu_score,
+               AVG(tr.tkp_score)::int   AS tkp_score,
+               MAX(tr.created_at) AS created_at
         FROM tryout_results tr
         JOIN users u ON u.id = tr.user_id
         GROUP BY tr.user_id, u.full_name
@@ -696,18 +693,75 @@ router.get("/ranking", requireAuth, async (req: any, res) => {
     }
 
     const ranking = rankingRows.map((row: any, idx: number) => ({
-      rank: idx + 1,
-      userId: row.user_id,
+      rank:     idx + 1,
+      userId:   row.user_id,
       userName: row.full_name,
-      total: row.total_score,
-      TWK: row.twk_score,
-      TIU: row.tiu_score,
-      TKP: row.tkp_score,
-      date: row.created_at,
-      isMe: row.user_id === userId,
+      total:    row.total_score,
+      TWK:      row.twk_score,
+      TIU:      row.tiu_score,
+      TKP:      row.tkp_score,
+      date:     row.created_at,
+      isMe:     row.user_id === userId,
     }));
 
-    return res.json({ ranking });
+    // ── Skor user saat ini (untuk hitung rank sebenarnya) ──────────────────
+    let myScore = 0;
+    if (tryoutId) {
+      const [myRow] = await db.execute(sql`
+        SELECT total_score FROM tryout_results
+        WHERE user_id = ${userId} AND tryout_id = ${tryoutId}
+        ORDER BY total_score DESC LIMIT 1
+      `).then(r => r.rows as any[]);
+      myScore = myRow?.total_score ?? 0;
+    } else {
+      const [myRow] = await db.execute(sql`
+        SELECT AVG(total_score)::int AS total_score
+        FROM tryout_results WHERE user_id = ${userId}
+      `).then(r => r.rows as any[]);
+      myScore = myRow?.total_score ?? 0;
+    }
+
+    // ── Rank sebenarnya: real lebih tinggi + dummy lebih tinggi + 1 ────────
+    let myActualRank = 0;
+    let totalParticipants = 0;
+    if (myScore > 0) {
+      const [realAbove, dummyAbove, realTotal, dummyTotal] = await Promise.all([
+        tryoutId
+          ? db.execute(sql`SELECT COUNT(DISTINCT user_id)::int AS cnt FROM tryout_results WHERE tryout_id = ${tryoutId} AND total_score > ${myScore}`).then(r => Number((r.rows[0] as any)?.cnt ?? 0))
+          : db.execute(sql`SELECT COUNT(DISTINCT user_id)::int AS cnt FROM (SELECT user_id, AVG(total_score) AS avg_score FROM tryout_results GROUP BY user_id HAVING AVG(total_score) > ${myScore}) x`).then(r => Number((r.rows[0] as any)?.cnt ?? 0)),
+        countDummyAbove(myScore),
+        tryoutId
+          ? db.execute(sql`SELECT COUNT(DISTINCT user_id)::int AS cnt FROM tryout_results WHERE tryout_id = ${tryoutId}`).then(r => Number((r.rows[0] as any)?.cnt ?? 0))
+          : db.execute(sql`SELECT COUNT(DISTINCT user_id)::int AS cnt FROM tryout_results`).then(r => Number((r.rows[0] as any)?.cnt ?? 0)),
+        totalDummyCount(),
+      ]);
+      myActualRank    = realAbove + dummyAbove + 1;
+      totalParticipants = realTotal + dummyTotal;
+    }
+
+    // ── Distribusi histogram (dummy + user nyata, bucket 50 poin) ──────────
+    const buckets = [
+      { range: "0–149",   min: 0,   max: 149 },
+      { range: "150–199", min: 150, max: 199 },
+      { range: "200–249", min: 200, max: 249 },
+      { range: "250–299", min: 250, max: 299 },
+      { range: "300–349", min: 300, max: 349 },
+      { range: "350–399", min: 350, max: 399 },
+      { range: "400–449", min: 400, max: 449 },
+      { range: "450–550", min: 450, max: 550 },
+    ];
+    const distRows = await db.execute(sql`
+      SELECT score AS s FROM dummy_scores
+      UNION ALL
+      SELECT total_score AS s FROM tryout_results
+    `).then(r => (r.rows as any[]).map(r => Number(r.s)));
+
+    const distribution = buckets.map(b => ({
+      range: b.range,
+      count: distRows.filter(s => s >= b.min && s <= b.max).length,
+    }));
+
+    return res.json({ ranking, myActualRank, myScore, totalParticipants, distribution });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
   }
