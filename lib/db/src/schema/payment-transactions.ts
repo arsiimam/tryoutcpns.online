@@ -16,6 +16,7 @@ export const paymentTransactionsTable = pgTable("payment_transactions", {
   expiresAt:       timestamp("expires_at"),
   couponCode:      text("coupon_code"),         // kupon yang digunakan (jika ada)
   couponId:        integer("coupon_id"),        // FK ke coupons.id
+  gateway:         text("gateway").notNull().default("duitku"), // "duitku" | "midtrans"
   createdAt:       timestamp("created_at").defaultNow().notNull(),
   updatedAt:       timestamp("updated_at").defaultNow().notNull(),
 });

@@ -3,7 +3,7 @@ import { AdminLayout } from "../../components/layouts/AdminLayout";
 import { PageHeader } from "../../components/ui/shared";
 import {
   Eye, EyeOff, Copy, CheckCircle2, Save, RefreshCw,
-  AlertCircle, Zap, Globe, Clock, ShieldCheck, Target,
+  AlertCircle, Zap, Globe, Clock, ShieldCheck, Target, ToggleLeft, ToggleRight,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -21,6 +21,14 @@ interface SettingsData {
   duitku_merchant_code_source: "database" | "environment" | "none";
   duitku_environment: "sandbox" | "production";
   duitku_expiry_period: string;
+  /* Midtrans */
+  midtrans_server_key_masked: string;
+  midtrans_server_key_source: "database" | "environment" | "none";
+  midtrans_client_key: string;
+  midtrans_client_key_source: "database" | "environment" | "none";
+  midtrans_environment: "sandbox" | "production";
+  /* Gateway */
+  active_payment_gateway: "duitku" | "midtrans";
 }
 
 type ToastState = { type: "success" | "error"; msg: string } | null;
@@ -137,8 +145,20 @@ export function AdminSettingsPage() {
   const [expiryPeriod, setExpiryPeriod]   = useState("1440");
   const [savingDuitku, setSavingDuitku]   = useState(false);
 
-  const callbackUrlGoogle = `${window.location.origin}/api/auth/google/callback`;
-  const callbackUrlDuitku = `${window.location.origin}/api/payment/callback`;
+  /* Midtrans state */
+  const [mtServerKey, setMtServerKey]   = useState("");
+  const [mtClientKey, setMtClientKey]   = useState("");
+  const [showMtServerKey, setShowMtServerKey] = useState(false);
+  const [mtEnv, setMtEnv]               = useState<"sandbox" | "production">("sandbox");
+  const [savingMidtrans, setSavingMidtrans] = useState(false);
+
+  /* Active gateway state */
+  const [activeGateway, setActiveGateway]   = useState<"duitku" | "midtrans">("duitku");
+  const [savingGateway, setSavingGateway]   = useState(false);
+
+  const callbackUrlGoogle  = `${window.location.origin}/api/auth/google/callback`;
+  const callbackUrlDuitku  = `${window.location.origin}/api/payment/callback`;
+  const callbackUrlMidtrans = `${window.location.origin}/api/payment/midtrans-notification`;
 
   /* ---- fetch settings ---- */
   async function loadSettings() {
@@ -149,6 +169,9 @@ export function AdminSettingsPage() {
       setMerchantCode(data.duitku_merchant_code);
       setDuitkuEnv(data.duitku_environment);
       setExpiryPeriod(data.duitku_expiry_period || "1440");
+      setMtClientKey(data.midtrans_client_key ?? "");
+      setMtEnv(data.midtrans_environment ?? "sandbox");
+      setActiveGateway(data.active_payment_gateway ?? "duitku");
     } finally {
       setLoading(false);
     }
@@ -223,6 +246,53 @@ export function AdminSettingsPage() {
       showToast("error", "Gagal menyimpan pengaturan Google. Coba lagi.");
     } finally {
       setSavingGoogle(false);
+    }
+  }
+
+  /* ---- save Gateway toggle ---- */
+  async function handleSaveGateway(gw: "duitku" | "midtrans") {
+    setSavingGateway(true);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active_payment_gateway: gw }),
+      });
+      if (!res.ok) throw new Error("Gagal");
+      setActiveGateway(gw);
+      showToast("success", `Gateway aktif diubah ke ${gw === "midtrans" ? "Midtrans" : "Duitku"}.`);
+    } catch {
+      showToast("error", "Gagal mengubah gateway aktif.");
+    } finally {
+      setSavingGateway(false);
+    }
+  }
+
+  /* ---- save Midtrans ---- */
+  async function handleSaveMidtrans(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingMidtrans(true);
+    try {
+      const body: Record<string, string> = {
+        midtrans_environment: mtEnv,
+        midtrans_client_key:  mtClientKey,
+      };
+      if (mtServerKey.trim()) body.midtrans_server_key = mtServerKey;
+
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Gagal menyimpan.");
+
+      await loadSettings();
+      setMtServerKey("");
+      showToast("success", "Pengaturan Midtrans berhasil disimpan.");
+    } catch {
+      showToast("error", "Gagal menyimpan pengaturan Midtrans. Coba lagi.");
+    } finally {
+      setSavingMidtrans(false);
     }
   }
 
@@ -346,6 +416,55 @@ export function AdminSettingsPage() {
               </div>
             </form>
           )}
+        </SectionCard>
+
+        {/* ========== GATEWAY AKTIF ========== */}
+        <SectionCard
+          icon={<ToggleRight size={22} className="text-indigo-600" />}
+          title="Gateway Pembayaran Aktif"
+          subtitle="Pilih gateway yang digunakan untuk menerima pembayaran dari user"
+        >
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              {(["duitku", "midtrans"] as const).map(gw => {
+                const isActive = activeGateway === gw;
+                return (
+                  <button
+                    key={gw}
+                    type="button"
+                    disabled={savingGateway}
+                    onClick={() => handleSaveGateway(gw)}
+                    className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all font-medium text-sm ${
+                      isActive
+                        ? "border-indigo-500 bg-indigo-50 text-indigo-800"
+                        : "border-slate-200 hover:border-slate-300 text-slate-600"
+                    }`}
+                  >
+                    {isActive && (
+                      <span className="absolute top-2 right-2 bg-indigo-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                        AKTIF
+                      </span>
+                    )}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg ${
+                      gw === "duitku" ? "bg-blue-500" : "bg-blue-700"
+                    }`}>
+                      {gw === "duitku" ? "D" : "M"}
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold">{gw === "duitku" ? "Duitku" : "Midtrans"}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {gw === "duitku" ? "Pilih metode manual" : "Snap — all-in-one checkout"}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-slate-400">
+              Hanya satu gateway yang aktif sekaligus. Klik untuk langsung menggantinya.
+              Pastikan gateway yang dipilih sudah dikonfigurasi di bawah.
+            </p>
+          </div>
         </SectionCard>
 
         {/* ========== DUITKU PAYMENT GATEWAY ========== */}
@@ -541,6 +660,139 @@ export function AdminSettingsPage() {
               >
                 {savingDuitku ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
                 {savingDuitku ? "Menyimpan..." : "Simpan Pengaturan Duitku"}
+              </button>
+            </div>
+          </form>
+        </SectionCard>
+
+        {/* ========== MIDTRANS PAYMENT GATEWAY ========== */}
+        <SectionCard
+          icon={
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-black"
+              style={{ background: "#003f8a" }}>
+              M
+            </div>
+          }
+          title="Midtrans Payment Gateway"
+          subtitle="Konfigurasi Server Key, Client Key, dan lingkungan Midtrans Snap"
+        >
+          <form onSubmit={handleSaveMidtrans} className="p-6 space-y-6">
+
+            {/* Status bar */}
+            <div
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm"
+              style={
+                settings?.midtrans_server_key_source !== "none" && settings?.midtrans_client_key
+                  ? { background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534" }
+                  : { background: "#fefce8", border: "1px solid #fde68a", color: "#92400e" }
+              }
+            >
+              <ShieldCheck size={16} />
+              {settings?.midtrans_server_key_source !== "none" && settings?.midtrans_client_key
+                ? `Gateway terkonfigurasi — mode ${settings.midtrans_environment === "production" ? "Produksi 🟢" : "Sandbox 🟡"}`
+                : "Gateway belum dikonfigurasi. Isi Server Key dan Client Key di bawah."}
+            </div>
+
+            {/* Environment toggle */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                <Globe size={14} className="inline mr-1.5 -mt-0.5" />
+                Lingkungan (Environment)
+              </label>
+              <div className="flex rounded-lg border border-slate-200 overflow-hidden w-fit">
+                {(["sandbox", "production"] as const).map((env) => (
+                  <button key={env} type="button" onClick={() => setMtEnv(env)}
+                    className="px-5 py-2 text-sm font-semibold transition-colors capitalize"
+                    style={mtEnv === env ? { background: "#003f8a", color: "#fff" } : { background: "#fff", color: "#475569" }}
+                  >
+                    {env === "sandbox" ? "🟡 Sandbox" : "🟢 Production"}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-slate-400">
+                Gunakan Sandbox untuk pengujian. Ganti ke Production saat siap menerima pembayaran nyata.
+              </p>
+            </div>
+
+            {/* Server Key */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Server Key
+                <SourceBadge source={settings?.midtrans_server_key_source ?? "none"} />
+              </label>
+              <MaskedField value={!mtServerKey ? (settings?.midtrans_server_key_masked ?? "") : ""} />
+              <div className="relative">
+                <input
+                  type={showMtServerKey ? "text" : "password"}
+                  value={mtServerKey}
+                  onChange={(e) => setMtServerKey(e.target.value)}
+                  placeholder={settings?.midtrans_server_key_source !== "none" ? "Biarkan kosong untuk tidak mengubah" : "SB-Mid-server-..."}
+                  className={`${inputCls} pr-10`}
+                />
+                <button type="button" onClick={() => setShowMtServerKey(!showMtServerKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  {showMtServerKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {settings?.midtrans_server_key_source !== "none" && (
+                <p className="mt-1 text-xs text-slate-400">Kosongkan jika tidak ingin mengubah Server Key yang sudah tersimpan.</p>
+              )}
+            </div>
+
+            {/* Client Key */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Client Key (public)
+                <SourceBadge source={settings?.midtrans_client_key_source ?? "none"} />
+              </label>
+              <input
+                type="text"
+                value={mtClientKey}
+                onChange={(e) => setMtClientKey(e.target.value)}
+                placeholder="SB-Mid-client-..."
+                className={inputCls}
+              />
+              <p className="mt-1 text-xs text-slate-400">Client Key bersifat public dan digunakan di frontend untuk Snap.js.</p>
+            </div>
+
+            {/* Notification URL */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Notification URL
+                <span className="ml-2 text-xs font-normal text-slate-400">(daftarkan di dashboard Midtrans)</span>
+              </label>
+              <div className="flex gap-2">
+                <input readOnly value={callbackUrlMidtrans}
+                  className="flex-1 px-3 py-2 text-sm border rounded-lg bg-slate-50 text-slate-600 font-mono cursor-default" />
+                <CopyButton value={callbackUrlMidtrans} />
+              </div>
+              <p className="mt-1.5 text-xs text-slate-400">
+                Masukkan URL ini di <strong>Midtrans Dashboard → Settings → Configuration → Payment Notification URL</strong>.
+              </p>
+            </div>
+
+            {/* Setup guide */}
+            <div className="p-4 rounded-lg text-xs space-y-1.5"
+              style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e3a8a" }}>
+              <p className="font-semibold flex items-center gap-1.5">
+                <Zap size={13} /> Cara mendapatkan kredensial Midtrans:
+              </p>
+              <ol className="list-decimal ml-4 space-y-1">
+                <li>Login ke <a href="https://dashboard.midtrans.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">dashboard.midtrans.com</a></li>
+                <li>Pilih environment <strong>Sandbox</strong> atau <strong>Production</strong></li>
+                <li>Buka <strong>Settings → Access Keys</strong></li>
+                <li>Salin <strong>Server Key</strong> dan <strong>Client Key</strong></li>
+                <li>Di <strong>Settings → Configuration</strong>, isi <strong>Payment Notification URL</strong> dengan URL di atas</li>
+              </ol>
+            </div>
+
+            <div className="pt-1 flex justify-end">
+              <button type="submit" disabled={savingMidtrans}
+                className="flex items-center gap-2 px-5 py-2 text-white text-sm font-semibold rounded-lg transition-opacity disabled:opacity-60"
+                style={{ background: "#003f8a" }}
+              >
+                {savingMidtrans ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
+                {savingMidtrans ? "Menyimpan..." : "Simpan Pengaturan Midtrans"}
               </button>
             </div>
           </form>

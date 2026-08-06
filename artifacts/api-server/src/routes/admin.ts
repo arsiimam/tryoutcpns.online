@@ -4,6 +4,7 @@ import { usersTable, appSettingsTable, userSubscriptionsTable } from "@workspace
 import { eq, inArray, desc } from "drizzle-orm";
 import { invalidateGoogleCredCache } from "./auth";
 import { invalidateDuitkuCredCache } from "../lib/duitku";
+import { invalidateMidtransCache, invalidateGatewayCache } from "../lib/midtrans";
 
 const router = Router();
 
@@ -75,6 +76,18 @@ router.get("/admin/settings", requireAdmin, async (_req, res) => {
   const environment   = dbEnvironment  || process.env.DUITKU_ENV            || "sandbox";
   const expiryPeriod  = dbExpiryPeriod || "1440";
 
+  // ---- Midtrans ----
+  const dbMtServerKey  = map["midtrans_server_key"]   ?? "";
+  const dbMtClientKey  = map["midtrans_client_key"]   ?? "";
+  const dbMtEnv        = map["midtrans_environment"]  ?? "";
+
+  const mtServerKey = dbMtServerKey || process.env.MIDTRANS_SERVER_KEY || "";
+  const mtClientKey = dbMtClientKey || process.env.MIDTRANS_CLIENT_KEY || "";
+  const mtEnv       = dbMtEnv       || "sandbox";
+
+  // ---- Active gateway ----
+  const activeGateway = (map["active_payment_gateway"] === "midtrans") ? "midtrans" : "duitku";
+
   return res.json({
     /* Google */
     google_client_id:              clientId,
@@ -91,6 +104,18 @@ router.get("/admin/settings", requireAdmin, async (_req, res) => {
     duitku_expiry_period:          expiryPeriod,
     duitku_merchant_code_source:   dbMerchantCode
       ? "database" : process.env.DUITKU_MERCHANT_CODE ? "environment" : "none",
+
+    /* Midtrans */
+    midtrans_server_key_masked:    maskSecret(mtServerKey),
+    midtrans_server_key_source:    dbMtServerKey
+      ? "database" : process.env.MIDTRANS_SERVER_KEY ? "environment" : "none",
+    midtrans_client_key:           mtClientKey,
+    midtrans_client_key_source:    dbMtClientKey
+      ? "database" : process.env.MIDTRANS_CLIENT_KEY ? "environment" : "none",
+    midtrans_environment:          mtEnv === "production" ? "production" : "sandbox",
+
+    /* Gateway selector */
+    active_payment_gateway:        activeGateway,
   });
 });
 
@@ -107,10 +132,18 @@ router.put("/admin/settings", requireAdmin, async (req, res) => {
     duitku_api_key?:       string;
     duitku_environment?:   string;
     duitku_expiry_period?: string;
+    /* Midtrans */
+    midtrans_server_key?:  string;
+    midtrans_client_key?:  string;
+    midtrans_environment?: string;
+    /* Gateway */
+    active_payment_gateway?: string;
   };
 
-  let googleChanged = false;
-  let duitkuChanged = false;
+  let googleChanged   = false;
+  let duitkuChanged   = false;
+  let midtransChanged = false;
+  let gatewayChanged  = false;
 
   // ---- Google ----
   if (typeof body.google_client_id === "string") {
@@ -142,8 +175,31 @@ router.put("/admin/settings", requireAdmin, async (req, res) => {
     duitkuChanged = true;
   }
 
-  if (googleChanged) invalidateGoogleCredCache();
-  if (duitkuChanged) invalidateDuitkuCredCache();
+  // ---- Midtrans ----
+  if (typeof body.midtrans_server_key === "string" && body.midtrans_server_key.trim()) {
+    await upsertSetting("midtrans_server_key", body.midtrans_server_key.trim());
+    midtransChanged = true;
+  }
+  if (typeof body.midtrans_client_key === "string" && body.midtrans_client_key.trim()) {
+    await upsertSetting("midtrans_client_key", body.midtrans_client_key.trim());
+    midtransChanged = true;
+  }
+  if (typeof body.midtrans_environment === "string") {
+    const env = body.midtrans_environment === "production" ? "production" : "sandbox";
+    await upsertSetting("midtrans_environment", env);
+    midtransChanged = true;
+  }
+
+  // ---- Gateway ----
+  if (body.active_payment_gateway === "midtrans" || body.active_payment_gateway === "duitku") {
+    await upsertSetting("active_payment_gateway", body.active_payment_gateway);
+    gatewayChanged = true;
+  }
+
+  if (googleChanged)   invalidateGoogleCredCache();
+  if (duitkuChanged)   invalidateDuitkuCredCache();
+  if (midtransChanged) invalidateMidtransCache();
+  if (gatewayChanged)  invalidateGatewayCache();
 
   return res.json({ ok: true });
 });

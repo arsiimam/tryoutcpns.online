@@ -39,9 +39,12 @@ interface PaymentMethodInfo {
 }
 
 interface PaymentConfig {
-  environment: "sandbox" | "production";
-  methods: PaymentMethodInfo[];
+  activeGateway:      "duitku" | "midtrans";
+  environment:        "sandbox" | "production";
+  methods:            PaymentMethodInfo[];
   merchantConfigured: boolean;
+  midtransClientKey?:  string;
+  midtransConfigured?: boolean;
 }
 
 interface CreatePaymentResult {
@@ -199,9 +202,11 @@ export function SubscriptionPage() {
     }
   };
 
-  /* Checkout — create Duitku invoice then redirect */
+  /* Checkout — route to Duitku or Midtrans */
   const handleCheckout = async () => {
-    if (!selectedPlan || !selectedMethod || !user) return;
+    const isMidtrans = paymentConfig?.activeGateway === "midtrans";
+    if (!selectedPlan || !user) return;
+    if (!isMidtrans && !selectedMethod) return;
     if (!paymentConfig?.merchantConfigured) {
       setCheckoutError("Konfigurasi payment belum lengkap. Hubungi admin.");
       return;
@@ -209,29 +214,27 @@ export function SubscriptionPage() {
     setIsProcessing(true);
     setCheckoutError("");
     try {
-      const res = await fetch("/api/payment/create", {
+      const body: Record<string, unknown> = {
+        planId:         selectedPlan.id,
+        planName:       selectedPlan.name,
+        amount:         selectedPlan.price,
+        customerName:   user.name,
+        email:          user.email,
+        discountAmount: discount,
+        couponCode:     couponCode.trim() || undefined,
+        couponId:       couponId ?? undefined,
+      };
+      if (!isMidtrans) body.paymentMethod = selectedMethod;
+
+      const res  = await fetch("/api/payment/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planId:         selectedPlan.id,
-          planName:       selectedPlan.name,
-          amount:         selectedPlan.price,
-          paymentMethod:  selectedMethod,
-          customerName:   user.name,
-          email:          user.email,
-          discountAmount: discount,
-          couponCode:     couponCode.trim() || undefined,
-          couponId:       couponId ?? undefined,
-        }),
+        body: JSON.stringify(body),
       });
-
       const data = (await res.json()) as CreatePaymentResult & { error?: string };
+      if (!res.ok || data.error) throw new Error(data.error || "Gagal membuat invoice");
 
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Gagal membuat invoice");
-      }
-
-      // Redirect to Duitku payment page
+      // Redirect to payment page (same flow for both gateways)
       window.location.href = data.paymentUrl;
     } catch (err: unknown) {
       setIsProcessing(false);
@@ -502,49 +505,66 @@ export function SubscriptionPage() {
               )}
             </div>
 
-            {/* Payment methods */}
-            <div className="mb-5">
-              <label className="mb-3 block text-sm font-medium text-slate-700">Metode Pembayaran</label>
-              {paymentConfig && !paymentConfig.merchantConfigured ? (
-                <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                  <AlertTriangle size={14} />
-                  Konfigurasi Duitku belum lengkap. Hubungi admin.
-                </div>
-              ) : !paymentConfig ? (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Loader2 size={14} className="animate-spin" /> Memuat metode pembayaran…
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
-                  {Array.from(grouped.entries()).map(([group, methods]) => (
-                    <div key={group}>
-                      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        {groupIcon(group as PaymentMethodInfo["group"])}
-                        {GROUP_LABELS[group as PaymentMethodInfo["group"]]}
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {methods.map((m: PaymentMethodInfo) => (
-                          <button
-                            key={m.code}
-                            onClick={() => setSelectedMethod(m.code)}
-                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-all ${
-                              selectedMethod === m.code
-                                ? "border-primary bg-primary/5 font-semibold text-primary"
-                                : "border-slate-200 text-slate-700 hover:border-primary/40"
-                            }`}
-                          >
-                            <span className="flex items-center gap-1.5 truncate">
-                              {groupIcon(m.group as PaymentMethodInfo["group"])}
-                              {m.name}
-                            </span>
-                          </button>
-                        ))}
+            {/* Payment methods — Duitku only */}
+            {paymentConfig?.activeGateway !== "midtrans" && (
+              <div className="mb-5">
+                <label className="mb-3 block text-sm font-medium text-slate-700">Metode Pembayaran</label>
+                {paymentConfig && !paymentConfig.merchantConfigured ? (
+                  <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <AlertTriangle size={14} />
+                    Konfigurasi Duitku belum lengkap. Hubungi admin.
+                  </div>
+                ) : !paymentConfig ? (
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <Loader2 size={14} className="animate-spin" /> Memuat metode pembayaran…
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                    {Array.from(grouped.entries()).map(([group, methods]) => (
+                      <div key={group}>
+                        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                          {groupIcon(group as PaymentMethodInfo["group"])}
+                          {GROUP_LABELS[group as PaymentMethodInfo["group"]]}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {methods.map((m: PaymentMethodInfo) => (
+                            <button
+                              key={m.code}
+                              onClick={() => setSelectedMethod(m.code)}
+                              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-all ${
+                                selectedMethod === m.code
+                                  ? "border-primary bg-primary/5 font-semibold text-primary"
+                                  : "border-slate-200 text-slate-700 hover:border-primary/40"
+                              }`}
+                            >
+                              <span className="flex items-center gap-1.5 truncate">
+                                {groupIcon(m.group as PaymentMethodInfo["group"])}
+                                {m.name}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Midtrans info */}
+            {paymentConfig?.activeGateway === "midtrans" && (
+              <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+                <p className="font-semibold mb-1 flex items-center gap-1.5">
+                  <ShieldCheck size={15} /> Pembayaran via Midtrans Snap
+                </p>
+                <p className="text-xs text-blue-600">
+                  Anda akan diarahkan ke halaman Midtrans untuk memilih metode pembayaran (Transfer Bank, E-Wallet, QRIS, Kartu Kredit, dan lainnya).
+                </p>
+                {!paymentConfig.merchantConfigured && (
+                  <p className="mt-2 text-xs text-red-600 font-semibold">⚠ Konfigurasi Midtrans belum lengkap. Hubungi admin.</p>
+                )}
+              </div>
+            )}
 
             {checkoutError && (
               <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -567,7 +587,11 @@ export function SubscriptionPage() {
               </button>
               <button
                 onClick={handleCheckout}
-                disabled={!selectedMethod || isProcessing || !paymentConfig?.merchantConfigured}
+                disabled={
+                  isProcessing ||
+                  !paymentConfig?.merchantConfigured ||
+                  (paymentConfig?.activeGateway !== "midtrans" && !selectedMethod)
+                }
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary py-3 font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
