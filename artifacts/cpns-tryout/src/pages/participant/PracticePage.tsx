@@ -411,7 +411,7 @@ export function PracticePage() {
                   >
                     {opt.key}.
                   </span>
-                  <span className="flex-1 text-slate-700">{opt.text}</span>
+                  <span className="flex-1 text-slate-700 q-html" dangerouslySetInnerHTML={{ __html: opt.text ?? "" }} />
                   {icon}
                 </button>
               );

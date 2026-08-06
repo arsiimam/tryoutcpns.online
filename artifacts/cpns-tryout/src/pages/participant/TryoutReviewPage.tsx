@@ -127,12 +127,9 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
                   <div key={opt.key} className={cls}>
                     <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border
                       border-current">{opt.key}</span>
-                    <span className="flex-1">
-                      {opt.text ?? ""}
-                      {isTKP && opt.weight !== undefined && (
-                        <span className="ml-2 text-xs text-slate-400">({opt.weight} poin)</span>
-                      )}
-                    </span>
+                    <span className="flex-1 q-html" dangerouslySetInnerHTML={{ __html:
+                      (opt.text ?? "") + (isTKP && opt.weight !== undefined ? `<span class="ml-2 text-xs text-slate-400">(${opt.weight} poin)</span>` : "")
+                    }} />
                     {!isTKP && isCorrect && (
                       <CheckCircle2 size={14} className="shrink-0 text-emerald-600 mt-0.5" />
                     )}

@@ -172,9 +172,10 @@ export function SessionPage() {
 
             {/* Teks Soal & Opsi */}
             <div className="p-6 md:p-8 flex-1 overflow-y-auto">
-              <div className="text-lg text-slate-800 leading-relaxed mb-8 font-medium">
-                {currentQ.text}
-              </div>
+              <div
+                className="text-base text-slate-800 leading-relaxed mb-8 font-medium q-html"
+                dangerouslySetInnerHTML={{ __html: currentQ.text }}
+              />
               <div className="space-y-3">
                 {currentQ.options.map((opt) => {
                   const isSelected = session.answers[currentQ.id] === opt.key;
@@ -195,10 +196,10 @@ export function SessionPage() {
                           opt.key
                         )}
                       </div>
-                      <div className="text-slate-700 pt-1 leading-relaxed w-full">
-                        <span className="md:hidden font-bold mr-2">{opt.key}.</span>
-                        {opt.text}
-                      </div>
+                      <div
+                        className="text-slate-700 pt-1 leading-relaxed w-full q-html"
+                        dangerouslySetInnerHTML={{ __html: `<span class="md:hidden font-bold mr-2">${opt.key}.</span>${opt.text}` }}
+                      />
                       {/* Hidden radio input for accessibility */}
                       <input 
                         type="radio" 
