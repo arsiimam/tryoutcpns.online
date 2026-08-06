@@ -12,11 +12,57 @@ import {
   userSubscriptionsTable,
   usersTable,
   subscriptionPlansTable,
+  couponsTable,
 } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 
 const router = Router();
+
+/** POST /api/payment/validate-coupon */
+router.post("/payment/validate-coupon", async (req, res) => {
+  try {
+    const { code, amount } = req.body as { code: string; amount: number };
+    if (!code?.trim() || !amount) return res.status(400).json({ valid: false, error: "code dan amount diperlukan." });
+
+    const [coupon] = await db.select().from(couponsTable)
+      .where(eq(couponsTable.code, code.trim().toUpperCase()));
+
+    if (!coupon)         return res.json({ valid: false, error: "Kode kupon tidak ditemukan." });
+    if (!coupon.isActive) return res.json({ valid: false, error: "Kupon tidak aktif." });
+
+    const now = new Date();
+    if (now < coupon.validFrom)  return res.json({ valid: false, error: "Kupon belum berlaku." });
+    if (now > coupon.validUntil) return res.json({ valid: false, error: "Kupon sudah kedaluwarsa." });
+    if (coupon.usedCount >= coupon.quota) return res.json({ valid: false, error: "Kuota kupon sudah habis." });
+    if (coupon.minPurchase > 0 && amount < coupon.minPurchase) {
+      return res.json({ valid: false, error: `Minimum pembelian Rp ${coupon.minPurchase.toLocaleString("id-ID")} untuk kupon ini.` });
+    }
+
+    let discount = 0;
+    if (coupon.discountType === "percentage") {
+      discount = Math.round(amount * coupon.discountValue / 100);
+      if (coupon.maxDiscount > 0) discount = Math.min(discount, coupon.maxDiscount);
+    } else {
+      discount = Math.min(coupon.discountValue, amount);
+    }
+
+    return res.json({
+      valid: true,
+      discount,
+      couponId: coupon.id,
+      coupon: {
+        code: coupon.code,
+        description: coupon.description,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+        maxDiscount: coupon.maxDiscount,
+      },
+    });
+  } catch (err: any) {
+    return res.status(500).json({ valid: false, error: err.message });
+  }
+});
 
 /** GET /api/payment/config */
 router.get("/payment/config", async (_req, res) => {
@@ -43,10 +89,12 @@ router.post("/payment/create", async (req, res) => {
       customerName,
       email,
       discountAmount = 0,
+      couponCode,
+      couponId,
     } = req.body as {
       planId: string; planName: string; amount: number;
       paymentMethod: string; customerName: string; email: string;
-      discountAmount?: number;
+      discountAmount?: number; couponCode?: string; couponId?: number;
     };
 
     if (!planId || !amount || !paymentMethod || !customerName || !email) {
@@ -97,6 +145,8 @@ router.post("/payment/create", async (req, res) => {
       paymentMethod,
       duitkuReference: result.reference,
       expiresAt,
+      couponCode:      couponCode?.trim().toUpperCase() ?? null,
+      couponId:        couponId ?? null,
     });
 
     logger.info({ merchantOrderId, reference: result.reference }, "Duitku invoice created");
@@ -168,6 +218,18 @@ router.post("/payment/callback", async (req, res) => {
         expiresAt: expires,
       });
       logger.info({ merchantOrderId, userId: tx.userId, planId: tx.planId, durationDays }, "Subscription activated");
+
+      // Increment coupon usedCount if a coupon was applied
+      if (tx.couponId) {
+        try {
+          await db.update(couponsTable)
+            .set({ usedCount: sql`used_count + 1`, updatedAt: new Date() })
+            .where(eq(couponsTable.id, tx.couponId));
+          logger.info({ merchantOrderId, couponId: tx.couponId }, "Coupon usedCount incremented");
+        } catch (couponErr) {
+          logger.warn({ couponErr }, "Failed to increment coupon usedCount");
+        }
+      }
     }
 
     logger.info({ merchantOrderId, resultCode, newStatus }, "Payment callback processed");

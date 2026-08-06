@@ -135,13 +135,12 @@ router.post("/bundles/:id/submit", requireAuth, async (req: any, res) => {
 
 /* ─────────────────────────────────────────────
    GET /history
-   List all bundles the user has completed practice for
+   Latest session per bundle + session count
 ────────────────────────────────────────────── */
 router.get("/history", requireAuth, async (req: any, res) => {
   try {
     const userId = req.session.userId as string;
 
-    // Get latest session per bundle using DISTINCT ON
     const result = await db.execute(sql`
       SELECT DISTINCT ON (ps.bundle_id)
         ps.id            AS session_id,
@@ -152,16 +151,16 @@ router.get("/history", requireAuth, async (req: any, res) => {
         qb.name          AS bundle_name,
         qb.description   AS bundle_description,
         qb.category      AS bundle_category,
-        qb.question_count
+        qb.question_count,
+        (SELECT COUNT(*) FROM practice_sessions s2
+         WHERE s2.user_id = ps.user_id AND s2.bundle_id = ps.bundle_id) AS session_count
       FROM practice_sessions ps
       JOIN question_bundles qb ON qb.id = ps.bundle_id
       WHERE ps.user_id = ${userId}
       ORDER BY ps.bundle_id, ps.completed_at DESC
     `);
 
-    // db.execute returns { rows: [...] } in drizzle-orm/node-postgres
     const rows = (result as any).rows ?? result ?? [];
-
     const history = (rows as any[]).map(r => ({
       sessionId:         r.session_id,
       bundleId:          r.bundle_id,
@@ -172,6 +171,7 @@ router.get("/history", requireAuth, async (req: any, res) => {
       totalQuestions:    r.total_questions,
       correctCount:      r.correct_count,
       completedAt:       r.completed_at,
+      sessionCount:      Number(r.session_count ?? 1),
     }));
 
     return res.json({ history });
@@ -181,28 +181,63 @@ router.get("/history", requireAuth, async (req: any, res) => {
 });
 
 /* ─────────────────────────────────────────────
-   GET /history/:bundleId
-   Questions + user answers for the latest session of a bundle
+   GET /history/:bundleId/sessions
+   All session metadata for a bundle (no questions)
 ────────────────────────────────────────────── */
-router.get("/history/:bundleId", requireAuth, async (req: any, res) => {
+router.get("/history/:bundleId/sessions", requireAuth, async (req: any, res) => {
   try {
     const bundleId = Number(req.params.bundleId);
     const userId   = req.session.userId as string;
+    if (isNaN(bundleId)) return res.status(400).json({ error: "ID tidak valid." });
+
+    const result = await db.execute(sql`
+      SELECT ps.id, ps.correct_count, ps.total_questions, ps.completed_at
+      FROM practice_sessions ps
+      WHERE ps.user_id = ${userId} AND ps.bundle_id = ${bundleId}
+      ORDER BY ps.completed_at DESC
+    `);
+    const rows = (result as any).rows ?? result ?? [];
+    const sessions = (rows as any[]).map(r => ({
+      id:             r.id,
+      correctCount:   r.correct_count,
+      totalQuestions: r.total_questions,
+      completedAt:    r.completed_at,
+    }));
+    return res.json({ sessions });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/* ─────────────────────────────────────────────
+   GET /history/:bundleId
+   Questions + user answers for a session of a bundle.
+   Optional ?sessionId=<uuid> to pick a specific session;
+   defaults to the most recent session.
+────────────────────────────────────────────── */
+router.get("/history/:bundleId", requireAuth, async (req: any, res) => {
+  try {
+    const bundleId  = Number(req.params.bundleId);
+    const userId    = req.session.userId as string;
+    const sessionId = req.query.sessionId as string | undefined;
 
     if (isNaN(bundleId)) return res.status(400).json({ error: "ID tidak valid." });
 
-    // Get most recent session
-    const [session] = await db
-      .select()
-      .from(practiceSessionsTable)
-      .where(
-        and(
-          eq(practiceSessionsTable.userId, userId),
-          eq(practiceSessionsTable.bundleId, bundleId),
-        )
-      )
-      .orderBy(desc(practiceSessionsTable.completedAt))
-      .limit(1);
+    // Get specific session or most recent
+    let session: any;
+    if (sessionId) {
+      [session] = await db
+        .select()
+        .from(practiceSessionsTable)
+        .where(and(eq(practiceSessionsTable.id, sessionId), eq(practiceSessionsTable.userId, userId)));
+    } else {
+      [session] = await db
+        .select()
+        .from(practiceSessionsTable)
+        .where(and(eq(practiceSessionsTable.userId, userId), eq(practiceSessionsTable.bundleId, bundleId)))
+        .orderBy(desc(practiceSessionsTable.completedAt))
+        .limit(1);
+    }
 
     if (!session) return res.status(404).json({ error: "Belum ada sesi latihan untuk bundle ini." });
 

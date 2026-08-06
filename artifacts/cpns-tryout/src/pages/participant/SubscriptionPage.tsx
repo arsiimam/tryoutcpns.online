@@ -167,11 +167,36 @@ export function SubscriptionPage() {
     }
   }, [location]);
 
-  /* Apply coupon — placeholder until coupon API is implemented */
+  const [couponId, setCouponId]       = useState<number | null>(null);
+  const [couponMsg, setCouponMsg]     = useState<string>("");
+  const [couponLoading, setCouponLoading] = useState(false);
+
+  /* Apply coupon — validates against backend */
   const handleApplyCoupon = async () => {
     if (!selectedPlan || !couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponMsg("");
     setDiscount(0);
-    setCheckoutError("Sistem kupon belum tersedia. Silakan lanjutkan tanpa kupon.");
+    setCouponId(null);
+    try {
+      const res = await fetch("/api/payment/validate-coupon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode.trim(), amount: selectedPlan.price }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        setCouponMsg(data.error ?? "Kupon tidak valid.");
+      } else {
+        setDiscount(data.discount);
+        setCouponId(data.couponId);
+        setCouponMsg("");
+      }
+    } catch {
+      setCouponMsg("Gagal memvalidasi kupon. Coba lagi.");
+    } finally {
+      setCouponLoading(false);
+    }
   };
 
   /* Checkout — create Duitku invoice then redirect */
@@ -195,6 +220,8 @@ export function SubscriptionPage() {
           customerName:   user.name,
           email:          user.email,
           discountAmount: discount,
+          couponCode:     couponCode.trim() || undefined,
+          couponId:       couponId ?? undefined,
         }),
       });
 
@@ -217,6 +244,8 @@ export function SubscriptionPage() {
     setSelectedMethod("");
     setCouponCode("");
     setDiscount(0);
+    setCouponId(null);
+    setCouponMsg("");
     setCheckoutError("");
     setIsCheckoutOpen(true);
   };
@@ -451,19 +480,25 @@ export function SubscriptionPage() {
               <div className="flex gap-2">
                 <input
                   value={couponCode}
-                  onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setDiscount(0); }}
+                  onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setDiscount(0); setCouponId(null); setCouponMsg(""); }}
+                  onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
                   placeholder="Masukkan kode kupon"
                   className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <button
                   onClick={handleApplyCoupon}
-                  className="rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
+                  disabled={couponLoading || !couponCode.trim()}
+                  className="rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5 disabled:opacity-50 flex items-center gap-1"
                 >
+                  {couponLoading ? <Loader2 size={13} className="animate-spin" /> : null}
                   Terapkan
                 </button>
               </div>
+              {couponMsg && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1"><AlertTriangle size={11} /> {couponMsg}</p>
+              )}
               {discount > 0 && (
-                <p className="mt-1 text-xs text-emerald-600">Kupon berhasil diterapkan! Diskon Rp {fmt(discount)}</p>
+                <p className="mt-1 text-xs text-emerald-600">✓ Kupon berhasil diterapkan! Diskon Rp {fmt(discount)}</p>
               )}
             </div>
 

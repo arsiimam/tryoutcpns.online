@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
-import { CheckCircle2, XCircle, Heart, ChevronLeft } from "lucide-react";
+import {
+  CheckCircle2, XCircle, Heart, ChevronLeft,
+  Clock, BarChart2, ChevronDown, ChevronUp,
+} from "lucide-react";
 
 interface ReviewQuestion {
   id: string;
@@ -16,17 +19,15 @@ interface ReviewQuestion {
 }
 
 interface BundleInfo {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
+  id: string; name: string; category: string; description: string;
 }
 
 interface SessionInfo {
-  id: string;
-  correctCount: number;
-  totalQuestions: number;
-  completedAt: string;
+  id: string; correctCount: number; totalQuestions: number; completedAt: string;
+}
+
+interface SessionMeta {
+  id: string; correctCount: number; totalQuestions: number; completedAt: string;
 }
 
 export function ReviewBundleDetailPage() {
@@ -34,42 +35,59 @@ export function ReviewBundleDetailPage() {
   const [, navigate] = useLocation();
   const bundleId = params.bundleId;
 
-  const [bundle, setBundle] = useState<BundleInfo | null>(null);
-  const [session, setSession] = useState<SessionInfo | null>(null);
-  const [questions, setQuestions] = useState<ReviewQuestion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  /* Session list (all sessions for this bundle) */
+  const [sessions, setSessions]       = useState<SessionMeta[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+
+  /* Questions for selected session */
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [bundle, setBundle]         = useState<BundleInfo | null>(null);
+  const [session, setSession]       = useState<SessionInfo | null>(null);
+  const [questions, setQuestions]   = useState<ReviewQuestion[]>([]);
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState<string | null>(null);
 
   const [tab, setTab] = useState<"semua" | "salah" | "benar" | "favorit">("semua");
   const [openExplanation, setOpenExplanation] = useState<Record<string, boolean>>({});
 
+  /* 1. Load session list on mount */
   useEffect(() => {
-    async function load() {
-      try {
-        const r = await fetch(`/api/participant/practice/history/${bundleId}`, {
-          credentials: "include",
-        });
-        if (!r.ok) {
-          const d = await r.json();
-          setError(d.error ?? "Gagal memuat data review.");
-          return;
-        }
-        const data = await r.json();
+    fetch(`/api/participant/practice/history/${bundleId}/sessions`, { credentials: "include" })
+      .then(r => r.json())
+      .then(d => {
+        const list: SessionMeta[] = d.sessions ?? [];
+        setSessions(list);
+        if (list.length > 0) setSelectedSessionId(list[0].id); // default to latest
+      })
+      .catch(() => {})
+      .finally(() => setSessionsLoading(false));
+  }, [bundleId]);
+
+  /* 2. Load questions whenever selectedSessionId changes */
+  useEffect(() => {
+    if (!selectedSessionId) return;
+    setLoading(true);
+    setError(null);
+    setQuestions([]);
+    setBundle(null);
+    setSession(null);
+    setTab("semua");
+    setOpenExplanation({});
+
+    const url = `/api/participant/practice/history/${bundleId}?sessionId=${selectedSessionId}`;
+    fetch(url, { credentials: "include" })
+      .then(r => r.ok ? r.json() : r.json().then(d => Promise.reject(d.error ?? "Gagal memuat.")))
+      .then(data => {
         setBundle(data.bundle);
         setSession(data.session);
         setQuestions((data.questions ?? []).map((q: any) => ({ ...q, isFavorite: false })));
-      } catch {
-        setError("Terjadi kesalahan saat memuat data.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [bundleId]);
+      })
+      .catch(e => setError(typeof e === "string" ? e : "Terjadi kesalahan."))
+      .finally(() => setLoading(false));
+  }, [bundleId, selectedSessionId]);
 
   const toggleFav = (qId: string) =>
     setQuestions(prev => prev.map(q => q.id === qId ? { ...q, isFavorite: !q.isFavorite } : q));
-
   const toggleExplanation = (qId: string) =>
     setOpenExplanation(prev => ({ ...prev, [qId]: !prev[qId] }));
 
@@ -78,7 +96,12 @@ export function ReviewBundleDetailPage() {
   if (tab === "benar")   filtered = questions.filter(q => q.isCorrect);
   if (tab === "favorit") filtered = questions.filter(q => q.isFavorite);
 
-  if (loading) {
+  function fmtDate(s: string) {
+    return new Date(s).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  /* Loading session list */
+  if (sessionsLoading) {
     return (
       <DashboardLayout>
         <div className="flex h-64 items-center justify-center">
@@ -88,202 +111,184 @@ export function ReviewBundleDetailPage() {
     );
   }
 
-  if (error || !bundle || !session) {
+  if (sessions.length === 0) {
     return (
       <DashboardLayout>
-        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border text-center">
-          <p className="text-slate-500 font-medium">{error ?? "Data tidak ditemukan."}</p>
-          <button
-            onClick={() => navigate("/review")}
-            className="mt-4 px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90"
-          >
-            Kembali ke Daftar Review
-          </button>
-        </div>
+        <div className="p-8 text-center text-slate-500">Belum ada sesi latihan untuk bundle ini.</div>
       </DashboardLayout>
     );
   }
 
-  const pct = session.totalQuestions > 0
-    ? Math.round((session.correctCount / session.totalQuestions) * 100)
-    : 0;
-
-  const TABS: { key: typeof tab; label: string }[] = [
-    { key: "semua",   label: `Semua (${questions.length})` },
-    { key: "salah",   label: `Salah (${questions.filter(q => q.userAnswer !== null && !q.isCorrect).length})` },
-    { key: "benar",   label: `Benar (${questions.filter(q => q.isCorrect).length})` },
-    { key: "favorit", label: `Favorit (${questions.filter(q => q.isFavorite).length})` },
-  ];
-
   return (
     <DashboardLayout>
-      {/* Back button */}
+      {/* Back */}
       <button
         onClick={() => navigate("/review")}
-        className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-4 transition-colors"
+        className="mb-4 flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary transition-colors"
       >
-        <ChevronLeft size={16} /> Kembali ke Daftar Review
+        <ChevronLeft size={16} /> Kembali ke Daftar
       </button>
 
-      {/* Header + summary */}
-      <div className="bg-white rounded-2xl border shadow-sm p-6 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {bundle.category}
-            </span>
-            <h1 className="text-xl font-bold text-slate-900 mt-0.5">{bundle.name}</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Dikerjakan: {new Date(session.completedAt).toLocaleDateString("id-ID", {
-                day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
-              })}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-6 sm:text-right">
+      {/* Bundle header */}
+      {bundle && (
+        <div className="mb-5 bg-white rounded-xl border shadow-sm p-5">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <div className={`text-3xl font-black ${pct >= 70 ? "text-emerald-600" : pct >= 50 ? "text-amber-500" : "text-red-500"}`}>
-                {pct}%
-              </div>
-              <div className="text-sm text-slate-500 mt-0.5">
-                {session.correctCount} benar dari {session.totalQuestions} soal
-              </div>
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">{bundle.category}</span>
+              <h1 className="text-xl font-bold text-slate-900 mt-0.5">{bundle.name}</h1>
+              {bundle.description && <p className="text-sm text-slate-500 mt-1">{bundle.description}</p>}
             </div>
-            <div className="w-16 h-16 relative flex-shrink-0">
-              <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" strokeWidth="3" />
-                <circle
-                  cx="18" cy="18" r="15.9" fill="none"
-                  stroke={pct >= 70 ? "#10b981" : pct >= 50 ? "#f59e0b" : "#ef4444"}
-                  strokeWidth="3"
-                  strokeDasharray={`${pct} ${100 - pct}`}
-                  strokeLinecap="round"
-                />
-              </svg>
+            <div className="flex items-center gap-2 text-sm text-slate-500 shrink-0">
+              <BarChart2 size={15} />
+              <span className="font-semibold text-slate-700">{sessions.length}</span> sesi
             </div>
           </div>
         </div>
+      )}
 
-        {/* Progress bar */}
-        <div className="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${pct >= 70 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400"}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200 mb-6 overflow-x-auto">
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`pb-3 px-4 font-medium text-sm whitespace-nowrap transition-colors relative ${tab === t.key ? "text-primary" : "text-slate-500 hover:text-slate-700"}`}
-          >
-            {t.label}
-            {tab === t.key && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
-          </button>
-        ))}
-      </div>
-
-      {/* Question list */}
-      <div className="space-y-6">
-        {filtered.map((q, idx) => {
-          const isWrong = q.userAnswer !== null && !q.isCorrect;
-          const isExpOpen = openExplanation[q.id];
-
-          return (
-            <div key={q.id} className="bg-white rounded-xl border shadow-sm overflow-hidden">
-              {/* Card header */}
-              <div className="p-4 bg-slate-50 border-b flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-400">#{idx + 1}</span>
-                  <span className="px-2.5 py-0.5 bg-slate-200 text-slate-700 text-[10px] font-bold rounded-full tracking-wider uppercase">
-                    {q.categoryId || "Materi"}
-                  </span>
-                  {q.isCorrect ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                      <CheckCircle2 size={13} /> Benar
-                    </span>
-                  ) : q.userAnswer !== null ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-red-500">
-                      <XCircle size={13} /> Salah
-                    </span>
-                  ) : (
-                    <span className="text-xs text-slate-400">Tidak dijawab</span>
-                  )}
-                </div>
+      {/* ── Session picker ── */}
+      {sessions.length > 1 && (
+        <div className="mb-5 bg-white rounded-xl border shadow-sm p-4">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <Clock size={13} /> Riwayat Sesi
+          </p>
+          <div className="space-y-2 max-h-52 overflow-y-auto">
+            {sessions.map((s, idx) => {
+              const pct = s.totalQuestions > 0 ? Math.round((s.correctCount / s.totalQuestions) * 100) : 0;
+              const isSelected = s.id === selectedSessionId;
+              return (
                 <button
-                  onClick={() => toggleFav(q.id)}
-                  className={`p-2 rounded-full transition-colors ${q.isFavorite ? "text-red-500 bg-red-50 hover:bg-red-100" : "text-slate-400 hover:bg-slate-200"}`}
+                  key={s.id}
+                  onClick={() => setSelectedSessionId(s.id)}
+                  className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg text-left transition-all border ${
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-slate-100 hover:border-slate-300 hover:bg-slate-50"
+                  }`}
                 >
-                  <Heart size={16} className={q.isFavorite ? "fill-current" : ""} />
-                </button>
-              </div>
-
-              <div className="p-6">
-                {/* Question text */}
-                <div
-                  className="text-slate-800 font-medium mb-6 leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: q.text }}
-                />
-
-                {/* Options */}
-                <div className="space-y-2.5 mb-5">
-                  {q.options.map((opt) => {
-                    let cls = "border-slate-200 bg-white opacity-50";
-                    let icon = null;
-
-                    if (opt.key === q.correctAnswer) {
-                      cls = "border-emerald-500 bg-emerald-50 text-emerald-900";
-                      icon = <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />;
-                    } else if (opt.key === q.userAnswer && isWrong) {
-                      cls = "border-red-400 bg-red-50 text-red-900";
-                      icon = <XCircle size={18} className="text-red-500 shrink-0" />;
-                    }
-
-                    return (
-                      <div
-                        key={opt.key}
-                        className={`flex items-start gap-3 p-3 rounded-lg border-2 ${cls}`}
-                      >
-                        <span className="font-bold mt-0.5 shrink-0">{opt.key}.</span>
-                        <span className="flex-1">{opt.text}</span>
-                        {icon}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Explanation toggle */}
-                <button
-                  onClick={() => toggleExplanation(q.id)}
-                  className="text-sm font-semibold text-primary hover:underline focus:outline-none"
-                >
-                  {isExpOpen ? "Sembunyikan Pembahasan" : "Lihat Pembahasan"}
-                </button>
-
-                {isExpOpen && q.explanation && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm leading-relaxed">
-                    <div className="font-bold text-blue-900 mb-1">Pembahasan:</div>
-                    <div
-                      className="text-slate-700 prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: q.explanation }}
-                    />
+                  <div className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={isSelected ? { background: "#4f5eea", color: "#fff" } : { background: "#f1f5f9", color: "#64748b" }}>
+                    {sessions.length - idx}
                   </div>
-                )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-500">{fmtDate(s.completedAt)}</div>
+                    <div className="mt-0.5 h-1.5 bg-slate-100 rounded-full overflow-hidden w-full">
+                      <div className={`h-full rounded-full ${pct >= 70 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400"}`}
+                        style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <div className={`shrink-0 text-sm font-bold ${pct >= 70 ? "text-emerald-600" : pct >= 50 ? "text-amber-500" : "text-red-500"}`}>
+                    {s.correctCount}/{s.totalQuestions} <span className="text-xs font-normal text-slate-400">({pct}%)</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Questions for selected session ── */}
+      {loading ? (
+        <div className="flex h-40 items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      ) : error ? (
+        <div className="p-6 text-center text-red-500">{error}</div>
+      ) : (
+        <>
+          {/* Session summary */}
+          {session && (
+            <div className="mb-4 flex items-center gap-4 bg-white rounded-xl border shadow-sm p-4">
+              <div className="flex-1">
+                <div className="text-xs text-slate-400 mb-0.5">Sesi yang ditampilkan</div>
+                <div className="text-sm font-semibold text-slate-700">{fmtDate(session.completedAt)}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-black text-slate-900">
+                  {session.correctCount}/{session.totalQuestions}
+                </div>
+                <div className="text-xs text-slate-400">jawaban benar</div>
               </div>
             </div>
-          );
-        })}
+          )}
 
-        {filtered.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl border">
-            <p className="text-slate-500">Tidak ada soal dalam kategori ini.</p>
+          {/* Filter tabs */}
+          <div className="flex gap-2 flex-wrap mb-4">
+            {(["semua", "benar", "salah", "favorit"] as const).map(t => (
+              <button key={t} onClick={() => setTab(t)}
+                className="px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-colors"
+                style={tab === t
+                  ? { background: "#4f5eea", color: "#fff" }
+                  : { background: "#f1f5f9", color: "#475569" }}>
+                {t === "benar" ? `✓ Benar (${questions.filter(q=>q.isCorrect).length})`
+                  : t === "salah" ? `✗ Salah (${questions.filter(q=>q.userAnswer!==null&&!q.isCorrect).length})`
+                  : t === "favorit" ? `♥ Favorit (${questions.filter(q=>q.isFavorite).length})`
+                  : `Semua (${questions.length})`}
+              </button>
+            ))}
           </div>
-        )}
-      </div>
+
+          {/* Question list */}
+          <div className="space-y-4">
+            {filtered.length === 0 ? (
+              <div className="py-10 text-center text-slate-400 bg-white rounded-xl border">Tidak ada soal di kategori ini.</div>
+            ) : filtered.map((q, idx) => {
+              const isOpen = !!openExplanation[q.id];
+              return (
+                <div key={q.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden ${
+                  q.isCorrect ? "border-l-4 border-l-emerald-400" : "border-l-4 border-l-red-400"}`}>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <span className="text-sm font-bold text-slate-400">#{idx + 1}</span>
+                      <div className="flex-1">
+                        <div className="prose prose-sm max-w-none text-slate-800"
+                          dangerouslySetInnerHTML={{ __html: q.text }} />
+                      </div>
+                      <button onClick={() => toggleFav(q.id)}
+                        className={`shrink-0 transition-colors ${q.isFavorite ? "text-red-500" : "text-slate-300 hover:text-red-400"}`}>
+                        <Heart size={18} fill={q.isFavorite ? "currentColor" : "none"} />
+                      </button>
+                    </div>
+
+                    <div className="space-y-1.5 mt-3">
+                      {q.options.map(opt => {
+                        const isUser    = q.userAnswer === opt.key;
+                        const isCorrect = q.correctAnswer === opt.key;
+                        let cls = "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm border transition-colors";
+                        if (isCorrect) cls += " bg-emerald-50 border-emerald-200 font-semibold text-emerald-800";
+                        else if (isUser && !isCorrect) cls += " bg-red-50 border-red-200 font-semibold text-red-700";
+                        else cls += " bg-slate-50 border-slate-100 text-slate-700";
+                        return (
+                          <div key={opt.key} className={cls}>
+                            <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-current">{opt.key}</span>
+                            <span className="flex-1">{opt.text}</span>
+                            {isCorrect && <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />}
+                            {isUser && !isCorrect && <XCircle size={15} className="text-red-400 shrink-0" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {q.explanation && (
+                      <button onClick={() => toggleExplanation(q.id)}
+                        className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary hover:opacity-80 transition-opacity">
+                        {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        {isOpen ? "Sembunyikan Pembahasan" : "Lihat Pembahasan"}
+                      </button>
+                    )}
+                    {isOpen && q.explanation && (
+                      <div className="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                        <div className="prose prose-sm max-w-none text-blue-900 text-sm"
+                          dangerouslySetInnerHTML={{ __html: q.explanation }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </DashboardLayout>
   );
 }

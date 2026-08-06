@@ -14,6 +14,7 @@ interface BundleHistory {
   totalQuestions: number;
   correctCount: number;
   completedAt: string;
+  sessionCount: number;
 }
 
 const CAT_COLORS: Record<string, string> = {
@@ -116,10 +117,17 @@ export function ReviewPage() {
                   />
                 </div>
 
-                <div className="mt-3 text-xs text-slate-400">
-                  Dikerjakan: {new Date(h.completedAt).toLocaleDateString("id-ID", {
-                    day: "numeric", month: "long", year: "numeric",
-                  })}
+                <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
+                  <span>
+                    Terakhir: {new Date(h.completedAt).toLocaleDateString("id-ID", {
+                      day: "numeric", month: "short", year: "numeric",
+                    })}
+                  </span>
+                  {(h.sessionCount ?? 1) > 1 && (
+                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold">
+                      {h.sessionCount} sesi
+                    </span>
+                  )}
                 </div>
               </button>
             );

@@ -14,6 +14,8 @@ export const paymentTransactionsTable = pgTable("payment_transactions", {
   duitkuReference: text("duitku_reference"),   // reference from Duitku API
   callbackData:    text("callback_data"),       // raw JSON from callback for audit
   expiresAt:       timestamp("expires_at"),
+  couponCode:      text("coupon_code"),         // kupon yang digunakan (jika ada)
+  couponId:        integer("coupon_id"),        // FK ke coupons.id
   createdAt:       timestamp("created_at").defaultNow().notNull(),
   updatedAt:       timestamp("updated_at").defaultNow().notNull(),
 });
