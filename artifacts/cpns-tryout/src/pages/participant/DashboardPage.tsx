@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { MetricCard, PageHeader } from "../../components/ui/shared";
 import { useAuth } from "../../lib/auth-context";
-import { FileText, Trophy, Target, Clock, ArrowRight } from "lucide-react";
+import { FileText, Trophy, Target, Clock, ArrowRight, ShieldCheck } from "lucide-react";
 import { Link } from "wouter";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -12,25 +12,29 @@ interface DashboardSummary {
   scoreHistory: { tryout: string; score: number }[];
 }
 interface Announcement { id: string; title: string; content: string; isImportant?: boolean; }
+interface PassingGrades { TWK: number; TIU: number; TKP: number; }
 
 export function ParticipantDashboard() {
   const { user } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [recentTryouts, setRecentTryouts] = useState<{id:string;title:string;duration:number;totalQuestions:number;isAccessibleFree:boolean}[]>([]);
+  const [passingGrades, setPassingGrades] = useState<PassingGrades | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       if (!user) return;
       try {
-        const [dashRes, tryRes] = await Promise.all([
+        const [dashRes, tryRes, pgRes] = await Promise.all([
           fetch("/api/participant/dashboard", { credentials: "include" }).then(r => r.json()),
           fetch("/api/participant/tryouts", { credentials: "include" }).then(r => r.json()),
+          fetch("/api/participant/settings/passing-grades", { credentials: "include" }).then(r => r.json()),
         ]);
         setSummary(dashRes.dashboard);
         setAnnouncements([]);
         setRecentTryouts((tryRes.tryouts ?? []).slice(0, 3));
+        if (pgRes.grades) setPassingGrades(pgRes.grades);
       } catch { } finally { setLoading(false); }
     }
     load();
@@ -120,6 +124,36 @@ export function ParticipantDashboard() {
         </div>
 
         <div className="space-y-6">
+          {/* Passing Grade */}
+          {passingGrades && (
+            <div className="bg-white p-6 rounded-xl border shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck size={18} className="text-primary" />
+                <h3 className="text-lg font-bold text-slate-900">Passing Grade SKD</h3>
+              </div>
+              <p className="text-xs text-slate-500 mb-4">Nilai ambang batas kelulusan yang berlaku saat ini.</p>
+              <div className="space-y-3">
+                {([
+                  { label: "TWK", sublabel: "Tes Wawasan Kebangsaan", value: passingGrades.TWK, color: "bg-blue-50 border-blue-200 text-blue-700" },
+                  { label: "TIU", sublabel: "Tes Intelegensi Umum",    value: passingGrades.TIU, color: "bg-violet-50 border-violet-200 text-violet-700" },
+                  { label: "TKP", sublabel: "Tes Karakteristik Pribadi", value: passingGrades.TKP, color: "bg-amber-50 border-amber-200 text-amber-700" },
+                ] as const).map(({ label, sublabel, value, color }) => (
+                  <div key={label} className={`flex items-center justify-between px-4 py-3 rounded-lg border ${color}`}>
+                    <div>
+                      <span className="font-bold text-sm">{label}</span>
+                      <p className="text-[11px] opacity-75">{sublabel}</p>
+                    </div>
+                    <span className="text-xl font-extrabold">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 pt-3 border-t flex items-center justify-between text-xs text-slate-500">
+                <span>Total minimum</span>
+                <span className="font-bold text-slate-700">{passingGrades.TWK + passingGrades.TIU + passingGrades.TKP}</span>
+              </div>
+            </div>
+          )}
+
           {/* Tryout Terbaru */}
           <div className="bg-white p-6 rounded-xl border shadow-sm">
             <div className="flex items-center justify-between mb-4">
