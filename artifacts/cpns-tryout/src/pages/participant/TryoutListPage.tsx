@@ -5,7 +5,7 @@ interface Tryout {
   id: string; title: string; description: string; duration: number;
   composition: { TWK: number; TIU: number; TKP: number };
   passingScore: { total: number; TWK: number; TIU: number; TKP: number };
-  isAccessibleFree: boolean; status: string; schedule?: string;
+  isAccessibleFree: boolean; hasPremium: boolean; status: string; schedule?: string;
 }
 import { Link, useLocation } from "wouter";
 import { Clock, FileText, Target, PlayCircle, Lock } from "lucide-react";
@@ -28,7 +28,9 @@ export function TryoutListPage() {
     load();
   }, [user]);
 
-  const hasPremium = !!(
+  // hasPremium diambil langsung dari API (bukan dari auth context yang bisa stale)
+  // API /participant/tryouts selalu cek DB terbaru per request
+  const hasPremium = tryouts.length > 0 ? tryouts[0].hasPremium : !!(
     user?.subscription?.status === "active" &&
     new Date(user?.subscription?.expiresAt ?? 0) > new Date()
   );
