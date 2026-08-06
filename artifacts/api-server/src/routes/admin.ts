@@ -44,13 +44,15 @@ async function getAllSettings(): Promise<Record<string, string>> {
 }
 
 async function upsertSetting(key: string, value: string) {
-  await db
-    .insert(appSettingsTable)
-    .values({ key, value })
-    .onConflictDoUpdate({
-      target: appSettingsTable.key,
-      set: { value, updatedAt: new Date() },
-    });
+  const updated = await db
+    .update(appSettingsTable)
+    .set({ value, updatedAt: new Date() })
+    .where(eq(appSettingsTable.key, key))
+    .returning({ id: appSettingsTable.id });
+
+  if (updated.length === 0) {
+    await db.insert(appSettingsTable).values({ key, value });
+  }
 }
 
 /* ------------------------------------------------------------------ */
