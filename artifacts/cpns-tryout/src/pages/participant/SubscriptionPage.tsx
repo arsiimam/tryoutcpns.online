@@ -112,6 +112,12 @@ export function SubscriptionPage() {
   const [isProcessing,    setIsProcessing]    = useState(false);
   const [checkoutError,   setCheckoutError]   = useState("");
 
+  // Midtrans waiting state (setelah buka tab baru)
+  const [midtransWaiting,     setMidtransWaiting]     = useState(false);
+  const [midtransOrderId,     setMidtransOrderId]     = useState("");
+  const [midtransChecking,    setMidtransChecking]     = useState(false);
+  const [midtransCheckResult, setMidtransCheckResult] = useState<{ ok: boolean; message: string } | null>(null);
+
   // Return-from-payment state
   const [returnStatus, setReturnStatus] = useState<"success" | "pending" | null>(null);
   const [returnOrderId, setReturnOrderId] = useState("");
@@ -234,11 +240,56 @@ export function SubscriptionPage() {
       const data = (await res.json()) as CreatePaymentResult & { error?: string };
       if (!res.ok || data.error) throw new Error(data.error || "Gagal membuat invoice");
 
-      // Redirect to payment page (same flow for both gateways)
-      window.location.href = data.paymentUrl;
+      if (isMidtrans) {
+        // Buka Midtrans di tab baru — halaman ini tetap terbuka untuk cek status
+        window.open(data.paymentUrl, "_blank", "noopener,noreferrer");
+        setMidtransOrderId(data.merchantOrderId);
+        setMidtransWaiting(true);
+        setMidtransCheckResult(null);
+        setIsProcessing(false);
+      } else {
+        // Duitku: redirect halaman saat ini
+        window.location.href = data.paymentUrl;
+      }
     } catch (err: unknown) {
       setIsProcessing(false);
       setCheckoutError(err instanceof Error ? err.message : "Terjadi kesalahan");
+    }
+  };
+
+  /* Cek status pembayaran Midtrans dari DB */
+  const handleCheckMidtransStatus = async () => {
+    if (!midtransOrderId) return;
+    setMidtransChecking(true);
+    setMidtransCheckResult(null);
+    try {
+      const res  = await fetch(`/api/payment/check/${midtransOrderId}`);
+      const data = await res.json();
+      if (data.statusCode === "00") {
+        setMidtransCheckResult({ ok: true, message: "Pembayaran berhasil! Langganan Anda sudah aktif." });
+        // Refresh subscription data
+        const [subRes, txRes] = await Promise.all([
+          fetch("/api/participant/subscription", { credentials: "include" }).then(r => r.json()),
+          fetch("/api/participant/transactions",  { credentials: "include" }).then(r => r.json()),
+        ]);
+        setActiveSub(subRes.subscription ?? null);
+        setPayments(txRes.transactions ?? []);
+        // Tutup dialog setelah 2 detik
+        setTimeout(() => {
+          setIsCheckoutOpen(false);
+          setMidtransWaiting(false);
+          setMidtransOrderId("");
+          setMidtransCheckResult(null);
+        }, 2000);
+      } else if (data.statusCode === "01") {
+        setMidtransCheckResult({ ok: false, message: "Pembayaran masih menunggu. Selesaikan di tab Midtrans lalu klik Cek lagi." });
+      } else {
+        setMidtransCheckResult({ ok: false, message: data.statusMessage ?? "Pembayaran belum terkonfirmasi." });
+      }
+    } catch {
+      setMidtransCheckResult({ ok: false, message: "Gagal mengecek status. Coba lagi." });
+    } finally {
+      setMidtransChecking(false);
     }
   };
 
@@ -551,60 +602,103 @@ export function SubscriptionPage() {
               </div>
             )}
 
-            {/* Midtrans info */}
-            {paymentConfig?.activeGateway === "midtrans" && (
-              <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
-                <p className="font-semibold mb-1 flex items-center gap-1.5">
-                  <ShieldCheck size={15} /> Pembayaran via Midtrans Snap
-                </p>
-                <p className="text-xs text-blue-600">
-                  Anda akan diarahkan ke halaman Midtrans untuk memilih metode pembayaran (Transfer Bank, E-Wallet, QRIS, Kartu Kredit, dan lainnya).
-                </p>
-                {!paymentConfig.merchantConfigured && (
-                  <p className="mt-2 text-xs text-red-600 font-semibold">⚠ Konfigurasi Midtrans belum lengkap. Hubungi admin.</p>
+            {/* Midtrans: waiting for payment state */}
+            {midtransWaiting ? (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+                  <p className="font-semibold mb-1 flex items-center gap-2">
+                    <ExternalLink size={15} /> Tab pembayaran Midtrans sudah terbuka
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    Selesaikan pembayaran di tab Midtrans, lalu kembali ke sini dan klik tombol di bawah untuk mengecek status.
+                  </p>
+                </div>
+
+                {midtransCheckResult && (
+                  <div className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${
+                    midtransCheckResult.ok
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : "border-amber-200 bg-amber-50 text-amber-700"
+                  }`}>
+                    {midtransCheckResult.ok ? <CheckCheck size={16} className="mt-0.5 shrink-0" /> : <AlertTriangle size={16} className="mt-0.5 shrink-0" />}
+                    {midtransCheckResult.message}
+                  </div>
                 )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setIsCheckoutOpen(false); setMidtransWaiting(false); setMidtransOrderId(""); setMidtransCheckResult(null); }}
+                    className="flex-1 rounded-lg border py-3 font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    Tutup
+                  </button>
+                  <button
+                    onClick={handleCheckMidtransStatus}
+                    disabled={midtransChecking}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary py-3 font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {midtransChecking ? (
+                      <><Loader2 size={16} className="animate-spin" /> Mengecek…</>
+                    ) : (
+                      <><ShieldCheck size={16} /> Cek Status Pembayaran</>
+                    )}
+                  </button>
+                </div>
               </div>
-            )}
-
-            {checkoutError && (
-              <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                <AlertTriangle size={14} /> {checkoutError}
-              </div>
-            )}
-
-            {paymentConfig?.environment === "sandbox" && (
-              <p className="mb-4 text-xs text-amber-600 flex items-center gap-1">
-                <AlertTriangle size={11} /> Mode sandbox — tidak ada transaksi uang nyata
-              </p>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setIsCheckoutOpen(false)}
-                className="flex-1 rounded-lg border py-3 font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleCheckout}
-                disabled={
-                  isProcessing ||
-                  !paymentConfig?.merchantConfigured ||
-                  (paymentConfig?.activeGateway !== "midtrans" && !selectedMethod)
-                }
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary py-3 font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" /> Memproses…
-                  </>
-                ) : (
-                  <>
-                    <ExternalLink size={16} /> Bayar Sekarang
-                  </>
+            ) : (
+              <>
+                {/* Midtrans info (before payment) */}
+                {paymentConfig?.activeGateway === "midtrans" && (
+                  <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+                    <p className="font-semibold mb-1 flex items-center gap-1.5">
+                      <ShieldCheck size={15} /> Pembayaran via Midtrans Snap
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      Tab baru akan terbuka ke halaman Midtrans. Setelah bayar, kembali ke sini dan klik "Cek Status Pembayaran".
+                    </p>
+                    {!paymentConfig.merchantConfigured && (
+                      <p className="mt-2 text-xs text-red-600 font-semibold">⚠ Konfigurasi Midtrans belum lengkap. Hubungi admin.</p>
+                    )}
+                  </div>
                 )}
-              </button>
-            </div>
+
+                {checkoutError && (
+                  <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <AlertTriangle size={14} /> {checkoutError}
+                  </div>
+                )}
+
+                {paymentConfig?.environment === "sandbox" && (
+                  <p className="mb-4 text-xs text-amber-600 flex items-center gap-1">
+                    <AlertTriangle size={11} /> Mode sandbox — tidak ada transaksi uang nyata
+                  </p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setIsCheckoutOpen(false)}
+                    className="flex-1 rounded-lg border py-3 font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleCheckout}
+                    disabled={
+                      isProcessing ||
+                      !paymentConfig?.merchantConfigured ||
+                      (paymentConfig?.activeGateway !== "midtrans" && !selectedMethod)
+                    }
+                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary py-3 font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isProcessing ? (
+                      <><Loader2 size={16} className="animate-spin" /> Memproses…</>
+                    ) : (
+                      <><ExternalLink size={16} /> Bayar Sekarang</>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

@@ -124,9 +124,12 @@ router.post("/payment/create", async (req, res) => {
 
     const replitDomains = process.env.REPLIT_DOMAINS;
     const devDomain     = process.env.REPLIT_DEV_DOMAIN;
-    const host = replitDomains
-      ? `https://${replitDomains.split(",")[0].trim()}`
-      : devDomain ? `https://${devDomain}` : `http://localhost:${process.env.PORT || 8080}`;
+    const siteUrl       = process.env.SITE_URL; // set di VPS: SITE_URL=https://tryoutcpns.online
+    const host = siteUrl
+      ? siteUrl.replace(/\/$/, "")
+      : replitDomains
+        ? `https://${replitDomains.split(",")[0].trim()}`
+        : devDomain ? `https://${devDomain}` : `http://localhost:${process.env.PORT || 8080}`;
 
     const epochSec        = Math.floor(Date.now() / 1000).toString();
     const maxSlugLen      = 50 - 5 - 1 - epochSec.length;
@@ -358,11 +361,36 @@ router.post("/payment/callback", async (req, res) => {
   }
 });
 
-/** GET /api/payment/check/:merchantOrderId?amount=99000 */
+/** GET /api/payment/check/:merchantOrderId?amount=99000
+ *  Untuk Midtrans: cek status dari DB (tidak perlu panggil Midtrans API)
+ *  Untuk Duitku:   tetap panggil Duitku API
+ */
 router.get("/payment/check/:merchantOrderId", async (req, res) => {
   try {
     const { merchantOrderId } = req.params;
-    const amount = Number(req.query.amount) || 0;
+
+    // Cek di DB dulu untuk tahu gateway-nya
+    const [tx] = await db
+      .select()
+      .from(paymentTransactionsTable)
+      .where(eq(paymentTransactionsTable.merchantOrderId, merchantOrderId))
+      .limit(1);
+
+    if (tx?.gateway === "midtrans") {
+      // Midtrans: kembalikan status dari DB langsung
+      const statusCode =
+        tx.status === "success" ? "00" :
+        tx.status === "pending" ? "01" : "02";
+      return res.json({
+        statusCode,
+        statusMessage: tx.status === "success" ? "Success" : tx.status === "pending" ? "Pending" : "Failed",
+        amount: String(tx.amount),
+        merchantOrderId,
+      });
+    }
+
+    // Duitku: panggil Duitku API seperti biasa
+    const amount = Number(req.query.amount) || (tx?.amount ?? 0);
     const result = await checkTransaction(merchantOrderId, amount);
     return res.json(result);
   } catch (err: unknown) {
