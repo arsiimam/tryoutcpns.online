@@ -1,11 +1,30 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import { randomUUID } from "crypto";
 import { db } from "@workspace/db";
 import { usersTable, appSettingsTable, userSubscriptionsTable } from "@workspace/db";
 import { eq, inArray, and, desc } from "drizzle-orm";
 import { authLimiter } from "../lib/rate-limit";
 
 const router = Router();
+
+/* ------------------------------------------------------------------ */
+/* One-time tokens for mobile OAuth session establishment              */
+/* ------------------------------------------------------------------ */
+interface MobileOAuthCode {
+  userId: string;
+  userRole: string;
+  expiresAt: number;
+}
+const mobileOAuthCodes = new Map<string, MobileOAuthCode>();
+
+// Purge expired codes every 60 seconds to avoid memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of mobileOAuthCodes) {
+    if (val.expiresAt < now) mobileOAuthCodes.delete(key);
+  }
+}, 60_000).unref();
 
 /* ------------------------------------------------------------------ */
 /* Google credential cache (populated from DB, env as fallback)        */
@@ -216,6 +235,11 @@ router.get("/auth/google", async (req, res) => {
     return res.redirect(`${base}/sign-in?error=google_not_configured`);
   }
 
+  // If ?mobile=1 is passed, encode it in OAuth state so the callback can
+  // redirect back to the mobile app deep-link instead of the web dashboard.
+  const isMobile = (req.query as Record<string, string>).mobile === "1";
+  const state = Buffer.from(JSON.stringify({ mobile: isMobile })).toString("base64url");
+
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -223,6 +247,7 @@ router.get("/auth/google", async (req, res) => {
     scope: "openid email profile",
     access_type: "offline",
     prompt: "select_account",
+    state,
   });
 
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
@@ -232,11 +257,21 @@ router.get("/auth/google", async (req, res) => {
 /* GET /api/auth/google/callback                                       */
 /* ------------------------------------------------------------------ */
 router.get("/auth/google/callback", async (req, res) => {
-  const { code } = req.query as { code?: string };
+  const { code, state } = req.query as { code?: string; state?: string };
   const base = getBaseUrl(req as any);
 
+  // Decode mobile flag from OAuth state
+  let isMobile = false;
+  if (state) {
+    try {
+      const decoded = JSON.parse(Buffer.from(state, "base64url").toString());
+      isMobile = decoded.mobile === true;
+    } catch { /* ignore malformed state */ }
+  }
+
   if (!code) {
-    return res.redirect(`${base}/sign-in?error=google_cancelled`);
+    const errTarget = isMobile ? "cpns-mobile://auth-error?reason=cancelled" : `${base}/sign-in?error=google_cancelled`;
+    return res.redirect(errTarget);
   }
 
   try {
@@ -259,7 +294,10 @@ router.get("/auth/google/callback", async (req, res) => {
     const tokens = await tokenRes.json() as { access_token?: string; error?: string };
     if (!tokens.access_token) {
       req.log.error({ tokens }, "Google token exchange failed");
-      return res.redirect(`${base}/sign-in?error=google_failed`);
+      const errTarget = isMobile
+        ? "cpns-mobile://auth-error?reason=token_failed"
+        : `${base}/sign-in?error=google_failed`;
+      return res.redirect(errTarget);
     }
 
     // Get Google user info
@@ -273,7 +311,10 @@ router.get("/auth/google/callback", async (req, res) => {
     };
 
     if (!googleUser.email) {
-      return res.redirect(`${base}/sign-in?error=google_failed`);
+      const errTarget = isMobile
+        ? "cpns-mobile://auth-error?reason=no_email"
+        : `${base}/sign-in?error=google_failed`;
+      return res.redirect(errTarget);
     }
 
     const email = googleUser.email.toLowerCase();
@@ -306,6 +347,19 @@ router.get("/auth/google/callback", async (req, res) => {
       }
     }
 
+    if (isMobile) {
+      // For mobile: issue a one-time token the app exchanges for a session.
+      // This avoids relying on browser-cookie sharing which is unreliable on Android.
+      const token = randomUUID();
+      mobileOAuthCodes.set(token, {
+        userId: user.id,
+        userRole: user.role,
+        expiresAt: Date.now() + 60_000, // 60-second TTL
+      });
+      return res.redirect(`cpns-mobile://auth-success?token=${token}`);
+    }
+
+    // Web: set session directly and redirect to dashboard
     req.session.userId   = user.id;
     req.session.userRole = user.role;
     await new Promise<void>((resolve, reject) => {
@@ -314,8 +368,56 @@ router.get("/auth/google/callback", async (req, res) => {
     return res.redirect(`${base}/dashboard`);
   } catch (err) {
     req.log.error({ err }, "Google OAuth callback error");
-    return res.redirect(`${base}/sign-in?error=google_failed`);
+    const errTarget = isMobile ? "cpns-mobile://auth-error?reason=failed" : `${base}/sign-in?error=google_failed`;
+    return res.redirect(errTarget);
   }
+});
+
+/* ------------------------------------------------------------------ */
+/* POST /api/auth/mobile-session                                       */
+/* Exchange a one-time OAuth token (from deep-link) for a real session */
+/* ------------------------------------------------------------------ */
+router.post("/auth/mobile-session", async (req, res) => {
+  const { token } = req.body as { token?: string };
+  if (!token) {
+    return res.status(400).json({ error: "Token wajib diisi." });
+  }
+
+  const code = mobileOAuthCodes.get(token);
+  if (!code || code.expiresAt < Date.now()) {
+    mobileOAuthCodes.delete(token);
+    return res.status(401).json({ error: "Token tidak valid atau sudah kedaluwarsa." });
+  }
+
+  // One-time use: delete immediately
+  mobileOAuthCodes.delete(token);
+
+  // Establish session
+  req.session.userId   = code.userId;
+  req.session.userRole = code.userRole;
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((err) => (err ? reject(err) : resolve()));
+  });
+
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, code.userId))
+    .limit(1);
+
+  if (!user) {
+    return res.status(404).json({ error: "User tidak ditemukan." });
+  }
+
+  return res.json({
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      avatarUrl: user.avatarUrl ?? null,
+    },
+  });
 });
 
 export default router;

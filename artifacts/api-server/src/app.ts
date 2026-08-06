@@ -17,7 +17,13 @@ const allowedOrigins = (() => {
     replDomains.split(",").forEach((d) => list.push(`https://${d.trim()}`));
   }
   const devDomain = process.env.REPLIT_DEV_DOMAIN;
-  if (devDomain) list.push(`https://${devDomain}`);
+  if (devDomain) {
+    list.push(`https://${devDomain}`);
+    // Allow Expo dev server which uses a different subdomain (*.expo.pike.replit.dev)
+    // The Expo preview domain replaces the first segment's suffix with .expo.
+    list.push(/\.expo\.pike\.replit\.dev$/);
+    list.push(/\.expo\.replit\.dev$/);
+  }
   // Allow APP_URL (production domain on VPS)
   const appUrl = process.env.APP_URL;
   if (appUrl) {
