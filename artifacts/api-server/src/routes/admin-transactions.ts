@@ -4,8 +4,9 @@
  */
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, paymentTransactionsTable, userSubscriptionsTable, subscriptionPlansTable } from "@workspace/db";
-import { eq, desc, like, or, sql, and, gt } from "drizzle-orm";
+import { usersTable, paymentTransactionsTable, subscriptionPlansTable } from "@workspace/db";
+import { eq, desc, like, or, sql } from "drizzle-orm";
+import { activateOrExtendSubscription } from "../lib/subscription-helper";
 
 const router = Router();
 
@@ -139,7 +140,7 @@ router.put("/admin/transactions/:id/status", requireAdmin, async (req, res) => {
 
   if (!tx) return res.status(404).json({ error: "Transaksi tidak ditemukan." });
 
-  // Jika admin konfirmasi sebagai sukses → buat langganan aktif (sama seperti payment callback)
+  // Jika admin konfirmasi sebagai sukses → aktifkan/perpanjang langganan
   if (status === "success" && tx.userId) {
     let durationDays = 30;
     try {
@@ -151,33 +152,9 @@ router.put("/admin/transactions/:id/status", requireAdmin, async (req, res) => {
       if (plan?.durationDays) durationDays = plan.durationDays;
     } catch { /* pakai default 30 hari */ }
 
-    const now     = new Date();
-    const expires = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-
-    // Cek apakah sudah ada langganan aktif dari transaksi ini (hindari duplikat)
-    const existing = await db
-      .select({ id: userSubscriptionsTable.id })
-      .from(userSubscriptionsTable)
-      .where(
-        and(
-          eq(userSubscriptionsTable.userId, tx.userId),
-          eq(userSubscriptionsTable.planId, tx.planId),
-          eq(userSubscriptionsTable.status, "active"),
-          gt(userSubscriptionsTable.expiresAt, now),
-        )
-      )
-      .limit(1);
-
-    if (existing.length === 0) {
-      await db.insert(userSubscriptionsTable).values({
-        userId:    tx.userId,
-        planId:    tx.planId,
-        planName:  tx.planName,
-        status:    "active",
-        startedAt: now,
-        expiresAt: expires,
-      });
-    }
+    await activateOrExtendSubscription({
+      userId: tx.userId, planId: tx.planId, planName: tx.planName, durationDays,
+    });
   }
 
   return res.json({ ok: true, transaction: tx });

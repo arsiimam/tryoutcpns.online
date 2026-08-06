@@ -21,6 +21,7 @@ import {
 } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { activateOrExtendSubscription } from "../lib/subscription-helper";
 
 const router = Router();
 
@@ -270,17 +271,10 @@ router.post("/payment/midtrans-notification", async (req, res) => {
         if (plan?.durationDays) durationDays = plan.durationDays;
       } catch { /* keep default */ }
 
-      const now     = new Date();
-      const expires = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-      await db.insert(userSubscriptionsTable).values({
-        userId:    tx.userId,
-        planId:    tx.planId,
-        planName:  tx.planName,
-        status:    "active",
-        startedAt: now,
-        expiresAt: expires,
+      const result = await activateOrExtendSubscription({
+        userId: tx.userId, planId: tx.planId, planName: tx.planName, durationDays,
       });
-      logger.info({ order_id, userId: tx.userId, durationDays }, "Subscription activated via Midtrans");
+      logger.info({ order_id, userId: tx.userId, durationDays, ...result }, "Subscription activated via Midtrans");
 
       if (tx.couponId) {
         try {
@@ -338,17 +332,10 @@ router.post("/payment/callback", async (req, res) => {
         if (plan?.durationDays) durationDays = plan.durationDays;
       } catch { /* keep default */ }
 
-      const now     = new Date();
-      const expires = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
-      await db.insert(userSubscriptionsTable).values({
-        userId:    tx.userId,
-        planId:    tx.planId,
-        planName:  tx.planName,
-        status:    "active",
-        startedAt: now,
-        expiresAt: expires,
+      const result = await activateOrExtendSubscription({
+        userId: tx.userId, planId: tx.planId, planName: tx.planName, durationDays,
       });
-      logger.info({ merchantOrderId, userId: tx.userId, planId: tx.planId, durationDays }, "Subscription activated");
+      logger.info({ merchantOrderId, userId: tx.userId, planId: tx.planId, durationDays, ...result }, "Subscription activated");
 
       // Increment coupon usedCount if a coupon was applied
       if (tx.couponId) {
