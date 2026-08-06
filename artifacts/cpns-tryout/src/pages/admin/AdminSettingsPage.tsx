@@ -29,6 +29,11 @@ interface SettingsData {
   midtrans_environment: "sandbox" | "production";
   /* Gateway */
   active_payment_gateway: "duitku" | "midtrans";
+  /* Social links */
+  social_instagram: string;
+  social_tiktok:    string;
+  social_telegram:  string;
+  social_facebook:  string;
 }
 
 type ToastState = { type: "success" | "error"; msg: string } | null;
@@ -156,6 +161,13 @@ export function AdminSettingsPage() {
   const [activeGateway, setActiveGateway]   = useState<"duitku" | "midtrans">("duitku");
   const [savingGateway, setSavingGateway]   = useState(false);
 
+  /* Social links state */
+  const [socialInstagram, setSocialInstagram] = useState("");
+  const [socialTiktok,    setSocialTiktok]    = useState("");
+  const [socialTelegram,  setSocialTelegram]  = useState("");
+  const [socialFacebook,  setSocialFacebook]  = useState("");
+  const [savingSocial,    setSavingSocial]    = useState(false);
+
   /* Dummy scores state */
   const [dummyStats, setDummyStats]         = useState<{ inDb: number; stats: { mean: number; std: number; min: number; max: number } } | null>(null);
   const [generatingDummy, setGeneratingDummy] = useState(false);
@@ -176,8 +188,30 @@ export function AdminSettingsPage() {
       setMtClientKey(data.midtrans_client_key ?? "");
       setMtEnv(data.midtrans_environment ?? "sandbox");
       setActiveGateway(data.active_payment_gateway ?? "duitku");
+      setSocialInstagram(data.social_instagram ?? "");
+      setSocialTiktok(data.social_tiktok ?? "");
+      setSocialTelegram(data.social_telegram ?? "");
+      setSocialFacebook(data.social_facebook ?? "");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSaveSocial(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingSocial(true);
+    try {
+      const r = await fetch("/api/admin/settings", {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ social_instagram: socialInstagram, social_tiktok: socialTiktok, social_telegram: socialTelegram, social_facebook: socialFacebook }),
+      });
+      if (!r.ok) throw new Error("Gagal menyimpan");
+      showToast("success", "Link sosial media berhasil disimpan.");
+    } catch (e: any) {
+      showToast("error", e.message);
+    } finally {
+      setSavingSocial(false);
     }
   }
 
@@ -925,6 +959,44 @@ export function AdminSettingsPage() {
               >
                 {savingGoogle ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
                 {savingGoogle ? "Menyimpan..." : "Simpan Pengaturan Google"}
+              </button>
+            </div>
+          </form>
+        </SectionCard>
+
+        {/* ── Sosial Media ── */}
+        <SectionCard
+          title="Link Sosial Media"
+          subtitle="Link yang tampil di ikon sosmed footer landing page."
+          icon={<Globe size={20} style={{ color: BLUE }} />}
+        >
+          <form onSubmit={handleSaveSocial} className="space-y-4">
+            {[
+              { label: "Instagram", value: socialInstagram, set: setSocialInstagram, placeholder: "https://instagram.com/namaakun" },
+              { label: "TikTok",    value: socialTiktok,    set: setSocialTiktok,    placeholder: "https://tiktok.com/@namaakun" },
+              { label: "Telegram",  value: socialTelegram,  set: setSocialTelegram,  placeholder: "https://t.me/namaakun" },
+              { label: "Facebook",  value: socialFacebook,  set: setSocialFacebook,  placeholder: "https://facebook.com/namaakun" },
+            ].map(({ label, value, set, placeholder }) => (
+              <div key={label}>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">{label}</label>
+                <input
+                  type="url"
+                  value={value}
+                  onChange={e => set(e.target.value)}
+                  placeholder={placeholder}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                  style={{ "--tw-ring-color": BLUE } as React.CSSProperties}
+                />
+              </div>
+            ))}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={savingSocial}
+                className="flex items-center gap-2 px-5 py-2 text-white text-sm font-semibold rounded-lg transition-opacity disabled:opacity-60"
+                style={{ background: BLUE }}
+              >
+                {savingSocial ? <><RefreshCw size={15} className="animate-spin" /> Menyimpan…</> : <><Save size={15} /> Simpan Link Sosmed</>}
               </button>
             </div>
           </form>

@@ -84,6 +84,7 @@ export function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [selectedOpt, setSelectedOpt] = useState<string>("B");
   const [apiPlans, setApiPlans] = useState<ApiPlan[]>([]);
+  const [socialLinks, setSocialLinks] = useState({ instagram: "", tiktok: "", telegram: "", facebook: "" });
 
   const timer = useCountdown(45 * 60 + 23);
 
@@ -93,6 +94,14 @@ export function LandingPage() {
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d?.plans?.length) setApiPlans(d.plans); })
       .catch(() => {/* keep hardcoded fallback */});
+  }, []);
+
+  /* Load social links from API */
+  useEffect(() => {
+    fetch("/api/site-config")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setSocialLinks({ instagram: d.social_instagram ?? "", tiktok: d.social_tiktok ?? "", telegram: d.social_telegram ?? "", facebook: d.social_facebook ?? "" }); })
+      .catch(() => {});
   }, []);
 
   function closeMobile() { setMobileOpen(false); }
@@ -196,7 +205,7 @@ export function LandingPage() {
             <a href="#fitur" onClick={() => scrollTo("fitur")}>Keunggulan</a>
             <a href="#testimoni" onClick={() => scrollTo("testimoni")}>Testimoni</a>
             <a href="#paket" onClick={() => scrollTo("paket")}>Paket</a>
-            <a href="#faq" onClick={() => scrollTo("faq")}>Blog</a>
+            <a href="#faq" onClick={() => scrollTo("faq")}>FAQ</a>
           </nav>
 
           <div className="lp-nav-right">
@@ -218,7 +227,7 @@ export function LandingPage() {
             <a href="#fitur" onClick={() => { scrollTo("fitur"); closeMobile(); }}>Keunggulan</a>
             <a href="#testimoni" onClick={() => { scrollTo("testimoni"); closeMobile(); }}>Testimoni</a>
             <a href="#paket" onClick={() => { scrollTo("paket"); closeMobile(); }}>Paket</a>
-            <a href="#faq" onClick={() => { scrollTo("faq"); closeMobile(); }}>Blog</a>
+            <a href="#faq" onClick={() => { scrollTo("faq"); closeMobile(); }}>FAQ</a>
             {isSignedIn ? (
               <Link href="/dashboard" className="lp-btn-login" onClick={closeMobile}>Dashboard</Link>
             ) : (
@@ -264,7 +273,7 @@ export function LandingPage() {
 
             <div className="lp-stats">
               <div className="lp-stat"><div className="lp-num">10.000+</div><div className="lp-lbl">Peserta</div></div>
-              <div className="lp-stat"><div className="lp-num">85%</div><div className="lp-lbl">Lolos</div></div>
+              <div className="lp-stat"><div className="lp-num">300+</div><div className="lp-lbl">Paket Tryout</div></div>
               <div className="lp-stat"><div className="lp-num">500+</div><div className="lp-lbl">Soal</div></div>
             </div>
           </div>
@@ -412,9 +421,9 @@ export function LandingPage() {
 
           <div className="lp-testi-grid">
             {[
-              { init: "A", name: "Ahmad Fauzi", role: "Lolos CPNS 2024", text: "Tryout ini sangat membantu! Simulasinya mirip banget dengan ujian aslinya. Saya jadi lebih percaya diri." },
+              { init: "A", name: "Ahmad Fauzi", role: "Peserta CPNS 2024", text: "Tryout ini sangat membantu! Simulasinya mirip banget dengan ujian aslinya. Saya jadi lebih percaya diri." },
               { init: "S", name: "Siti Nurhaliza", role: "Peserta CPNS 2025", text: "Bank soalnya lengkap dan pembahasannya jelas. Fitur analisis skor bikin tahu kelemahan saya." },
-              { init: "B", name: "Budi Santoso", role: "Lolos PNS Kemenkeu", text: "Timer dan navigasi soalnya akurat. Auto-save bikin tenang kalau koneksi putus. Recommended!" },
+              { init: "B", name: "Budi Santoso", role: "Peserta PNS Kemenkeu", text: "Timer dan navigasi soalnya akurat. Auto-save bikin tenang kalau koneksi putus. Recommended!" },
             ].map(t => (
               <div key={t.name} className="lp-testi-card">
                 <div className="lp-testi-quote">"</div>
@@ -481,14 +490,21 @@ export function LandingPage() {
                 Platform tryout CPNS berbasis CAT terdepan di Indonesia. Persiapkan ujian dengan sistem yang sama persis dengan ujian resmi.
               </p>
               <div className="lp-socials">
-                <a href="#" aria-label="Facebook">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9v-2.89h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z" /></svg>
-                </a>
-                <a href="#" aria-label="Instagram">
+                {/* Instagram */}
+                <a href={socialLinks.instagram || "#"} target={socialLinks.instagram ? "_blank" : undefined} rel="noopener noreferrer" aria-label="Instagram">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>
                 </a>
-                <a href="#" aria-label="YouTube">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" /></svg>
+                {/* TikTok */}
+                <a href={socialLinks.tiktok || "#"} target={socialLinks.tiktok ? "_blank" : undefined} rel="noopener noreferrer" aria-label="TikTok">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V9.08a8.28 8.28 0 0 0 4.84 1.54V7.18a4.85 4.85 0 0 1-1.07-.49z"/></svg>
+                </a>
+                {/* Telegram */}
+                <a href={socialLinks.telegram || "#"} target={socialLinks.telegram ? "_blank" : undefined} rel="noopener noreferrer" aria-label="Telegram">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+                </a>
+                {/* Facebook */}
+                <a href={socialLinks.facebook || "#"} target={socialLinks.facebook ? "_blank" : undefined} rel="noopener noreferrer" aria-label="Facebook">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9v-2.89h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z" /></svg>
                 </a>
               </div>
             </div>
@@ -509,7 +525,6 @@ export function LandingPage() {
               <h4>Perusahaan</h4>
               <ul>
                 <li><a href="#">Tentang Kami</a></li>
-                <li><a href="#">Blog</a></li>
                 <li><a href="#faq" onClick={() => scrollTo("faq")}>FAQ</a></li>
                 <li><a href="#">Kontak</a></li>
               </ul>
@@ -520,15 +535,15 @@ export function LandingPage() {
               <h4>Hubungi Kami</h4>
               <div className="lp-contact-item" style={{ marginBottom: 14 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 6c0-1.1-.9-2-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h16a2 2 0 0 0 2-2V6z" /><polyline points="22 6 12 13 2 6" /></svg>
-                info@tryoutcpns.id
+                contactryoutcpns@gmail.com
               </div>
               <div className="lp-contact-item" style={{ marginBottom: 14 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                +62 812 3456 7890
+                +62 851 6705 1976
               </div>
               <div className="lp-contact-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                Jakarta, Indonesia
+                Jl. Klaseman 1 No. 99 Sinduharjo, Ngaglik Sleman 55581
               </div>
             </div>
           </div>

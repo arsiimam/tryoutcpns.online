@@ -10,6 +10,24 @@ import { regenerateDummyScores, totalDummyCount, computeStats, buildScoreArray, 
 const router = Router();
 
 /* ------------------------------------------------------------------ */
+/* GET /api/site-config — public endpoint for landing page             */
+/* Returns social links and other public site settings                 */
+/* ------------------------------------------------------------------ */
+router.get("/site-config", async (_req, res) => {
+  try {
+    const map = await getAllSettings();
+    return res.json({
+      social_instagram: map["social_instagram"] ?? "",
+      social_tiktok:    map["social_tiktok"]    ?? "",
+      social_telegram:  map["social_telegram"]  ?? "",
+      social_facebook:  map["social_facebook"]  ?? "",
+    });
+  } catch {
+    return res.json({ social_instagram: "", social_tiktok: "", social_telegram: "", social_facebook: "" });
+  }
+});
+
+/* ------------------------------------------------------------------ */
 /* Middleware                                                           */
 /* ------------------------------------------------------------------ */
 async function requireAdmin(req: Request, res: Response, next: NextFunction) {
@@ -91,6 +109,12 @@ router.get("/admin/settings", requireAdmin, async (_req, res) => {
   // ---- Active gateway ----
   const activeGateway = (map["active_payment_gateway"] === "midtrans") ? "midtrans" : "duitku";
 
+  // ---- Social links ----
+  const socialInstagram = map["social_instagram"] ?? "";
+  const socialTiktok    = map["social_tiktok"]    ?? "";
+  const socialTelegram  = map["social_telegram"]  ?? "";
+  const socialFacebook  = map["social_facebook"]  ?? "";
+
   return res.json({
     /* Google */
     google_client_id:              clientId,
@@ -119,6 +143,12 @@ router.get("/admin/settings", requireAdmin, async (_req, res) => {
 
     /* Gateway selector */
     active_payment_gateway:        activeGateway,
+
+    /* Social media links */
+    social_instagram: socialInstagram,
+    social_tiktok:    socialTiktok,
+    social_telegram:  socialTelegram,
+    social_facebook:  socialFacebook,
   });
 });
 
@@ -197,6 +227,13 @@ router.put("/admin/settings", requireAdmin, async (req, res) => {
   if (body.active_payment_gateway === "midtrans" || body.active_payment_gateway === "duitku") {
     await upsertSetting("active_payment_gateway", body.active_payment_gateway);
     gatewayChanged = true;
+  }
+
+  // ---- Social links ----
+  for (const key of ["social_instagram", "social_tiktok", "social_telegram", "social_facebook"] as const) {
+    if (typeof (body as any)[key] === "string") {
+      await upsertSetting(key, ((body as any)[key] as string).trim());
+    }
   }
 
   if (googleChanged)   invalidateGoogleCredCache();
