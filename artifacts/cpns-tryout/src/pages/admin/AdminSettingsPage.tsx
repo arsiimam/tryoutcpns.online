@@ -3,7 +3,7 @@ import { AdminLayout } from "../../components/layouts/AdminLayout";
 import { PageHeader } from "../../components/ui/shared";
 import {
   Eye, EyeOff, Copy, CheckCircle2, Save, RefreshCw,
-  AlertCircle, Zap, Globe, Clock, ShieldCheck, Target, ToggleLeft, ToggleRight,
+  AlertCircle, Zap, Globe, Clock, ShieldCheck, Target,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -418,55 +418,6 @@ export function AdminSettingsPage() {
           )}
         </SectionCard>
 
-        {/* ========== GATEWAY AKTIF ========== */}
-        <SectionCard
-          icon={<ToggleRight size={22} className="text-indigo-600" />}
-          title="Gateway Pembayaran Aktif"
-          subtitle="Pilih gateway yang digunakan untuk menerima pembayaran dari user"
-        >
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {(["duitku", "midtrans"] as const).map(gw => {
-                const isActive = activeGateway === gw;
-                return (
-                  <button
-                    key={gw}
-                    type="button"
-                    disabled={savingGateway}
-                    onClick={() => handleSaveGateway(gw)}
-                    className={`relative flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all font-medium text-sm ${
-                      isActive
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-800"
-                        : "border-slate-200 hover:border-slate-300 text-slate-600"
-                    }`}
-                  >
-                    {isActive && (
-                      <span className="absolute top-2 right-2 bg-indigo-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                        AKTIF
-                      </span>
-                    )}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg ${
-                      gw === "duitku" ? "bg-blue-500" : "bg-blue-700"
-                    }`}>
-                      {gw === "duitku" ? "D" : "M"}
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold">{gw === "duitku" ? "Duitku" : "Midtrans"}</div>
-                      <div className="text-xs text-slate-400 mt-0.5">
-                        {gw === "duitku" ? "Pilih metode manual" : "Snap — all-in-one checkout"}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-xs text-slate-400">
-              Hanya satu gateway yang aktif sekaligus. Klik untuk langsung menggantinya.
-              Pastikan gateway yang dipilih sudah dikonfigurasi di bawah.
-            </p>
-          </div>
-        </SectionCard>
-
         {/* ========== DUITKU PAYMENT GATEWAY ========== */}
         <SectionCard
           icon={
@@ -651,6 +602,34 @@ export function AdminSettingsPage() {
               </ol>
             </div>
 
+            {/* Aktifkan Duitku */}
+            <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${
+              activeGateway === "duitku"
+                ? "border-green-400 bg-green-50"
+                : "border-slate-200 bg-slate-50"
+            }`}>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Status Gateway</p>
+                {activeGateway === "duitku" ? (
+                  <p className="text-xs text-green-700 font-medium mt-0.5">✅ Duitku sedang aktif — user akan membayar via Duitku</p>
+                ) : (
+                  <p className="text-xs text-slate-500 mt-0.5">Duitku saat ini tidak aktif. Klik tombol untuk mengaktifkan.</p>
+                )}
+              </div>
+              {activeGateway !== "duitku" && (
+                <button
+                  type="button"
+                  disabled={savingGateway}
+                  onClick={() => handleSaveGateway("duitku")}
+                  className="ml-4 flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-opacity disabled:opacity-60 whitespace-nowrap"
+                  style={{ background: BLUE }}
+                >
+                  {savingGateway ? <RefreshCw size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                  {savingGateway ? "Menyimpan..." : "Aktifkan Duitku"}
+                </button>
+              )}
+            </div>
+
             <div className="pt-1 flex justify-end">
               <button
                 type="submit"
@@ -784,6 +763,34 @@ export function AdminSettingsPage() {
                 <li>Salin <strong>Server Key</strong> dan <strong>Client Key</strong></li>
                 <li>Di <strong>Settings → Configuration</strong>, isi <strong>Payment Notification URL</strong> dengan URL di atas</li>
               </ol>
+            </div>
+
+            {/* Aktifkan Midtrans */}
+            <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${
+              activeGateway === "midtrans"
+                ? "border-green-400 bg-green-50"
+                : "border-slate-200 bg-slate-50"
+            }`}>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Status Gateway</p>
+                {activeGateway === "midtrans" ? (
+                  <p className="text-xs text-green-700 font-medium mt-0.5">✅ Midtrans sedang aktif — user akan membayar via Midtrans Snap</p>
+                ) : (
+                  <p className="text-xs text-slate-500 mt-0.5">Midtrans saat ini tidak aktif. Pastikan Server Key & Client Key sudah diisi, lalu aktifkan.</p>
+                )}
+              </div>
+              {activeGateway !== "midtrans" && (
+                <button
+                  type="button"
+                  disabled={savingGateway}
+                  onClick={() => handleSaveGateway("midtrans")}
+                  className="ml-4 flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-opacity disabled:opacity-60 whitespace-nowrap"
+                  style={{ background: "#003f8a" }}
+                >
+                  {savingGateway ? <RefreshCw size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                  {savingGateway ? "Menyimpan..." : "Aktifkan Midtrans"}
+                </button>
+              )}
             </div>
 
             <div className="pt-1 flex justify-end">
