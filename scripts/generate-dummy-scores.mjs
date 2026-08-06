@@ -15,12 +15,15 @@
  */
 
 // ─── Konfigurasi ──────────────────────────────────────────────────────────
+// Skala SKD CPNS: total nilai akhir 0–550
+// TWK max 150, TIU max 175, TKP max 225 → total 550
+// Rata-rata peserta riil ≈ 325, std ≈ 55, passing grade = 311
 const SEED      = 42;
 const N         = 11_523;
-const MEAN      = 65;
-const STD       = 12;
+const MEAN      = 325;
+const STD       = 55;
 const MIN_SCORE = 0;
-const MAX_SCORE = 100;
+const MAX_SCORE = 550;
 const BATCH     = 500;
 
 // ─── Seeded PRNG (mulberry32) ──────────────────────────────────────────────

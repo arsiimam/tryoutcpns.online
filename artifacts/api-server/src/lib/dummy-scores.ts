@@ -8,13 +8,15 @@ import { db } from "@workspace/db";
 import { dummyScoresTable } from "@workspace/db/schema";
 import { gt, count, sql } from "drizzle-orm";
 
-// ─── Config ────────────────────────────────────────────────────────────────
+// ─── Config (Skala SKD CPNS, nilai akhir 0–550) ────────────────────────────
+// TWK max 150 (30×5), TIU max 175 (35×5), TKP max 225 (45 soal bobot 1-5)
+// Rata-rata peserta riil ≈ 325, std ≈ 55, passing grade SKD = 311
 export const DUMMY_SEED      = 42;
 export const DUMMY_N         = 11_523;
-export const DUMMY_MEAN      = 65;
-export const DUMMY_STD       = 12;
+export const DUMMY_MEAN      = 325;
+export const DUMMY_STD       = 55;
 export const DUMMY_MIN       = 0;
-export const DUMMY_MAX       = 100;
+export const DUMMY_MAX       = 550;
 export const DUMMY_BATCH     = 500;
 
 // ─── Seeded PRNG (mulberry32) ──────────────────────────────────────────────
