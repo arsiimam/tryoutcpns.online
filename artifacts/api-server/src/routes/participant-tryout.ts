@@ -6,6 +6,7 @@ import {
   appSettingsTable,
 } from "@workspace/db";
 import { eq, and, desc, sql, gt } from "drizzle-orm";
+import { countDummyAbove, totalDummyCount } from "../lib/dummy-scores";
 
 const router = Router();
 
@@ -413,17 +414,17 @@ router.post("/sessions/:sessionId/submit", requireAuth, async (req: any, res) =>
 
     const passed = twkScore >= twkPG && tiuScore >= tiuPG && tkpScore >= tkpPG && totalScore >= totalPG;
 
-    // Calculate rank (how many users have a higher total score for this tryout)
-    const rankRow = await db
-      .select({ cnt: sql<number>`count(*)` })
-      .from(tryoutResultsTable)
-      .where(
-        and(
+    // Calculate rank: (real users with higher score) + (dummy scores higher) + 1
+    const [rankRow, dummyAbove] = await Promise.all([
+      db.select({ cnt: sql<number>`count(*)` })
+        .from(tryoutResultsTable)
+        .where(and(
           eq(tryoutResultsTable.tryoutId, session.tryoutId),
-          gt(tryoutResultsTable.totalScore, totalScore)
-        )
-      );
-    const rank = Number(rankRow[0]?.cnt ?? 0) + 1;
+          gt(tryoutResultsTable.totalScore, totalScore),
+        )),
+      countDummyAbove(totalScore),
+    ]);
+    const rank = Number(rankRow[0]?.cnt ?? 0) + dummyAbove + 1;
 
     // Save result
     const [result] = await db
@@ -481,6 +482,23 @@ router.get("/results", requireAuth, async (req: any, res) => {
       .where(eq(tryoutResultsTable.userId, userId))
       .orderBy(desc(tryoutResultsTable.createdAt));
 
+    const dummyTotal = await totalDummyCount();
+
+    // Per-tryout real participant counts in one query
+    const tryoutIds = [...new Set(results.map(r => r.tryoutId).filter(Boolean))];
+    let countMap: Record<string, number> = {};
+    if (tryoutIds.length) {
+      const countRows = await db.execute(sql`
+        SELECT tryout_id, COUNT(*)::int AS cnt
+        FROM tryout_results
+        WHERE tryout_id = ANY(${tryoutIds})
+        GROUP BY tryout_id
+      `);
+      for (const row of countRows.rows as any[]) {
+        countMap[String(row.tryout_id)] = Number(row.cnt) + dummyTotal;
+      }
+    }
+
     const mapped = results.map(r => ({
       id: r.id,
       sessionId: r.sessionId,
@@ -489,7 +507,7 @@ router.get("/results", requireAuth, async (req: any, res) => {
       score: { TWK: r.twkScore, TIU: r.tiuScore, TKP: r.tkpScore, total: r.totalScore },
       passed: r.passed,
       rank: r.rank ?? 0,
-      totalParticipants: 0,
+      totalParticipants: countMap[String(r.tryoutId)] ?? dummyTotal + 1,
       completedAt: r.createdAt,
     }));
 
@@ -533,12 +551,14 @@ router.get("/results/:sessionId", requireAuth, async (req: any, res) => {
 
     if (!result) return res.status(404).json({ error: "Hasil tidak ditemukan." });
 
-    // Total participants who submitted this tryout
-    const [totRow] = await db
-      .select({ cnt: sql<number>`count(*)` })
-      .from(tryoutResultsTable)
-      .where(eq(tryoutResultsTable.tryoutId, result.tryoutId));
-    const totalParticipants = Number(totRow?.cnt ?? 1);
+    // Total participants: real + dummy pool
+    const [[totRow], dummyTotal] = await Promise.all([
+      db.select({ cnt: sql<number>`count(*)` })
+        .from(tryoutResultsTable)
+        .where(eq(tryoutResultsTable.tryoutId, result.tryoutId)),
+      totalDummyCount(),
+    ]);
+    const totalParticipants = Number(totRow?.cnt ?? 1) + dummyTotal;
 
     return res.json({
       result: {
@@ -583,17 +603,20 @@ router.get("/dashboard", requireAuth, async (req: any, res) => {
       : 0;
     const scoreHistory = results.map(r => ({ tryout: r.tryoutName, score: r.totalScore }));
 
-    // Rank = count of distinct users with higher average score
+    // Rank = distinct users with higher avg score + dummy scores above avg + 1
     let rank = 0;
     if (totalTryoutsDone > 0) {
-      const rankRow = await db.execute(sql`
-        SELECT COUNT(DISTINCT user_id) AS cnt
-        FROM tryout_results
-        WHERE user_id != ${userId}
-        GROUP BY user_id
-        HAVING AVG(total_score) > ${averageScore}
-      `);
-      rank = (rankRow.rows?.length ?? 0) + 1;
+      const [rankRow, dummyAbove] = await Promise.all([
+        db.execute(sql`
+          SELECT COUNT(DISTINCT user_id) AS cnt
+          FROM tryout_results
+          WHERE user_id != ${userId}
+          GROUP BY user_id
+          HAVING AVG(total_score) > ${averageScore}
+        `),
+        countDummyAbove(averageScore),
+      ]);
+      rank = (rankRow.rows?.length ?? 0) + dummyAbove + 1;
     }
 
     // Subscription

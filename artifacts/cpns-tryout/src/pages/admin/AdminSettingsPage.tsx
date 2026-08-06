@@ -3,7 +3,7 @@ import { AdminLayout } from "../../components/layouts/AdminLayout";
 import { PageHeader } from "../../components/ui/shared";
 import {
   Eye, EyeOff, Copy, CheckCircle2, Save, RefreshCw,
-  AlertCircle, Zap, Globe, Clock, ShieldCheck, Target,
+  AlertCircle, Zap, Globe, Clock, ShieldCheck, Target, Users, BarChart2,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -156,6 +156,10 @@ export function AdminSettingsPage() {
   const [activeGateway, setActiveGateway]   = useState<"duitku" | "midtrans">("duitku");
   const [savingGateway, setSavingGateway]   = useState(false);
 
+  /* Dummy scores state */
+  const [dummyStats, setDummyStats]         = useState<{ inDb: number; stats: { mean: number; std: number; min: number; max: number } } | null>(null);
+  const [generatingDummy, setGeneratingDummy] = useState(false);
+
   const callbackUrlGoogle  = `${window.location.origin}/api/auth/google/callback`;
   const callbackUrlDuitku  = `${window.location.origin}/api/payment/callback`;
   const callbackUrlMidtrans = `${window.location.origin}/api/payment/midtrans-notification`;
@@ -193,6 +197,30 @@ export function AdminSettingsPage() {
   }, []);
 
   useEffect(() => { loadSettings(); }, []);
+
+  /* ---- fetch dummy scores stats ---- */
+  useEffect(() => {
+    fetch("/api/admin/dummy-scores/stats", { credentials: "include" })
+      .then(r => r.json())
+      .then(d => setDummyStats(d))
+      .catch(() => {});
+  }, []);
+
+  async function handleGenerateDummy() {
+    if (!confirm(`Generate ulang ${(11523).toLocaleString()} skor dummy? Data lama akan dihapus. Proses ini membutuhkan beberapa detik.`)) return;
+    setGeneratingDummy(true);
+    try {
+      const r = await fetch("/api/admin/dummy-scores/generate", { method: "POST", credentials: "include" });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Gagal");
+      setDummyStats(prev => prev ? { ...prev, inDb: d.inserted, stats: d.stats } : { inDb: d.inserted, stats: d.stats });
+      showToast("success", `${d.inserted.toLocaleString()} skor dummy berhasil di-generate ulang.`);
+    } catch (e: any) {
+      showToast("error", e.message);
+    } finally {
+      setGeneratingDummy(false);
+    }
+  }
 
   function showToast(type: "success" | "error", msg: string) {
     setToast({ type, msg });
@@ -900,6 +928,50 @@ export function AdminSettingsPage() {
               </button>
             </div>
           </form>
+        </SectionCard>
+
+        {/* ── Dummy Scores / Simulasi Peserta ── */}
+        <SectionCard
+          title="Simulasi Peserta (Dummy Scores)"
+          subtitle="Data dummy untuk merealistiskan ranking. Tidak pernah ditampilkan sebagai peserta nyata."
+          icon={<Users size={20} style={{ color: BLUE }} />}
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Total di DB",     value: dummyStats ? dummyStats.inDb.toLocaleString()        : "—" },
+                { label: "Mean skor",       value: dummyStats ? `${dummyStats.stats.mean}`               : "—" },
+                { label: "Std Deviasi",     value: dummyStats ? `${dummyStats.stats.std}`                : "—" },
+                { label: "Rentang",         value: dummyStats ? `${dummyStats.stats.min}–${dummyStats.stats.max}` : "—" },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-lg bg-slate-50 border p-3 text-center">
+                  <div className="text-xl font-bold text-slate-800">{value}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700 leading-relaxed">
+              <strong>Cara kerja:</strong> 11.523 skor dummy (distribusi normal, mean=65, std=12, seed=42) disimpan di database.
+              Saat peserta menyelesaikan tryout, skor mereka dibandingkan dengan data dummy ini untuk menghasilkan ranking yang realistis.
+              Data dummy <strong>tidak muncul</strong> di daftar nama peserta.
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleGenerateDummy}
+                disabled={generatingDummy}
+                className="flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-opacity disabled:opacity-60"
+                style={{ background: BLUE }}
+              >
+                {generatingDummy
+                  ? <><RefreshCw size={14} className="animate-spin" /> Generating…</>
+                  : <><BarChart2 size={14} /> Generate Ulang Data Dummy</>
+                }
+              </button>
+              <span className="text-xs text-slate-400">Reset aman — data user asli tidak tersentuh</span>
+            </div>
+          </div>
         </SectionCard>
 
       </div>

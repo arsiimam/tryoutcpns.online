@@ -5,6 +5,7 @@ import { eq, inArray, desc } from "drizzle-orm";
 import { invalidateGoogleCredCache } from "./auth";
 import { invalidateDuitkuCredCache } from "../lib/duitku";
 import { invalidateMidtransCache, invalidateGatewayCache } from "../lib/midtrans";
+import { regenerateDummyScores, totalDummyCount, computeStats, buildScoreArray, DUMMY_N, DUMMY_MEAN, DUMMY_STD, DUMMY_SEED } from "../lib/dummy-scores";
 
 const router = Router();
 
@@ -326,6 +327,31 @@ router.post("/admin/users/:id/subscription", requireAdmin, async (req, res) => {
   });
 
   return res.json({ ok: true, expiresAt });
+});
+
+/* ------------------------------------------------------------------ */
+/* Dummy Scores — stats & generate                                     */
+/* ------------------------------------------------------------------ */
+
+/** GET /admin/dummy-scores/stats — ringkasan statistik skor dummy */
+router.get("/dummy-scores/stats", requireAdmin, async (_req, res) => {
+  try {
+    const inDb  = await totalDummyCount();
+    const stats = computeStats(buildScoreArray(DUMMY_N, DUMMY_MEAN, DUMMY_STD, DUMMY_SEED));
+    return res.json({ inDb, config: { n: DUMMY_N, mean: DUMMY_MEAN, std: DUMMY_STD, seed: DUMMY_SEED }, stats });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/** POST /admin/dummy-scores/generate — hapus lama, generate ulang */
+router.post("/dummy-scores/generate", requireAdmin, async (_req, res) => {
+  try {
+    const stats = await regenerateDummyScores();
+    return res.json({ ok: true, inserted: stats.n, stats });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;

@@ -131,12 +131,39 @@ export function ResultPage() {
               <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                 <Trophy size={20} className="text-primary" /> Peringkat Nasional
               </h3>
-              <div className="flex items-center gap-6">
-                <div className="text-6xl font-black text-amber-500">#{result.rank}</div>
-                <div className="text-sm text-slate-500 leading-relaxed">
-                  dari <strong className="text-slate-900">{result.totalParticipants.toLocaleString()}</strong> peserta yang telah mengikuti simulasi tryout ini.
-                </div>
-              </div>
+              {(() => {
+                const pct = result.totalParticipants > 0
+                  ? Math.round((result.rank / result.totalParticipants) * 100)
+                  : 100;
+                const topPct = Math.max(1, Math.round((1 - (result.rank - 1) / result.totalParticipants) * 100));
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-6">
+                      <div className="text-6xl font-black text-amber-500">#{result.rank.toLocaleString()}</div>
+                      <div className="text-sm text-slate-500 leading-relaxed">
+                        dari <strong className="text-slate-900">{result.totalParticipants.toLocaleString()}</strong> peserta
+                        <br />
+                        <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                          🏆 Top {topPct}% peserta
+                        </span>
+                      </div>
+                    </div>
+                    {/* Progress bar ranking */}
+                    <div>
+                      <div className="flex justify-between text-xs text-slate-400 mb-1">
+                        <span>Rank #1 (Terbaik)</span>
+                        <span>Rank #{result.totalParticipants.toLocaleString()}</span>
+                      </div>
+                      <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all"
+                          style={{ width: `${Math.max(2, 100 - pct)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="bg-white p-6 rounded-xl border shadow-sm">

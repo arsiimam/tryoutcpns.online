@@ -9,3 +9,4 @@ export * from "./tryout-bundles";
 export * from "./tryout-sessions";
 export * from "./coupons";
 export * from "./practice-sessions";
+export * from "./dummy-scores";
