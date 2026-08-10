@@ -56,11 +56,13 @@ router.post("/admin/coupons", async (req, res) => {
 
     res.status(201).json(coupon);
   } catch (err: any) {
-    if (err?.code === "23505") {
+    const pgCode    = err?.code ?? err?.cause?.code;
+    const pgMessage = err?.cause?.message ?? err?.cause?.detail ?? err?.message ?? "Unknown";
+    if (pgCode === "23505") {
       return res.status(409).json({ error: "Kode kupon sudah digunakan. Gunakan kode yang berbeda." });
     }
-    console.error(err);
-    res.status(500).json({ error: err?.message ?? "Gagal membuat kupon." });
+    console.error("[coupon create]", pgCode, pgMessage, err);
+    res.status(500).json({ error: `DB error (${pgCode ?? "?"}): ${pgMessage}` });
   }
 });
 
