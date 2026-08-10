@@ -116,8 +116,8 @@ export function SessionPage() {
   const answeredCount = Object.keys(session.answers).length;
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
-      {/* Header */}
+    <div className="h-screen bg-slate-100 flex flex-col font-sans overflow-hidden">
+      {/* Header — fixed, tidak ikut scroll */}
       <header className="h-16 bg-white border-b flex items-center justify-between px-4 lg:px-8 shrink-0 shadow-sm z-10">
         <div className="font-bold text-lg text-slate-800 tracking-tight hidden sm:block">
           Simulasi CAT BKN
@@ -140,11 +140,11 @@ export function SessionPage() {
         </button>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Main Content (Soal) */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-          <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col min-h-[calc(100vh-8rem)]">
-            {/* Header Soal */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Main Content (Soal) — scroll area mandiri */}
+        <main className="flex-1 flex flex-col overflow-hidden p-4 lg:p-8 min-h-0">
+          <div className="flex-1 max-w-4xl w-full mx-auto bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col min-h-0">
+            {/* Header Soal — sticky */}
             <div className="p-4 md:p-6 border-b flex justify-between items-center bg-slate-50 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">
@@ -170,8 +170,8 @@ export function SessionPage() {
               </button>
             </div>
 
-            {/* Teks Soal & Opsi */}
-            <div className="p-6 md:p-8 flex-1 overflow-y-auto">
+            {/* Teks Soal & Opsi — scroll mandiri */}
+            <div className="p-6 md:p-8 flex-1 overflow-y-auto min-h-0">
               <div
                 className="text-base text-slate-800 leading-relaxed mb-8 font-medium q-html"
                 dangerouslySetInnerHTML={{ __html: currentQ.text }}
@@ -237,18 +237,21 @@ export function SessionPage() {
 
         {/* Sidebar Navigasi Grid (Desktop) / Drawer (Mobile) */}
         <aside className={`
-          w-80 bg-white border-l flex flex-col shrink-0 shadow-lg absolute right-0 inset-y-0 z-40 transform transition-transform duration-300
-          lg:relative lg:translate-x-0
-          ${isGridOpen ? 'translate-x-0' : 'translate-x-full'}
+          bg-white border-l flex flex-col shrink-0 shadow-lg
+          fixed right-0 top-16 bottom-0 w-80 z-40 transform transition-transform duration-300
+          lg:static lg:translate-x-0 lg:inset-auto
+          ${isGridOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
         `}>
-          <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+          {/* Header sidebar — sticky */}
+          <div className="p-4 border-b flex justify-between items-center bg-slate-50 shrink-0">
             <h3 className="font-bold text-slate-800">Navigasi Soal</h3>
             <button className="lg:hidden text-slate-500" onClick={() => setIsGridOpen(false)}>
               <X size={20} />
             </button>
           </div>
-          
-          <div className="p-4 border-b grid grid-cols-2 gap-2 text-xs">
+
+          {/* Legenda — sticky */}
+          <div className="p-4 border-b grid grid-cols-2 gap-2 text-xs shrink-0">
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-slate-200"></div>Belum</div>
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-primary"></div>Dijawab</div>
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-amber-500"></div>Ragu-ragu</div>
@@ -257,7 +260,8 @@ export function SessionPage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4">
+          {/* Grid nomor soal — scroll mandiri */}
+          <div className="flex-1 overflow-y-auto p-4 min-h-0">
             <div className="grid grid-cols-5 gap-2">
               {questions.map((q, idx) => {
                 const isAns = !!session.answers[q.id];
