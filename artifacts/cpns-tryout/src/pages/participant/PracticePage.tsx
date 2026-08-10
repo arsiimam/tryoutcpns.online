@@ -120,6 +120,7 @@ export function PracticePage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showAnswers, setShowAnswers] = useState(false);
   const [showNav, setShowNav] = useState(true);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   /* ── Fetch bundles on mount ── */
   useEffect(() => {
@@ -170,6 +171,7 @@ export function PracticePage() {
       return;
     }
     setView("submitting");
+    setSubmitError(null);
     try {
       const r = await fetch(`/api/participant/practice/bundles/${selectedBundle.id}/submit`, {
         method: "POST",
@@ -180,10 +182,12 @@ export function PracticePage() {
       if (r.ok) {
         navigate(`/review/${selectedBundle.id}`);
       } else {
-        // Submit failed — return to selection without losing state
+        const d = await r.json().catch(() => ({}));
+        setSubmitError(d.error ?? `Gagal menyimpan sesi (${r.status}). Coba lagi.`);
         setView("session");
       }
     } catch {
+      setSubmitError("Koneksi bermasalah. Coba lagi.");
       setView("session");
     }
   };
@@ -346,6 +350,11 @@ export function PracticePage() {
             {view === "submitting" ? "Menyimpan..." : "Selesai & Review"}
           </button>
         </div>
+        {submitError && (
+          <div className="mt-2 text-sm text-red-500 font-medium text-right pr-1">
+            ⚠ {submitError}
+          </div>
+        )}
       </div>
 
       <div className={`grid gap-5 ${showNav ? "lg:grid-cols-[1fr_220px]" : "grid-cols-1"}`}>

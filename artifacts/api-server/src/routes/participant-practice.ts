@@ -129,7 +129,9 @@ router.post("/bundles/:id/submit", requireAuth, async (req: any, res) => {
 
     return res.status(201).json({ session, correctCount, totalQuestions });
   } catch (err: any) {
-    return res.status(500).json({ error: err.message });
+    const msg = err?.cause?.message ?? err?.message ?? "Unknown";
+    console.error("[practice submit]", msg);
+    return res.status(500).json({ error: msg });
   }
 });
 
