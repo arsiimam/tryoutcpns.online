@@ -198,7 +198,7 @@ export function LandingPage() {
       <header className="lp-nav">
         <div className="lp-nav-inner">
           <Link href="/" className="lp-brand">
-            <BrandLogo variant="light" size="md" />
+            <BrandLogo variant="dark" size="md" />
           </Link>
 
           <nav className="lp-nav-links">
@@ -484,7 +484,7 @@ export function LandingPage() {
             {/* Brand */}
             <div>
               <div className="lp-footer-logo-wrap">
-                <BrandLogo variant="light" size="sm" />
+                <BrandLogo variant="dark" size="sm" />
               </div>
               <p className="lp-footer-desc">
                 Platform tryout CPNS berbasis CAT terdepan di Indonesia. Persiapkan ujian dengan sistem yang sama persis dengan ujian resmi.
