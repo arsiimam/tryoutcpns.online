@@ -147,7 +147,7 @@ export function AdminCouponsPage() {
         action={
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-[#1E4D9C] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#0A1C3C] transition-colors"
           >
             <Plus size={18} /> Buat Kupon
           </button>
@@ -156,7 +156,7 @@ export function AdminCouponsPage() {
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E4D9C]" />
         </div>
       ) : coupons.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border text-center">
@@ -221,7 +221,7 @@ export function AdminCouponsPage() {
                     </button>
                     <button
                       onClick={() => openEdit(c)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      className="p-1.5 text-[#1E4D9C] hover:bg-[#dce8f5] rounded transition-colors"
                     >
                       <Edit2 size={16} />
                     </button>
@@ -269,7 +269,7 @@ export function AdminCouponsPage() {
                   placeholder="mis. HEMAT50"
                   value={form.code}
                   onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                 />
               </div>
 
@@ -280,7 +280,7 @@ export function AdminCouponsPage() {
                   placeholder="Keterangan kupon (opsional)"
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                 />
               </div>
 
@@ -292,7 +292,7 @@ export function AdminCouponsPage() {
                   <select
                     value={form.discountType}
                     onChange={e => setForm(f => ({ ...f, discountType: e.target.value as any }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                   >
                     <option value="percentage">Persentase (%)</option>
                     <option value="fixed">Nominal (Rp)</option>
@@ -313,7 +313,7 @@ export function AdminCouponsPage() {
                       max={form.discountType === "percentage" ? 100 : undefined}
                       value={form.discountValue}
                       onChange={e => setForm(f => ({ ...f, discountValue: e.target.value }))}
-                      className="w-full border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                     />
                   </div>
                 </div>
@@ -327,7 +327,7 @@ export function AdminCouponsPage() {
                     min={0}
                     value={form.minPurchase}
                     onChange={e => setForm(f => ({ ...f, minPurchase: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                   />
                 </div>
                 <div>
@@ -338,7 +338,7 @@ export function AdminCouponsPage() {
                     placeholder="0 = tidak terbatas"
                     value={form.maxDiscount}
                     onChange={e => setForm(f => ({ ...f, maxDiscount: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                   />
                 </div>
               </div>
@@ -353,7 +353,7 @@ export function AdminCouponsPage() {
                   min={1}
                   value={form.quota}
                   onChange={e => setForm(f => ({ ...f, quota: e.target.value }))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                 />
               </div>
 
@@ -364,7 +364,7 @@ export function AdminCouponsPage() {
                     type="date"
                     value={form.validFrom}
                     onChange={e => setForm(f => ({ ...f, validFrom: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                   />
                 </div>
                 <div>
@@ -376,7 +376,7 @@ export function AdminCouponsPage() {
                     required
                     value={form.validUntil}
                     onChange={e => setForm(f => ({ ...f, validUntil: e.target.value }))}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                   />
                 </div>
               </div>
@@ -407,7 +407,7 @@ export function AdminCouponsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-blue-600 text-white rounded-lg px-4 py-2.5 text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60"
+                  className="flex-1 bg-[#1E4D9C] text-white rounded-lg px-4 py-2.5 text-sm font-semibold hover:bg-[#0A1C3C] transition-colors disabled:opacity-60"
                 >
                   {saving ? "Menyimpan..." : editingId ? "Simpan Perubahan" : "Buat Kupon"}
                 </button>

@@ -34,7 +34,7 @@ type ToastState = { type: "success" | "error"; msg: string } | null;
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
-const BLUE = "#4f5eea";
+const BLUE = "#1E4D9C";
 
 function idr(n: number) { return `Rp ${n.toLocaleString("id-ID")}`; }
 

@@ -357,7 +357,7 @@ export function TryoutReviewPage() {
                     onClick={() => setSectionFilter(c)}
                     className="px-3 py-1.5 text-xs font-semibold transition-colors"
                     style={sectionFilter === c
-                      ? { background: "#4f5eea", color: "#fff" }
+                      ? { background: "#1E4D9C", color: "#fff" }
                       : { background: "#fff", color: "#475569" }}>
                     {c === "ALL" ? "Semua" : c}
                   </button>
@@ -370,7 +370,7 @@ export function TryoutReviewPage() {
                     onClick={() => setStatusFilter(f)}
                     className="px-3 py-1.5 text-xs font-semibold transition-colors"
                     style={statusFilter === f
-                      ? { background: f === "BENAR" ? "#059669" : f === "SALAH" ? "#dc2626" : f === "LEWAT" ? "#64748b" : "#4f5eea", color: "#fff" }
+                      ? { background: f === "BENAR" ? "#059669" : f === "SALAH" ? "#dc2626" : f === "LEWAT" ? "#64748b" : "#1E4D9C", color: "#fff" }
                       : { background: "#fff", color: "#475569" }}>
                     {f === "ALL" ? "Semua" : f === "BENAR" ? `✓ Benar (${correctCount})` : f === "SALAH" ? `✗ Salah (${wrongCount})` : `— Lewat (${skippedCount})`}
                   </button>

@@ -62,44 +62,44 @@
 
 /* LIGHT MODE */
 :root {
-  --background: 210 40% 98%;
-  --foreground: 222.2 84% 4.9%;
+  --background: 0 0% 94%;           /* #EFEFEF Light Off-White */
+  --foreground: 218 72% 14%;        /* #0A1C3C Dark Indigo */
 
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 213 74% 24%; /* Navy */
+  --border: 218 40% 84%;
+  --input: 218 40% 84%;
+  --ring: 218 67% 37%;              /* #1E4D9C Royal Blue */
 
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --card-border: 214.3 31.8% 91.4%;
+  --card-foreground: 218 72% 14%;
+  --card-border: 218 40% 88%;
 
-  --sidebar: 213 74% 24%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 215 50% 30%;
-  --sidebar-primary: 38 92% 50%;
-  --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-  --sidebar-accent: 215 50% 30%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 213 74% 24%;
+  --sidebar: 218 67% 37%;           /* #1E4D9C Royal Blue */
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 218 60% 28%;
+  --sidebar-primary: 42 78% 55%;    /* #E6B134 Mustard Gold */
+  --sidebar-primary-foreground: 218 72% 14%;
+  --sidebar-accent: 218 72% 14%;    /* #0A1C3C Dark Indigo */
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-ring: 218 67% 37%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --popover-border: 214.3 31.8% 91.4%;
+  --popover-foreground: 218 72% 14%;
+  --popover-border: 218 40% 88%;
 
-  --primary: 213 74% 24%; /* Dark Navy #1e3a5f */
-  --primary-foreground: 210 40% 98%;
+  --primary: 218 67% 37%;           /* #1E4D9C Deep Royal Blue */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 0 0% 94%;
+  --secondary-foreground: 218 72% 14%;
 
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted: 218 30% 90%;
+  --muted-foreground: 218 20% 48%;
 
-  --accent: 38 92% 50%; /* Amber/Orange */
-  --accent-foreground: 222.2 47.4% 11.2%;
+  --accent: 42 78% 55%;             /* #E6B134 Mustard Gold */
+  --accent-foreground: 218 72% 14%;
 
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 100%;
 
   --app-font-sans: 'Inter', sans-serif;
   --radius: 0.5rem;

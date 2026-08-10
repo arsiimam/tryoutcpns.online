@@ -112,7 +112,7 @@ export function AdminTryoutDetailPage() {
           <h1 className="text-2xl font-bold text-slate-900">{bundle.name}</h1>
           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
             {bundle.category && (
-              <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded uppercase">{bundle.category}</span>
+              <span className="px-2 py-0.5 bg-[#dce8f5] text-[#0A1C3C] text-xs font-bold rounded uppercase">{bundle.category}</span>
             )}
             <span className={`px-2 py-0.5 text-xs font-bold rounded uppercase ${STATUS_CLS[bundle.status] ?? "bg-slate-100 text-slate-600"}`}>
               {bundle.status}
@@ -175,7 +175,7 @@ export function AdminTryoutDetailPage() {
               <div className="space-y-3">
                 {bundle.sections.map(s => (
                   <div key={s.id} className="flex items-center gap-3">
-                    <span className="w-12 text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-center">
+                    <span className="w-12 text-xs font-bold text-[#0A1C3C] bg-[#dce8f5] px-2 py-0.5 rounded text-center">
                       {s.category ?? s.name}
                     </span>
                     <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
@@ -184,7 +184,7 @@ export function AdminTryoutDetailPage() {
                         style={{
                           width: bundle.totalQuestions > 0
                             ? `${(s.questionCount / bundle.totalQuestions) * 100}%` : "0%",
-                          background: "#4f5eea",
+                          background: "#1E4D9C",
                         }}
                       />
                     </div>
@@ -226,7 +226,7 @@ export function AdminTryoutDetailPage() {
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           <div className="px-5 py-3 border-b bg-slate-50 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded uppercase">
+              <span className="px-2 py-0.5 bg-[#dce8f5] text-[#0A1C3C] text-xs font-bold rounded uppercase">
                 {activeSection.category ?? activeSection.name}
               </span>
               <span className="text-sm text-slate-500">{activeSection.questionCount} soal</span>
@@ -272,7 +272,7 @@ export function AdminTryoutDetailPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button onClick={() => setPreviewQ(q)} title="Lihat Detail"
-                          className="p-1.5 rounded hover:bg-blue-50 text-blue-600 mr-1"><Eye size={14} /></button>
+                          className="p-1.5 rounded hover:bg-[#dce8f5] text-[#1E4D9C] mr-1"><Eye size={14} /></button>
                         <button onClick={() => delQ(q)} title="Hapus"
                           className="p-1.5 rounded hover:bg-red-50 text-red-500"><Trash2 size={14} /></button>
                       </td>
@@ -319,8 +319,8 @@ export function AdminTryoutDetailPage() {
                 </div>
               )}
               {previewQ.explanation && (
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-xs font-semibold text-blue-600 uppercase mb-2">Pembahasan</p>
+                <div className="bg-[#dce8f5] rounded-lg p-4">
+                  <p className="text-xs font-semibold text-[#1E4D9C] uppercase mb-2">Pembahasan</p>
                   <div className="prose prose-sm max-w-none text-slate-700" dangerouslySetInnerHTML={{ __html: previewQ.explanation }} />
                 </div>
               )}
@@ -344,7 +344,7 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
     <button onClick={onClick}
       className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
         active
-          ? "border-blue-600 text-blue-700"
+          ? "border-[#1E4D9C] text-[#0A1C3C]"
           : "border-transparent text-slate-500 hover:text-slate-800"
       }`}>
       {children}

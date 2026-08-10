@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
-const BLUE     = "#4f5eea";
-const BLUE_D   = "#4147d5";
+const BLUE     = "#1E4D9C";   // Deep Royal Blue
+const BLUE_D   = "#0A1C3C";   // Dark Indigo — header/footer strip
 const BLUE_ACT = "rgba(255,255,255,0.18)";
 const BLUE_HOV = "rgba(255,255,255,0.09)";
 
@@ -49,7 +49,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="h-screen flex overflow-hidden" style={{ background: "#f6f7fc" }}>
+    <div className="h-screen flex overflow-hidden" style={{ background: "#EFEFEF" }}>
       {/* Mobile overlay */}
       {isMobileOpen && (
         <div

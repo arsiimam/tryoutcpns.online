@@ -167,7 +167,7 @@ export function ReviewBundleDetailPage() {
                   }`}
                 >
                   <div className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={isSelected ? { background: "#4f5eea", color: "#fff" } : { background: "#f1f5f9", color: "#64748b" }}>
+                    style={isSelected ? { background: "#1E4D9C", color: "#fff" } : { background: "#f1f5f9", color: "#64748b" }}>
                     {sessions.length - idx}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -218,7 +218,7 @@ export function ReviewBundleDetailPage() {
               <button key={t} onClick={() => setTab(t)}
                 className="px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-colors"
                 style={tab === t
-                  ? { background: "#4f5eea", color: "#fff" }
+                  ? { background: "#1E4D9C", color: "#fff" }
                   : { background: "#f1f5f9", color: "#475569" }}>
                 {t === "benar" ? `✓ Benar (${questions.filter(q=>q.isCorrect).length})`
                   : t === "salah" ? `✗ Salah (${questions.filter(q=>q.userAnswer!==null&&!q.isCorrect).length})`

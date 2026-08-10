@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
-const BLUE     = "#4f5eea";
-const BLUE_D   = "#4147d5";   // header strip & footer strip
+const BLUE     = "#1E4D9C";   // Deep Royal Blue
+const BLUE_D   = "#0A1C3C";   // Dark Indigo — header/footer strip
 const BLUE_ACT = "rgba(255,255,255,0.18)"; // active item bg
 const BLUE_HOV = "rgba(255,255,255,0.09)"; // hover item bg
 
@@ -55,7 +55,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="h-screen flex overflow-hidden" style={{ background: "#f6f7fc" }}>
+    <div className="h-screen flex overflow-hidden" style={{ background: "#EFEFEF" }}>
       {/* Mobile overlay */}
       {isMobileOpen && (
         <div
@@ -159,12 +159,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div
               className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border"
               style={{
-                background:  user?.subscriptionId ? "#eef1ff" : "#fff7ed",
-                color:       user?.subscriptionId ? "#4147d5" : "#92400e",
-                borderColor: user?.subscriptionId ? "#c7d2fe" : "#fde68a",
+                background:  user?.subscriptionId ? "#dce8f5" : "#fff7ed",
+                color:       user?.subscriptionId ? "#0A1C3C" : "#92400e",
+                borderColor: user?.subscriptionId ? "#93b4e8" : "#fde68a",
               }}
             >
-              <Star size={13} className={user?.subscriptionId ? "fill-[#4f5eea]" : "fill-amber-400"} />
+              <Star size={13} className={user?.subscriptionId ? "fill-[#1E4D9C]" : "fill-amber-400"} />
               {user?.subscriptionId ? "Premium" : "Paket Gratis"}
             </div>
 

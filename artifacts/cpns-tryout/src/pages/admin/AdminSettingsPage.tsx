@@ -41,7 +41,7 @@ type ToastState = { type: "success" | "error"; msg: string } | null;
 /* ------------------------------------------------------------------ */
 /* Sub-components                                                      */
 /* ------------------------------------------------------------------ */
-const BLUE = "#4f5eea";
+const BLUE = "#1E4D9C";
 
 function SourceBadge({ source }: { source: "database" | "environment" | "none" }) {
   if (source === "none") return null;
@@ -615,7 +615,7 @@ export function AdminSettingsPage() {
                       className="px-3 py-1.5 text-xs rounded-lg border transition-colors"
                       style={
                         expiryPeriod === opt.val
-                          ? { background: "#eef1ff", borderColor: BLUE, color: BLUE, fontWeight: 600 }
+                          ? { background: "#dce8f5", borderColor: BLUE, color: BLUE, fontWeight: 600 }
                           : { background: "#fff", borderColor: "#e2e8f0", color: "#475569" }
                       }
                     >
@@ -651,7 +651,7 @@ export function AdminSettingsPage() {
 
             {/* Setup guide */}
             <div className="p-4 rounded-lg text-xs space-y-1.5"
-              style={{ background: "#eef1ff", border: "1px solid #c7d2fe", color: "#3730a3" }}>
+              style={{ background: "#dce8f5", border: "1px solid #93b4e8", color: "#0A1C3C" }}>
               <p className="font-semibold flex items-center gap-1.5">
                 <Zap size={13} /> Cara mendapatkan kredensial Duitku:
               </p>
@@ -710,7 +710,7 @@ export function AdminSettingsPage() {
         <SectionCard
           icon={
             <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-black"
-              style={{ background: "#003f8a" }}>
+              style={{ background: "#0A1C3C" }}>
               M
             </div>
           }
@@ -744,7 +744,7 @@ export function AdminSettingsPage() {
                 {(["sandbox", "production"] as const).map((env) => (
                   <button key={env} type="button" onClick={() => setMtEnv(env)}
                     className="px-5 py-2 text-sm font-semibold transition-colors capitalize"
-                    style={mtEnv === env ? { background: "#003f8a", color: "#fff" } : { background: "#fff", color: "#475569" }}
+                    style={mtEnv === env ? { background: "#0A1C3C", color: "#fff" } : { background: "#fff", color: "#475569" }}
                   >
                     {env === "sandbox" ? "🟡 Sandbox" : "🟢 Production"}
                   </button>
@@ -814,7 +814,7 @@ export function AdminSettingsPage() {
 
             {/* Setup guide */}
             <div className="p-4 rounded-lg text-xs space-y-1.5"
-              style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e3a8a" }}>
+              style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#0A1C3C" }}>
               <p className="font-semibold flex items-center gap-1.5">
                 <Zap size={13} /> Cara mendapatkan kredensial Midtrans:
               </p>
@@ -847,7 +847,7 @@ export function AdminSettingsPage() {
                   disabled={savingGateway}
                   onClick={() => handleSaveGateway("midtrans")}
                   className="ml-4 flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-opacity disabled:opacity-60 whitespace-nowrap"
-                  style={{ background: "#003f8a" }}
+                  style={{ background: "#0A1C3C" }}
                 >
                   {savingGateway ? <RefreshCw size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
                   {savingGateway ? "Menyimpan..." : "Aktifkan Midtrans"}
@@ -858,7 +858,7 @@ export function AdminSettingsPage() {
             <div className="pt-1 flex justify-end">
               <button type="submit" disabled={savingMidtrans}
                 className="flex items-center gap-2 px-5 py-2 text-white text-sm font-semibold rounded-lg transition-opacity disabled:opacity-60"
-                style={{ background: "#003f8a" }}
+                style={{ background: "#0A1C3C" }}
               >
                 {savingMidtrans ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
                 {savingMidtrans ? "Menyimpan..." : "Simpan Pengaturan Midtrans"}
@@ -939,7 +939,7 @@ export function AdminSettingsPage() {
             </div>
 
             {/* Guide */}
-            <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700 space-y-1">
+            <div className="p-4 bg-[#dce8f5] border border-blue-100 rounded-lg text-xs text-[#0A1C3C] space-y-1">
               <p className="font-semibold">Cara mendapatkan kredensial Google:</p>
               <ol className="list-decimal ml-4 space-y-0.5">
                 <li>Buka <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console → Credentials</a></li>
@@ -1023,7 +1023,7 @@ export function AdminSettingsPage() {
               ))}
             </div>
 
-            <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700 leading-relaxed">
+            <div className="rounded-lg border border-blue-100 bg-[#dce8f5] p-3 text-xs text-[#0A1C3C] leading-relaxed">
               <strong>Cara kerja:</strong> 11.523 skor dummy (distribusi normal, mean=65, std=12, seed=42) disimpan di database.
               Saat peserta menyelesaikan tryout, skor mereka dibandingkan dengan data dummy ini untuk menghasilkan ranking yang realistis.
               Data dummy <strong>tidak muncul</strong> di daftar nama peserta.

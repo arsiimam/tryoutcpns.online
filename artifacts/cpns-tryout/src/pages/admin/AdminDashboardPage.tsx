@@ -60,7 +60,7 @@ export function AdminDashboardPage() {
     return (
       <AdminLayout>
         <div className="flex h-64 items-center justify-center">
-          <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+          <Loader2 className="animate-spin h-8 w-8 text-[#1E4D9C]" />
         </div>
       </AdminLayout>
     );

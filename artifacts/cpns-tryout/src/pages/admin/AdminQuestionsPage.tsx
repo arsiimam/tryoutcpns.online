@@ -187,7 +187,7 @@ export function AdminQuestionsPage() {
           <button
             onClick={() => setShowImport(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm"
-            style={{ background: "#4f5eea" }}
+            style={{ background: "#1E4D9C" }}
           >
             <Upload size={16} /> Import Bundle
           </button>
@@ -218,16 +218,16 @@ export function AdminQuestionsPage() {
             placeholder="Cari nama bundle..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none"
           />
         </div>
         <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none">
           <option value="Semua">Semua Kategori</option>
           {CATEGORIES.map(c => <option key={c}>{c}</option>)}
         </select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none">
           <option value="Semua">Semua Status</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
@@ -269,7 +269,7 @@ export function AdminQuestionsPage() {
                   {/* Category */}
                   <td className="px-4 py-4">
                     {b.category ? (
-                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded uppercase">
+                      <span className="px-2 py-0.5 bg-[#dce8f5] text-[#0A1C3C] text-xs font-bold rounded uppercase">
                         {b.category}
                       </span>
                     ) : <span className="text-slate-300">—</span>}
@@ -296,7 +296,7 @@ export function AdminQuestionsPage() {
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-1">
                       <Link href={`/admin/questions/${b.id}`}>
-                        <button title="Lihat Soal" className="p-1.5 rounded hover:bg-blue-50 text-blue-600">
+                        <button title="Lihat Soal" className="p-1.5 rounded hover:bg-[#dce8f5] text-[#1E4D9C]">
                           <Eye size={15} />
                         </button>
                       </Link>
@@ -329,7 +329,7 @@ export function AdminQuestionsPage() {
               {/* Drop zone */}
               <div
                 onClick={() => fileRef.current?.click()}
-                className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-[#dce8f5] transition-colors"
               >
                 <Upload size={32} className="mx-auto mb-3 text-slate-300" />
                 {importFile ? (
@@ -366,7 +366,7 @@ export function AdminQuestionsPage() {
                   onClick={doPreview}
                   disabled={!importFile || importLoading}
                   className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                  style={{ background: "#4f5eea" }}
+                  style={{ background: "#1E4D9C" }}
                 >
                   {importLoading ? "Memproses..." : "Preview →"}
                 </button>
@@ -437,7 +437,7 @@ export function AdminQuestionsPage() {
                   onClick={doImport}
                   disabled={importLoading}
                   className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                  style={{ background: "#4f5eea" }}
+                  style={{ background: "#1E4D9C" }}
                 >
                   {importLoading ? "Mengimpor..." : `Import ${previewData.questionCount} Soal`}
                 </button>
@@ -453,7 +453,7 @@ export function AdminQuestionsPage() {
                 {previewData?.questionCount} soal telah ditambahkan ke bundle <strong>{previewData?.bundleName}</strong>.
               </p>
               <button onClick={resetImport}
-                className="px-6 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "#4f5eea" }}>
+                className="px-6 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "#1E4D9C" }}>
                 Tutup
               </button>
             </div>
@@ -468,12 +468,12 @@ export function AdminQuestionsPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Nama Bundle</label>
               <input value={editName} onChange={e => setEditName(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Kategori</label>
               <select value={editCat} onChange={e => setEditCat(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none">
                 <option value="">Pilih kategori...</option>
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
@@ -481,13 +481,13 @@ export function AdminQuestionsPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Deskripsi</label>
               <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={3}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => setEditBundle(null)} className="px-4 py-2 border rounded-lg text-sm font-medium">Batal</button>
               <button onClick={saveEdit} disabled={editSaving}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                style={{ background: "#4f5eea" }}>
+                style={{ background: "#1E4D9C" }}>
                 {editSaving ? "Menyimpan..." : "Simpan"}
               </button>
             </div>

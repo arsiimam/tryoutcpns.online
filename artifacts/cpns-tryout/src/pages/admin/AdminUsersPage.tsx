@@ -84,7 +84,7 @@ function RoleBadge({ role }: { role: string }) {
     );
   }
   return (
-    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-[#0A1C3C]">
       Peserta
     </span>
   );
@@ -184,7 +184,7 @@ export function AdminUsersPage() {
               placeholder="Cari nama atau email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+              className="w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none text-sm"
             />
           </div>
           <button
@@ -310,7 +310,7 @@ export function AdminUsersPage() {
                             </button>
                             <button
                               onClick={() => setSelectedUser(u)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              className="p-1.5 text-[#1E4D9C] hover:bg-[#dce8f5] rounded transition-colors"
                               title="Lihat detail"
                             >
                               <Eye size={16} />

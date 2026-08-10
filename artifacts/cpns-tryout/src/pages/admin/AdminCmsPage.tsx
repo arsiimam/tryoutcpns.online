@@ -110,7 +110,7 @@ function SectionEditor({
           onClick={save}
           disabled={saving}
           className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-60"
-          style={{ background: "#4f5eea" }}
+          style={{ background: "#1E4D9C" }}
         >
           {saving
             ? <RefreshCw size={14} className="animate-spin" />
@@ -224,9 +224,9 @@ export function AdminCmsPage() {
                       onClick={() => setActiveId(s.id)}
                       className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-left transition-all font-medium w-full"
                       style={{
-                        background:  isActive ? "#eef1ff" : "transparent",
-                        color:       isActive ? "#4147d5" : "#475569",
-                        borderLeft:  isActive ? "3px solid #4f5eea" : "3px solid transparent",
+                        background:  isActive ? "#dce8f5" : "transparent",
+                        color:       isActive ? "#0A1C3C" : "#475569",
+                        borderLeft:  isActive ? "3px solid #1E4D9C" : "3px solid transparent",
                       }}
                     >
                       <s.icon size={15} />
@@ -243,9 +243,9 @@ export function AdminCmsPage() {
                 <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
                   <div
                     className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "#eef1ff" }}
+                    style={{ background: "#dce8f5" }}
                   >
-                    <activeMeta.icon size={17} style={{ color: "#4f5eea" }} />
+                    <activeMeta.icon size={17} style={{ color: "#1E4D9C" }} />
                   </div>
                   <div>
                     <h2 className="font-bold text-slate-900 leading-tight">{activeMeta.label}</h2>

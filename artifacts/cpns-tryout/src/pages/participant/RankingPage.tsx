@@ -118,7 +118,7 @@ export function RankingPage() {
                   {distWithMe.map((entry, idx) => (
                     <rect
                       key={idx}
-                      fill={entry.isMe ? "#4f5eea" : "#f59e0b"}
+                      fill={entry.isMe ? "#1E4D9C" : "#f59e0b"}
                     />
                   ))}
                 </Bar>

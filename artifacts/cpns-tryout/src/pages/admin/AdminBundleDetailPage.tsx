@@ -128,7 +128,7 @@ export function AdminBundleDetailPage() {
           <h1 className="text-2xl font-bold text-slate-900 leading-tight">{bundle.name}</h1>
           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
             {bundle.category && (
-              <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded uppercase">
+              <span className="px-2 py-0.5 bg-[#dce8f5] text-[#0A1C3C] text-xs font-bold rounded uppercase">
                 {bundle.category}
               </span>
             )}
@@ -160,7 +160,7 @@ export function AdminBundleDetailPage() {
           placeholder="Cari cuplikan soal..."
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
-          className="flex-1 min-w-48 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="flex-1 min-w-48 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none"
         />
         <span className="text-sm text-slate-500">
           Menampilkan {filtered.length} dari {questions.length} soal
@@ -220,7 +220,7 @@ export function AdminBundleDetailPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button onClick={() => setPreviewQ(q)} title="Lihat Detail"
-                          className="p-1.5 rounded hover:bg-blue-50 text-blue-600 mr-1">
+                          className="p-1.5 rounded hover:bg-[#dce8f5] text-[#1E4D9C] mr-1">
                           <Eye size={14} />
                         </button>
                         <button onClick={() => deleteQ(q)} title="Hapus"
@@ -295,8 +295,8 @@ export function AdminBundleDetailPage() {
 
               {/* Explanation */}
               {previewQ.explanation && (
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-xs font-semibold text-blue-600 uppercase mb-2">Pembahasan</p>
+                <div className="bg-[#dce8f5] rounded-lg p-4">
+                  <p className="text-xs font-semibold text-[#1E4D9C] uppercase mb-2">Pembahasan</p>
                   <div
                     className="prose prose-sm max-w-none text-slate-700"
                     dangerouslySetInnerHTML={{ __html: previewQ.explanation }}

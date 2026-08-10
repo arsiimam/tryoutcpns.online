@@ -120,13 +120,13 @@ export function AdminCategoriesPage() {
           <div className="flex gap-2">
             <button
               onClick={() => openCreateSub()}
-              className="flex items-center gap-2 border border-blue-600 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm"
+              className="flex items-center gap-2 border border-[#1E4D9C] text-[#1E4D9C] px-4 py-2 rounded-lg font-medium hover:bg-[#dce8f5] transition-colors text-sm"
             >
               <Tag size={15} /> Tambah Subkategori
             </button>
             <button
               onClick={openCreateCat}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
+              className="flex items-center gap-2 bg-[#1E4D9C] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#0A1C3C] transition-colors text-sm"
             >
               <Plus size={15} /> Tambah Kategori
             </button>
@@ -136,13 +136,13 @@ export function AdminCategoriesPage() {
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E4D9C]" />
         </div>
       ) : categories.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border text-center gap-3">
           <Layers size={40} className="text-slate-300" />
           <p className="text-slate-500 font-medium">Belum ada kategori</p>
-          <button onClick={openCreateCat} className="text-sm text-blue-600 font-semibold hover:underline">
+          <button onClick={openCreateCat} className="text-sm text-[#1E4D9C] font-semibold hover:underline">
             + Tambah kategori pertama
           </button>
         </div>
@@ -153,7 +153,7 @@ export function AdminCategoriesPage() {
               {/* Category header */}
               <div className="flex items-center justify-between px-5 py-4 bg-slate-50 border-b">
                 <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-md tracking-wider">
+                  <span className="px-2.5 py-1 bg-[#1E4D9C] text-white text-xs font-bold rounded-md tracking-wider">
                     {cat.code}
                   </span>
                   <div>
@@ -166,13 +166,13 @@ export function AdminCategoriesPage() {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => openCreateSub(cat.id)}
-                    className="flex items-center gap-1.5 text-xs text-blue-600 font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors border border-blue-200"
+                    className="flex items-center gap-1.5 text-xs text-[#1E4D9C] font-medium px-3 py-1.5 rounded-lg hover:bg-[#dce8f5] transition-colors border border-[#93b4e8]"
                   >
                     <Plus size={13} /> Subkategori
                   </button>
                   <button
                     onClick={() => openEditCat(cat)}
-                    className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-1.5 text-slate-500 hover:text-[#1E4D9C] hover:bg-[#dce8f5] rounded-lg transition-colors"
                   >
                     <Edit2 size={15} />
                   </button>
@@ -214,7 +214,7 @@ export function AdminCategoriesPage() {
                         <td className="px-5 py-3 text-right">
                           <button
                             onClick={() => openEditSub(sub)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-[#1E4D9C] hover:bg-[#dce8f5] rounded-lg transition-colors"
                           >
                             <Edit2 size={14} />
                           </button>
@@ -258,7 +258,7 @@ export function AdminCategoriesPage() {
                   Kode <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase font-mono tracking-wider"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C] uppercase font-mono tracking-wider"
                   placeholder="TWK / TIU / TKP"
                   value={catForm.code}
                   onChange={e => setCatForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
@@ -270,7 +270,7 @@ export function AdminCategoriesPage() {
                   Nama <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                   placeholder="Tes Wawasan Kebangsaan"
                   value={catForm.name}
                   onChange={e => setCatForm(f => ({ ...f, name: e.target.value }))}
@@ -280,7 +280,7 @@ export function AdminCategoriesPage() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Deskripsi</label>
                 <textarea
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C] resize-none"
                   rows={3}
                   placeholder="Deskripsi singkat kategori..."
                   value={catForm.description}
@@ -293,7 +293,7 @@ export function AdminCategoriesPage() {
                   Batal
                 </button>
                 <button type="submit" disabled={saving}
-                  className="px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-70">
+                  className="px-5 py-2 text-sm font-bold text-white bg-[#1E4D9C] hover:bg-[#0A1C3C] rounded-lg transition-colors disabled:opacity-70">
                   {saving ? "Menyimpan..." : editCatId ? "Simpan Perubahan" : "Tambah Kategori"}
                 </button>
               </div>
@@ -325,7 +325,7 @@ export function AdminCategoriesPage() {
                   Kategori <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C] bg-white"
                   value={subForm.categoryId}
                   onChange={e => setSubForm(f => ({ ...f, categoryId: e.target.value }))}
                   required
@@ -341,7 +341,7 @@ export function AdminCategoriesPage() {
                   Nama Subkategori <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C]"
                   placeholder="Pancasila, UUD 1945, Numerik, ..."
                   value={subForm.name}
                   onChange={e => setSubForm(f => ({ ...f, name: e.target.value }))}
@@ -351,7 +351,7 @@ export function AdminCategoriesPage() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Deskripsi</label>
                 <textarea
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E4D9C] resize-none"
                   rows={2}
                   placeholder="Deskripsi singkat subkategori..."
                   value={subForm.description}
@@ -364,7 +364,7 @@ export function AdminCategoriesPage() {
                   Batal
                 </button>
                 <button type="submit" disabled={saving}
-                  className="px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-70">
+                  className="px-5 py-2 text-sm font-bold text-white bg-[#1E4D9C] hover:bg-[#0A1C3C] rounded-lg transition-colors disabled:opacity-70">
                   {saving ? "Menyimpan..." : editSubId ? "Simpan Perubahan" : "Tambah Subkategori"}
                 </button>
               </div>

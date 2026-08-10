@@ -28,18 +28,18 @@ type ToastState = { type: "success" | "error"; msg: string } | null;
 /* ------------------------------------------------------------------ */
 /* Constants                                                           */
 /* ------------------------------------------------------------------ */
-const BLUE = "#4f5eea";
+const BLUE = "#1E4D9C";
 
 const COLOR_OPTIONS = [
   { value: "slate",   label: "Abu-abu (Gratis)", preview: "#64748b" },
-  { value: "blue",    label: "Biru (Silver)",    preview: "#4f5eea" },
+  { value: "blue",    label: "Biru (Silver)",    preview: "#1E4D9C" },
   { value: "gold",    label: "Emas (Gold)",      preview: "#f59e0b" },
   { value: "emerald", label: "Hijau (Platinum)", preview: "#10b981" },
 ];
 
 const COLOR_STYLES: Record<string, { bg: string; text: string; border: string; badge: string }> = {
   slate:   { bg: "#f8fafc", text: "#475569", border: "#e2e8f0", badge: "#94a3b8" },
-  blue:    { bg: "#eef1ff", text: "#3730a3", border: "#c7d2fe", badge: "#4f5eea" },
+  blue:    { bg: "#dce8f5", text: "#0A1C3C", border: "#93b4e8", badge: "#1E4D9C" },
   gold:    { bg: "#fffbeb", text: "#92400e", border: "#fde68a", badge: "#f59e0b" },
   emerald: { bg: "#f0fdf4", text: "#065f46", border: "#bbf7d0", badge: "#10b981" },
 };

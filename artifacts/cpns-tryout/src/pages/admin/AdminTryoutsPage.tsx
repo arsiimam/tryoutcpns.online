@@ -204,7 +204,7 @@ export function AdminTryoutsPage() {
             </button>
             <button onClick={() => setShowImport(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium"
-              style={{ background: "#4f5eea" }}>
+              style={{ background: "#1E4D9C" }}>
               <Upload size={15} /> Import Bundle
             </button>
           </div>
@@ -232,15 +232,15 @@ export function AdminTryoutsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input type="text" placeholder="Cari nama tryout..."
             value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
         </div>
         <select value={catF} onChange={e => setCatF(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none">
           <option value="Semua">Semua Kategori</option>
           {CATEGORIES.map(c => <option key={c}>{c}</option>)}
         </select>
         <select value={statusF} onChange={e => setStatusF(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          className="border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none">
           <option value="Semua">Semua Status</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
@@ -276,7 +276,7 @@ export function AdminTryoutsPage() {
                     <div className="font-semibold text-slate-900">{b.name}</div>
                     <div className="flex items-center gap-2 mt-0.5">
                       {b.category && (
-                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded">
+                        <span className="px-1.5 py-0.5 bg-[#dce8f5] text-[#0A1C3C] text-xs font-bold rounded">
                           {b.category}
                         </span>
                       )}
@@ -319,7 +319,7 @@ export function AdminTryoutsPage() {
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-1">
                       <Link href={`/admin/tryouts/${b.id}`}>
-                        <button title="Lihat Detail" className="p-1.5 rounded hover:bg-blue-50 text-blue-600"><Eye size={15} /></button>
+                        <button title="Lihat Detail" className="p-1.5 rounded hover:bg-[#dce8f5] text-[#1E4D9C]"><Eye size={15} /></button>
                       </Link>
                       <button title="Edit" onClick={() => openEdit(b)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500"><Edit2 size={15} /></button>
                       <button title="Duplikasi" onClick={() => duplicate(b)} className="p-1.5 rounded hover:bg-purple-50 text-purple-500"><Copy size={15} /></button>
@@ -343,7 +343,7 @@ export function AdminTryoutsPage() {
                 Upload file bundle tryout lengkap (JSON atau HTML). Seluruh konfigurasi dan soal akan diimpor otomatis.
               </p>
               <div onClick={() => fileRef.current?.click()}
-                className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-[#dce8f5] transition-colors">
                 <Upload size={32} className="mx-auto mb-3 text-slate-300" />
                 {importFile
                   ? <p className="font-semibold text-slate-700">{importFile.name}</p>
@@ -363,7 +363,7 @@ export function AdminTryoutsPage() {
                 <button onClick={resetImport} className="px-4 py-2 border rounded-lg text-sm font-medium">Batal</button>
                 <button onClick={doPreview} disabled={!importFile || impLoading}
                   className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                  style={{ background: "#4f5eea" }}>
+                  style={{ background: "#1E4D9C" }}>
                   {impLoading ? "Memproses..." : "Preview →"}
                 </button>
               </div>
@@ -394,7 +394,7 @@ export function AdminTryoutsPage() {
                 <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Komposisi Seksi</p>
                 <div className="flex flex-wrap gap-2">
                   {preview.sections.map((s, i) => (
-                    <div key={i} className="px-3 py-1.5 bg-blue-50 rounded-lg text-xs text-blue-700 font-medium">
+                    <div key={i} className="px-3 py-1.5 bg-[#dce8f5] rounded-lg text-xs text-[#0A1C3C] font-medium">
                       {s.name}: <strong>{s.questionCount}</strong> soal
                     </div>
                   ))}
@@ -431,7 +431,7 @@ export function AdminTryoutsPage() {
                   className="px-4 py-2 border rounded-lg text-sm font-medium">← Kembali</button>
                 <button onClick={doImport} disabled={impLoading}
                   className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                  style={{ background: "#4f5eea" }}>
+                  style={{ background: "#1E4D9C" }}>
                   {impLoading ? "Mengimpor..." : `Import ${preview.totalQuestions} Soal`}
                 </button>
               </div>
@@ -445,7 +445,7 @@ export function AdminTryoutsPage() {
               <p className="text-sm text-slate-500">
                 <strong>{preview?.name}</strong> — {preview?.totalQuestions} soal dalam {preview?.sectionCount} seksi.
               </p>
-              <button onClick={resetImport} className="px-6 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "#4f5eea" }}>
+              <button onClick={resetImport} className="px-6 py-2 rounded-lg text-sm font-medium text-white" style={{ background: "#1E4D9C" }}>
                 Tutup
               </button>
             </div>
@@ -459,27 +459,27 @@ export function AdminTryoutsPage() {
           <div className="space-y-4">
             <Field label="Nama Tryout" required>
               <input value={cName} onChange={e => setCName(e.target.value)} placeholder="SKD Nasional #1"
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
             </Field>
             <Field label="Kategori">
               <select value={cCat} onChange={e => setCCat(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none">
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Durasi (menit)">
                 <input type="number" value={cDur} onChange={e => setCDur(Number(e.target.value))} min={1}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
               </Field>
               <Field label="Passing Grade">
                 <input type="number" value={cPass} onChange={e => setCPass(Number(e.target.value))} min={0}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
               </Field>
             </div>
             <Field label="Deskripsi">
               <textarea value={cDesc} onChange={e => setCDesc(e.target.value)} rows={2}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
             </Field>
             <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-slate-700">
               <input type="checkbox" checked={cFree} onChange={e => setCFree(e.target.checked)}
@@ -490,7 +490,7 @@ export function AdminTryoutsPage() {
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 border rounded-lg text-sm font-medium">Batal</button>
               <button onClick={doCreate} disabled={cSaving || !cName.trim()}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                style={{ background: "#4f5eea" }}>
+                style={{ background: "#1E4D9C" }}>
                 {cSaving ? "Menyimpan..." : "Buat Tryout"}
               </button>
             </div>
@@ -504,11 +504,11 @@ export function AdminTryoutsPage() {
           <div className="space-y-4">
             <Field label="Nama Tryout" required>
               <input value={eName} onChange={e => setEName(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
             </Field>
             <Field label="Kategori">
               <select value={eCat} onChange={e => setECat(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none">
                 <option value="">Pilih...</option>
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
@@ -516,16 +516,16 @@ export function AdminTryoutsPage() {
             <div className="grid grid-cols-2 gap-3">
               <Field label="Durasi (menit)">
                 <input type="number" value={eDur} onChange={e => setEDur(Number(e.target.value))} min={1}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
               </Field>
               <Field label="Passing Grade">
                 <input type="number" value={ePass} onChange={e => setEPass(Number(e.target.value))} min={0}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
               </Field>
             </div>
             <Field label="Deskripsi">
               <textarea value={eDesc} onChange={e => setEDesc(e.target.value)} rows={2}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1E4D9C] focus:outline-none" />
             </Field>
             <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-slate-700">
               <input type="checkbox" checked={eFree} onChange={e => setEFree(e.target.checked)}
@@ -536,7 +536,7 @@ export function AdminTryoutsPage() {
               <button onClick={() => setEditB(null)} className="px-4 py-2 border rounded-lg text-sm font-medium">Batal</button>
               <button onClick={doEdit} disabled={eSaving}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                style={{ background: "#4f5eea" }}>
+                style={{ background: "#1E4D9C" }}>
                 {eSaving ? "Menyimpan..." : "Simpan"}
               </button>
             </div>
