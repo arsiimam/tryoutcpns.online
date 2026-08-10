@@ -141,44 +141,59 @@ router.get("/history", requireAuth, async (req: any, res) => {
   try {
     const userId = req.session.userId as string;
 
-    const result = await db.execute(sql`
-      SELECT session_id, bundle_id, total_questions, correct_count, completed_at,
-             bundle_name, bundle_description, bundle_category, question_count, session_count
-      FROM (
-        SELECT
-          ps.id            AS session_id,
-          ps.bundle_id,
-          ps.total_questions,
-          ps.correct_count,
-          ps.completed_at,
-          qb.name          AS bundle_name,
-          qb.description   AS bundle_description,
-          qb.category      AS bundle_category,
-          qb.question_count,
-          (SELECT COUNT(*) FROM practice_sessions s2
-           WHERE s2.user_id = ps.user_id AND s2.bundle_id = ps.bundle_id) AS session_count,
-          ROW_NUMBER() OVER (PARTITION BY ps.bundle_id ORDER BY ps.completed_at DESC) AS rn
-        FROM practice_sessions ps
-        JOIN question_bundles qb ON qb.id = ps.bundle_id
-        WHERE ps.user_id = ${userId}
-      ) ranked
-      WHERE rn = 1
-      ORDER BY completed_at DESC
-    `);
+    // Simple query: all sessions ordered by latest first, dedup by bundle in JS
+    const [sessionsResult, countsResult] = await Promise.all([
+      db
+        .select({
+          sessionId:    practiceSessionsTable.id,
+          bundleId:     practiceSessionsTable.bundleId,
+          totalQuestions: practiceSessionsTable.totalQuestions,
+          correctCount: practiceSessionsTable.correctCount,
+          completedAt:  practiceSessionsTable.completedAt,
+          bundleName:        questionBundlesTable.name,
+          bundleDescription: questionBundlesTable.description,
+          bundleCategory:    questionBundlesTable.category,
+          questionCount:     questionBundlesTable.questionCount,
+        })
+        .from(practiceSessionsTable)
+        .innerJoin(questionBundlesTable, eq(practiceSessionsTable.bundleId, questionBundlesTable.id))
+        .where(eq(practiceSessionsTable.userId, userId))
+        .orderBy(desc(practiceSessionsTable.completedAt)),
 
-    const rows = (result as any).rows ?? result ?? [];
-    const history = (rows as any[]).map(r => ({
-      sessionId:         r.session_id,
-      bundleId:          r.bundle_id,
-      bundleName:        r.bundle_name,
-      bundleDescription: r.bundle_description ?? "",
-      bundleCategory:    r.bundle_category ?? "Lainnya",
-      questionCount:     r.question_count,
-      totalQuestions:    r.total_questions,
-      correctCount:      r.correct_count,
-      completedAt:       r.completed_at,
-      sessionCount:      Number(r.session_count ?? 1),
-    }));
+      db.execute(sql`
+        SELECT bundle_id, COUNT(*)::int AS cnt
+        FROM practice_sessions
+        WHERE user_id = ${userId}
+        GROUP BY bundle_id
+      `),
+    ]);
+
+    // Count per bundle
+    const countRows = (countsResult as any).rows ?? countsResult ?? [];
+    const sessionCountMap: Record<number, number> = {};
+    for (const row of countRows as any[]) {
+      sessionCountMap[Number(row.bundle_id)] = Number(row.cnt);
+    }
+
+    // Dedup: keep latest session per bundle
+    const seen = new Set<number>();
+    const history = [];
+    for (const r of sessionsResult) {
+      if (seen.has(r.bundleId)) continue;
+      seen.add(r.bundleId);
+      history.push({
+        sessionId:         r.sessionId,
+        bundleId:          r.bundleId,
+        bundleName:        r.bundleName,
+        bundleDescription: r.bundleDescription ?? "",
+        bundleCategory:    r.bundleCategory ?? "Lainnya",
+        questionCount:     r.questionCount,
+        totalQuestions:    r.totalQuestions,
+        correctCount:      r.correctCount,
+        completedAt:       r.completedAt,
+        sessionCount:      sessionCountMap[r.bundleId] ?? 1,
+      });
+    }
 
     return res.json({ history });
   } catch (err: any) {
