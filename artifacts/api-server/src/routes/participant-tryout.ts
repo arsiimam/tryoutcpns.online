@@ -488,10 +488,11 @@ router.get("/results", requireAuth, async (req: any, res) => {
     const tryoutIds = [...new Set(results.map(r => r.tryoutId).filter(Boolean))];
     let countMap: Record<string, number> = {};
     if (tryoutIds.length) {
+      const inClause = sql.join(tryoutIds.map(id => sql`${id}`), sql`, `);
       const countRows = await db.execute(sql`
         SELECT tryout_id, COUNT(*)::int AS cnt
         FROM tryout_results
-        WHERE tryout_id = ANY(${tryoutIds})
+        WHERE tryout_id IN (${inClause})
         GROUP BY tryout_id
       `);
       for (const row of countRows.rows as any[]) {

@@ -142,22 +142,28 @@ router.get("/history", requireAuth, async (req: any, res) => {
     const userId = req.session.userId as string;
 
     const result = await db.execute(sql`
-      SELECT DISTINCT ON (ps.bundle_id)
-        ps.id            AS session_id,
-        ps.bundle_id,
-        ps.total_questions,
-        ps.correct_count,
-        ps.completed_at,
-        qb.name          AS bundle_name,
-        qb.description   AS bundle_description,
-        qb.category      AS bundle_category,
-        qb.question_count,
-        (SELECT COUNT(*) FROM practice_sessions s2
-         WHERE s2.user_id = ps.user_id AND s2.bundle_id = ps.bundle_id) AS session_count
-      FROM practice_sessions ps
-      JOIN question_bundles qb ON qb.id = ps.bundle_id
-      WHERE ps.user_id = ${userId}
-      ORDER BY ps.bundle_id, ps.completed_at DESC
+      SELECT session_id, bundle_id, total_questions, correct_count, completed_at,
+             bundle_name, bundle_description, bundle_category, question_count, session_count
+      FROM (
+        SELECT
+          ps.id            AS session_id,
+          ps.bundle_id,
+          ps.total_questions,
+          ps.correct_count,
+          ps.completed_at,
+          qb.name          AS bundle_name,
+          qb.description   AS bundle_description,
+          qb.category      AS bundle_category,
+          qb.question_count,
+          (SELECT COUNT(*) FROM practice_sessions s2
+           WHERE s2.user_id = ps.user_id AND s2.bundle_id = ps.bundle_id) AS session_count,
+          ROW_NUMBER() OVER (PARTITION BY ps.bundle_id ORDER BY ps.completed_at DESC) AS rn
+        FROM practice_sessions ps
+        JOIN question_bundles qb ON qb.id = ps.bundle_id
+        WHERE ps.user_id = ${userId}
+      ) ranked
+      WHERE rn = 1
+      ORDER BY completed_at DESC
     `);
 
     const rows = (result as any).rows ?? result ?? [];
