@@ -76,7 +76,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {/* Logo strip */}
         <div
           className="h-16 flex items-center px-5 shrink-0"
-          style={{ background: BLUE_D, borderBottom: "1px solid rgba(255,255,255,0.12)" }}
+          style={{ background: BLUE, borderBottom: "1px solid rgba(255,255,255,0.10)" }}
         >
           <Link href="/" className="flex items-center">
             <BrandLogo variant="dark" size="md" />

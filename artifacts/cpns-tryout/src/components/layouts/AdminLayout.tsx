@@ -74,8 +74,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <div
           className="h-16 flex items-center shrink-0"
           style={{
-            background: BLUE_D,
-            borderBottom: "1px solid rgba(255,255,255,0.12)",
+            background: BLUE,
+            borderBottom: "1px solid rgba(255,255,255,0.10)",
             padding: isCollapsed ? "0 0" : "0 12px 0 20px",
             justifyContent: isCollapsed ? "center" : "space-between",
           }}
