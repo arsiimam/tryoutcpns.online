@@ -28,6 +28,7 @@ const CAT_COLORS: Record<string, string> = {
 export function ReviewPage() {
   const [history, setHistory] = useState<BundleHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [, navigate] = useLocation();
 
   useEffect(() => {
@@ -35,9 +36,13 @@ export function ReviewPage() {
       try {
         const r = await fetch("/api/participant/practice/history", { credentials: "include" });
         const data = await r.json();
+        if (!r.ok) throw new Error(data.error ?? `Gagal memuat (${r.status})`);
         setHistory(data.history ?? []);
-      } catch {}
-      finally { setLoading(false); }
+      } catch (err: any) {
+        setError(err.message ?? "Terjadi kesalahan.");
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -47,6 +52,19 @@ export function ReviewPage() {
       <DashboardLayout>
         <div className="flex h-64 items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <div className="text-red-500 font-semibold">{error}</div>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90">
+            Coba Lagi
+          </button>
         </div>
       </DashboardLayout>
     );

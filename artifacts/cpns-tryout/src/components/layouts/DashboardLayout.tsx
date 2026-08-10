@@ -25,6 +25,7 @@ const navItems = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [location] = useLocation();
@@ -32,6 +33,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const initial = (user?.name ?? "U")[0].toUpperCase();
   const pageName = location.split("/")[1] || "dashboard";
+
+  // Toggle: on mobile open drawer, on desktop collapse sidebar
+  function handleHamburger() {
+    if (window.innerWidth < 768) {
+      setIsMobileOpen(o => !o);
+    } else {
+      setIsSidebarCollapsed(o => !o);
+    }
+  }
 
   // Close dropdown on outside click
   React.useEffect(() => {
@@ -56,10 +66,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* ====== SIDEBAR ====== */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col
-          transform transition-transform duration-200 ease-in-out
-          md:relative md:translate-x-0
-          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col
+          transform transition-all duration-200 ease-in-out
+          md:relative md:translate-x-0 shrink-0
+          ${isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          ${isSidebarCollapsed ? "md:w-0 md:overflow-hidden" : "w-64"}`}
         style={{ background: BLUE }}
       >
         {/* Logo strip */}
@@ -73,6 +84,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <button
             className="ml-auto md:hidden text-white/70 hover:text-white"
             onClick={() => setIsMobileOpen(false)}
+          >
+            <X size={20} />
+          </button>
+          {/* Desktop collapse button (inside sidebar) */}
+          <button
+            className="ml-auto hidden md:flex text-white/70 hover:text-white"
+            onClick={() => setIsSidebarCollapsed(true)}
           >
             <X size={20} />
           </button>
@@ -120,9 +138,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {/* Topbar */}
         <header className="h-16 bg-white border-b flex items-center px-4 md:px-8 shrink-0 z-30 shadow-sm">
           <button
-            className="mr-4 md:hidden"
+            className="mr-4"
             style={{ color: "#64748b" }}
-            onClick={() => setIsMobileOpen(true)}
+            onClick={handleHamburger}
+            aria-label="Toggle sidebar"
           >
             <Menu size={22} />
           </button>

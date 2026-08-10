@@ -14,43 +14,60 @@ import { FileText, Target, CheckCircle, XCircle, ArrowRight } from "lucide-react
 const DEFAULT_PG = { TWK: 65, TIU: 80, TKP: 166 };
 
 export function HasilPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [pg, setPg] = useState(DEFAULT_PG);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    fetch("/api/participant/passing-grades", { credentials: "include" })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.grades) setPg({ ...DEFAULT_PG, ...d.grades }); })
-      .catch(() => {});
-  }, []);
+    if (authLoading) return;
+    if (!user) { setLoading(false); return; }
 
-  useEffect(() => {
     async function load() {
-      if (!user) return;
       try {
         const [resultsRes, pgRes] = await Promise.all([
           fetch("/api/participant/results", { credentials: "include" }),
           fetch("/api/participant/settings/passing-grades", { credentials: "include" }),
         ]);
+        if (!resultsRes.ok) {
+          const d = await resultsRes.json().catch(() => ({}));
+          throw new Error(d.error ?? `Gagal memuat data (${resultsRes.status})`);
+        }
         const resultsData = await resultsRes.json();
         setResults(resultsData.results ?? []);
         if (pgRes.ok) {
           const pgData = await pgRes.json();
           if (pgData.grades) setPg({ ...DEFAULT_PG, ...pgData.grades });
         }
-      } catch { } finally { setLoading(false); }
+      } catch (err: any) {
+        setError(err.message ?? "Terjadi kesalahan saat memuat data.");
+      } finally {
+        setLoading(false);
+      }
     }
     load();
-  }, [user]);
+  }, [user, authLoading]);
 
   if (loading) {
     return (
       <DashboardLayout>
         <div className="flex h-64 items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <div className="text-red-500 font-semibold">{error}</div>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90">
+            Coba Lagi
+          </button>
         </div>
       </DashboardLayout>
     );
