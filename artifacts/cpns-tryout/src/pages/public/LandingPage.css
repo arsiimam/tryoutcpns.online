@@ -51,20 +51,20 @@
   box-shadow: 0 6px 20px rgba(230,177,52,0.45);
 }
 .lp-btn-lg-ghost {
-  background: #fff; border: 1.5px solid #0A1C3C; color: #0A1C3C;
+  background: transparent; border: 1.5px solid rgba(255,255,255,0.65); color: #fff;
   padding: 16px 26px; border-radius: 12px; font-weight: 600; font-size: 16px;
   display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
   transition: border-color .15s, color .15s, background .15s;
 }
-.lp-btn-lg-ghost:hover { background: #0A1C3C; color: #fff; }
+.lp-btn-lg-ghost:hover { background: rgba(255,255,255,0.12); border-color: #fff; }
 .lp-btn-ghost-nav { font-size: 15px; color: var(--lp-ink-700); cursor: pointer; background: none; border: none; }
 
 /* ===================== NAV ===================== */
 .lp-nav {
   position: sticky; top: 0; z-index: 50;
-  background: #fff;
-  border-bottom: 1px solid #e8edf2;
-  box-shadow: 0 2px 12px rgba(10,28,60,0.07);
+  background: #1E4D9C;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 2px 16px rgba(10,28,60,0.30);
   padding: 0 40px;
 }
 @media (max-width: 768px) { .lp-nav { padding: 0 16px; } }
@@ -91,12 +91,12 @@
   display: flex; gap: 36px; flex: 1; justify-content: center;
 }
 .lp-nav-links a {
-  color: #0A1C3C;
+  color: rgba(255,255,255,0.88);
   font-weight: 600;
   font-size: 15px;
-  transition: opacity .15s;
+  transition: color .15s;
 }
-.lp-nav-links a:hover { opacity: 0.7; }
+.lp-nav-links a:hover { color: #fff; }
 
 .lp-nav-right { display: flex; align-items: center; flex-shrink: 0; }
 
@@ -124,10 +124,10 @@
 .lp-hamburger {
   display: none; background: none; border: none;
   padding: 6px 8px; border-radius: 8px;
-  color: #0A1C3C; cursor: pointer;
+  color: rgba(255,255,255,0.9); cursor: pointer;
   transition: background .15s;
 }
-.lp-hamburger:hover { background: rgba(10,28,60,0.07); }
+.lp-hamburger:hover { background: rgba(255,255,255,0.12); }
 
 /* Mobile menu — drops below the pill */
 .lp-mobile-menu {
@@ -176,8 +176,19 @@
 
 /* HERO */
 .lp-hero {
-  background: linear-gradient(180deg, var(--lp-bg-soft) 0%, #ffffff 70%);
-  padding: 80px 0 60px;
+  background: linear-gradient(150deg, #0A1C3C 0%, #1E4D9C 55%, #1a4a8a 100%);
+  padding: 90px 0 70px;
+  position: relative;
+  overflow: hidden;
+}
+.lp-hero::after {
+  content: "";
+  position: absolute;
+  top: -120px; right: -120px;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(230,177,52,0.15) 0%, transparent 70%);
+  pointer-events: none;
 }
 .lp-hero-grid {
   display: grid; grid-template-columns: 1.05fr 1fr; gap: 60px; align-items: center;
@@ -185,22 +196,22 @@
 @media (max-width: 980px) { .lp-hero-grid { grid-template-columns: 1fr; } }
 .lp-badge {
   display: inline-flex; align-items: center; gap: 8px;
-  background: var(--lp-orange-50); color: var(--lp-orange-d);
-  border: 1px solid var(--lp-orange-100);
+  background: rgba(230,177,52,0.18); color: #E6B134;
+  border: 1px solid rgba(230,177,52,0.4);
   font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px;
   margin-bottom: 24px;
 }
 .lp-hero-title {
   font-size: 56px; line-height: 1.08; font-weight: 800; margin: 0 0 24px;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.5px; color: #fff;
 }
-.lp-hero-title .lp-accent { color: var(--lp-orange); display: block; }
+.lp-hero-title .lp-accent { color: #E6B134; display: block; }
 @media (max-width: 600px) { .lp-hero-title { font-size: 38px; } }
-.lp-hero-desc { font-size: 18px; color: var(--lp-ink-500); max-width: 520px; margin-bottom: 32px; }
+.lp-hero-desc { font-size: 18px; color: rgba(255,255,255,0.75); max-width: 520px; margin-bottom: 32px; }
 .lp-hero-ctas { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 44px; }
 .lp-stats { display: flex; gap: 56px; }
-.lp-stat .lp-num { font-size: 30px; font-weight: 800; color: var(--lp-orange); }
-.lp-stat .lp-lbl { font-size: 14px; color: var(--lp-ink-500); }
+.lp-stat .lp-num { font-size: 30px; font-weight: 800; color: #E6B134; }
+.lp-stat .lp-lbl { font-size: 14px; color: rgba(255,255,255,0.65); }
 @media (max-width: 600px) { .lp-stats { gap: 32px; } }
 
 /* HERO CARD */

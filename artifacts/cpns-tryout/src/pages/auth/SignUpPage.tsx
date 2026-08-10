@@ -65,7 +65,7 @@ export function SignUpPage() {
   if (isLoading) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "linear-gradient(150deg, #0A1C3C 0%, #1E4D9C 100%)" }}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">

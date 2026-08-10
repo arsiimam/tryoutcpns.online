@@ -54,18 +54,18 @@ export function SignInPage() {
   if (isLoading) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "linear-gradient(150deg, #0A1C3C 0%, #1E4D9C 100%)" }}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center mb-2">
-            <img src="/logo-navy.png" alt="Tryout CPNS Online" className="h-14 w-auto" />
+            <img src="/logo-navy.png" alt="Tryout CPNS Online" className="h-14 w-auto drop-shadow-lg" />
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900 mt-4">Masuk ke akun Anda</h1>
-          <p className="text-slate-500 text-sm mt-1">Selamat datang kembali!</p>
+          <h1 className="text-2xl font-bold text-white mt-4">Masuk ke akun Anda</h1>
+          <p className="text-white/60 text-sm mt-1">Selamat datang kembali!</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-5">
+        <div className="bg-white rounded-2xl border border-white/10 shadow-2xl p-8 space-y-5">
           {/* Google Button */}
           <button
             type="button"
@@ -142,9 +142,9 @@ export function SignInPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-slate-500 mt-6">
+        <p className="text-center text-sm text-white/60 mt-6">
           Belum punya akun?{" "}
-          <Link href="/sign-up" className="text-primary font-semibold hover:underline">Daftar Gratis</Link>
+          <Link href="/sign-up" className="text-[#E6B134] font-semibold hover:underline">Daftar Gratis</Link>
         </p>
       </div>
     </div>
