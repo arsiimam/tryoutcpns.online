@@ -60,7 +60,7 @@ router.post("/admin/coupons", async (req, res) => {
       return res.status(409).json({ error: "Kode kupon sudah digunakan. Gunakan kode yang berbeda." });
     }
     console.error(err);
-    res.status(500).json({ error: "Gagal membuat kupon." });
+    res.status(500).json({ error: err?.message ?? "Gagal membuat kupon." });
   }
 });
 
