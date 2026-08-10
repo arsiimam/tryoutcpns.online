@@ -55,7 +55,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="min-h-screen flex" style={{ background: "#f6f7fc" }}>
+    <div className="h-screen flex overflow-hidden" style={{ background: "#f6f7fc" }}>
       {/* Mobile overlay */}
       {isMobileOpen && (
         <div
