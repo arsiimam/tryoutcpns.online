@@ -8,5 +8,7 @@ export * from "./questions";
 export * from "./tryout-bundles";
 export * from "./tryout-sessions";
 export * from "./coupons";
+export * from "./categories";
+export * from "./subcategories";
 export * from "./practice-sessions";
 export * from "./dummy-scores";

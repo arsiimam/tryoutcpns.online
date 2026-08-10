@@ -10,6 +10,7 @@ import adminBundlesRouter       from "./admin-bundles";
 import adminTryoutBundlesRouter from "./admin-tryout-bundles";
 import adminStatsRouter        from "./admin-stats";
 import adminCouponsRouter      from "./admin-coupons";
+import adminCategoriesRouter   from "./admin-categories";
 import publicPlansRouter        from "./public-plans";
 import participantRouter        from "./participant";
 import { participantTryoutRouter }  from "./participant-tryout";
@@ -32,5 +33,6 @@ router.use(adminBundlesRouter);
 router.use(adminTryoutBundlesRouter);
 router.use(adminStatsRouter);
 router.use(adminCouponsRouter);
+router.use(adminCategoriesRouter);
 
 export default router;
