@@ -271,7 +271,9 @@ export function AdminTryoutsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map(b => (
-                <tr key={b.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={b.id}
+                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  onClick={() => window.location.assign(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/admin/tryouts/${b.id}`)}>
                   <td className="px-5 py-4">
                     <div className="font-semibold text-slate-900">{b.name}</div>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -306,7 +308,7 @@ export function AdminTryoutsPage() {
                       <span className="text-slate-400 text-xs">mnt</span>
                     </div>
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                     <button onClick={() => toggleStatus(b)}
                       className={`px-2.5 py-1 text-xs font-bold rounded uppercase cursor-pointer ${STATUS_CLS[b.status]}`}
                       title="Klik untuk toggle status">
@@ -316,7 +318,7 @@ export function AdminTryoutsPage() {
                   <td className="px-4 py-4 text-xs text-slate-400">
                     {new Date(b.updatedAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
                       <Link href={`/admin/tryouts/${b.id}`}>
                         <button title="Lihat Detail" className="p-1.5 rounded hover:bg-[#dce8f5] text-[#1E4D9C]"><Eye size={15} /></button>
