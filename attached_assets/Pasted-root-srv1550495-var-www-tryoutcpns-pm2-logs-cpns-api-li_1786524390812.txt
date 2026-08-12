@@ -1,0 +1,135 @@
+root@srv1550495:/var/www/tryoutcpns# pm2 logs cpns-api --lines 50
+[TAILING] Tailing last 50 lines for [cpns-api] process (change the value with --lines option)
+/root/.pm2/logs/cpns-api-out-78.log last 50 lines:
+78|cpns-ap | {"level":30,"time":1786524219687,"pid":441809,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524221585,"pid":441959,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524224534,"pid":442025,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524227574,"pid":442037,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524230774,"pid":442050,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524233852,"pid":442063,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524236950,"pid":442075,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524240233,"pid":442087,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524243642,"pid":442102,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524246438,"pid":442114,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524249718,"pid":442126,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524252629,"pid":442149,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524255934,"pid":442162,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524258936,"pid":442176,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524262051,"pid":442189,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524265275,"pid":442202,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524268354,"pid":442215,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524271477,"pid":442228,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524274421,"pid":442240,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524277600,"pid":442252,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524280737,"pid":442265,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524283828,"pid":442280,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524286881,"pid":442292,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524289991,"pid":442306,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524293129,"pid":442319,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524296190,"pid":442331,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524299398,"pid":442344,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524303209,"pid":442364,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524306012,"pid":442376,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524309094,"pid":442389,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524312133,"pid":442403,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524315304,"pid":442416,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524318570,"pid":442429,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524321715,"pid":442442,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524324516,"pid":442456,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524327826,"pid":442470,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524331018,"pid":442483,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524334147,"pid":442497,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524337241,"pid":442509,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524340294,"pid":442522,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524343401,"pid":442546,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524346553,"pid":442558,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524349774,"pid":442579,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524353113,"pid":442594,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524356025,"pid":442607,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524359035,"pid":442619,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524362597,"pid":442635,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524365511,"pid":442647,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524368504,"pid":442659,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-ap | {"level":30,"time":1786524371727,"pid":442673,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+
+/root/.pm2/logs/cpns-api-error-78.log last 50 lines:
+78|cpns-ap |     at parse (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+78|cpns-ap |     at process (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+78|cpns-ap |     at pathToRegexp (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+78|cpns-ap |     at Object.match (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+78|cpns-ap |     at matcher (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+78|cpns-ap |     at new Layer (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+78|cpns-ap |     at router20.route (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+78|cpns-ap |     at app2.route (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+78|cpns-ap |     at app2.app2.<computed> (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+78|cpns-ap |   originalPath: '*'
+78|cpns-ap | }
+78|cpns-ap | PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+78|cpns-ap |     at consumeUntil (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218:17)
+78|cpns-ap |     at parse (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+78|cpns-ap |     at process (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+78|cpns-ap |     at pathToRegexp (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+78|cpns-ap |     at Object.match (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+78|cpns-ap |     at matcher (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+78|cpns-ap |     at new Layer (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+78|cpns-ap |     at router20.route (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+78|cpns-ap |     at app2.route (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+78|cpns-ap |     at app2.app2.<computed> (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+78|cpns-ap |   originalPath: '*'
+78|cpns-ap | }
+78|cpns-ap | PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+78|cpns-ap |     at consumeUntil (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218:17)
+78|cpns-ap |     at parse (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+78|cpns-ap |     at process (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+78|cpns-ap |     at pathToRegexp (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+78|cpns-ap |     at Object.match (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+78|cpns-ap |     at matcher (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+78|cpns-ap |     at new Layer (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+78|cpns-ap |     at router20.route (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+78|cpns-ap |     at app2.route (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+78|cpns-ap |     at app2.app2.<computed> (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+78|cpns-ap |   originalPath: '*'
+78|cpns-ap | }
+78|cpns-ap | PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+78|cpns-ap |     at consumeUntil (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218:17)
+78|cpns-ap |     at parse (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+78|cpns-ap |     at process (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+78|cpns-ap |     at pathToRegexp (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+78|cpns-ap |     at Object.match (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+78|cpns-ap |     at matcher (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+78|cpns-ap |     at new Layer (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+78|cpns-ap |     at router20.route (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+78|cpns-ap |     at app2.route (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+78|cpns-ap |     at app2.app2.<computed> (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+78|cpns-ap |   originalPath: '*'
+78|cpns-ap | }
+
+78|cpns-api  | {"level":30,"time":1786524374695,"pid":442698,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-api  | PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+78|cpns-api  |     at consumeUntil (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218:17)
+78|cpns-api  |     at parse (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+78|cpns-api  |     at process (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+78|cpns-api  |     at pathToRegexp (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+78|cpns-api  |     at Object.match (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+78|cpns-api  |     at matcher (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+78|cpns-api  |     at new Layer (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+78|cpns-api  |     at router20.route (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+78|cpns-api  |     at app2.route (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+78|cpns-api  |     at app2.app2.<computed> (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+78|cpns-api  |   originalPath: '*'
+78|cpns-api  | }
+78|cpns-api  | {"level":30,"time":1786524377853,"pid":442710,"hostname":"srv1550495","frontendDist":"/var/www/tryoutcpns/artifacts/cpns-tryout/dist/public","msg":"Serving frontend static files"}
+78|cpns-api  | PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+78|cpns-api  |     at consumeUntil (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218:17)
+78|cpns-api  |     at parse (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+78|cpns-api  |     at process (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+78|cpns-api  |     at pathToRegexp (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+78|cpns-api  |     at Object.match (/var/www/tryoutcpns/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+78|cpns-api  |     at matcher (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+78|cpns-api  |     at new Layer (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+78|cpns-api  |     at router20.route (/var/www/tryoutcpns/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+78|cpns-api  |     at app2.route (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+78|cpns-api  |     at app2.app2.<computed> (/var/www/tryoutcpns/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+78|cpns-api  |   originalPath: '*'
+78|cpns-api  | }
+78|cpns-api  | {"le

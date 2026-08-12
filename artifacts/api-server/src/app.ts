@@ -119,7 +119,8 @@ if (process.env.NODE_ENV === "production") {
     logger.info({ frontendDist }, "Serving frontend static files");
     app.use(express.static(frontendDist, { maxAge: "1d", index: false }));
     // SPA fallback — any non-/api route returns index.html
-    app.get("*", (_req: Request, res: Response) => {
+    // Express 5 requires named wildcard: /{*path} instead of *
+    app.get("/{*path}", (_req: Request, res: Response) => {
       res.sendFile(path.join(frontendDist, "index.html"));
     });
   } else {
