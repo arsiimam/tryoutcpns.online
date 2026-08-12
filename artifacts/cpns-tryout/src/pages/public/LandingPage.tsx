@@ -82,6 +82,13 @@ export function LandingPage() {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [navScrolled, setNavScrolled] = useState(false);
+
+  useEffect(() => {
+    function onScroll() { setNavScrolled(window.scrollY > 8); }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const [selectedOpt, setSelectedOpt] = useState<string>("B");
   const [apiPlans, setApiPlans] = useState<ApiPlan[]>([]);
   const [socialLinks, setSocialLinks] = useState({ instagram: "", tiktok: "", telegram: "", facebook: "" });
@@ -195,7 +202,7 @@ export function LandingPage() {
     <div className="tryout-landing">
 
       {/* ===================== NAV ===================== */}
-      <header className="lp-nav">
+      <header className={`lp-nav${navScrolled ? " lp-nav--scrolled" : ""}`}>
         <div className="lp-nav-inner">
           <Link href="/" className="lp-brand">
             <BrandLogo variant="dark" size="md" />

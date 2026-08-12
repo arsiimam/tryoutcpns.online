@@ -62,10 +62,15 @@
 /* ===================== NAV ===================== */
 .lp-nav {
   position: sticky; top: 0; z-index: 50;
-  background: #1E4D9C;
-  border-bottom: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 2px 16px rgba(10,28,60,0.30);
+  background: #0A1C3C;
+  border-bottom: 1px solid transparent;
+  box-shadow: none;
   padding: 0 40px;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.lp-nav--scrolled {
+  box-shadow: 0 4px 28px rgba(0,0,0,0.40);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 @media (max-width: 768px) { .lp-nav { padding: 0 16px; } }
 
