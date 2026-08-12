@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "wouter";
+import { Link, useParams, useLocation } from "wouter";
+import { KatexRenderer } from "../../components/KatexRenderer";
 import { AdminLayout } from "../../components/layouts/AdminLayout";
 import {
   ArrowLeft, Download, Trash2, Eye, ChevronDown, FileText, BookOpen,
-  AlertCircle, BookMarked,
+  AlertCircle, BookMarked, Plus, Pencil,
 } from "lucide-react";
 
 /* ── types ─────────────────────────────────────────────── */
@@ -149,8 +150,16 @@ export function AdminBundleDetailPage() {
           )}
         </div>
 
-        {/* Export button */}
-        <ExportMenu onExport={exportBundle} />
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <Link href={`/admin/questions/${bundle.id}/add`}>
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+              style={{ background: "#1E4D9C" }}>
+              <Plus size={15} /> Tambah Soal
+            </button>
+          </Link>
+          <ExportMenu onExport={exportBundle} />
+        </div>
       </div>
 
       {/* ── search + info ───────────────────────────────── */}
@@ -223,6 +232,12 @@ export function AdminBundleDetailPage() {
                           className="p-1.5 rounded hover:bg-[#dce8f5] text-[#1E4D9C] mr-1">
                           <Eye size={14} />
                         </button>
+                        <Link href={`/admin/questions/${bundle.id}/edit/${q.id}`}>
+                          <button title="Edit Soal"
+                            className="p-1.5 rounded hover:bg-amber-50 text-amber-500 mr-1">
+                            <Pencil size={14} />
+                          </button>
+                        </Link>
                         <button onClick={() => deleteQ(q)} title="Hapus"
                           className="p-1.5 rounded hover:bg-red-50 text-red-500">
                           <Trash2 size={14} />
@@ -264,10 +279,7 @@ export function AdminBundleDetailPage() {
               {/* Content */}
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase mb-2">Soal</p>
-                <div
-                  className="prose prose-sm max-w-none text-slate-800"
-                  dangerouslySetInnerHTML={{ __html: previewQ.content }}
-                />
+                <KatexRenderer content={previewQ.content} className="prose prose-sm max-w-none text-slate-800" />
               </div>
 
               {/* Options */}
@@ -278,15 +290,13 @@ export function AdminBundleDetailPage() {
                     {previewQ.options.map((o: { key: string; text: string }) => (
                       <div key={o.key}
                         className={`flex gap-3 p-3 rounded-lg border text-sm ${
-                          o.key === previewQ.correctAnswer
-                            ? "border-emerald-300 bg-emerald-50"
-                            : "border-slate-200"
+                          o.key === previewQ.correctAnswer ? "border-emerald-300 bg-emerald-50" : "border-slate-200"
                         }`}
                       >
                         <span className={`font-bold w-5 shrink-0 ${o.key === previewQ.correctAnswer ? "text-emerald-600" : "text-slate-400"}`}>
                           {o.key}
                         </span>
-                        <span dangerouslySetInnerHTML={{ __html: o.text }} />
+                        <KatexRenderer content={o.text} block={false} />
                       </div>
                     ))}
                   </div>
@@ -297,10 +307,7 @@ export function AdminBundleDetailPage() {
               {previewQ.explanation && (
                 <div className="bg-[#dce8f5] rounded-lg p-4">
                   <p className="text-xs font-semibold text-[#1E4D9C] uppercase mb-2">Pembahasan</p>
-                  <div
-                    className="prose prose-sm max-w-none text-slate-700"
-                    dangerouslySetInnerHTML={{ __html: previewQ.explanation }}
-                  />
+                  <KatexRenderer content={previewQ.explanation} className="prose prose-sm max-w-none text-slate-700" />
                 </div>
               )}
 

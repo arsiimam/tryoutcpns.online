@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useRoute, useLocation } from "wouter";
+import { KatexRenderer } from "../../components/KatexRenderer";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import {
   CheckCircle2, XCircle, ArrowLeft, BookOpen, Filter,
@@ -94,9 +95,9 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
               <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold">Tidak Dijawab</span>
             )}
           </div>
-          <div
+          <KatexRenderer
+            content={q.content}
             className="text-sm text-slate-800 line-clamp-2 prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: q.content }}
           />
         </div>
 
@@ -109,8 +110,7 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
       {open && (
         <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3">
           {/* Full question */}
-          <div className="prose prose-sm max-w-none text-slate-800"
-            dangerouslySetInnerHTML={{ __html: q.content }} />
+          <KatexRenderer content={q.content} className="prose prose-sm max-w-none text-slate-800" />
 
           {/* Options */}
           {q.options.length > 0 && (
@@ -127,9 +127,12 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
                   <div key={opt.key} className={cls}>
                     <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border
                       border-current">{opt.key}</span>
-                    <span className="flex-1 q-html" dangerouslySetInnerHTML={{ __html:
-                      (opt.text ?? "") + (isTKP && opt.weight !== undefined ? `<span class="ml-2 text-xs text-slate-400">(${opt.weight} poin)</span>` : "")
-                    }} />
+                    <span className="flex-1">
+                      <KatexRenderer content={opt.text ?? ""} block={false} />
+                      {isTKP && opt.weight !== undefined && (
+                        <span className="ml-2 text-xs text-slate-400">({opt.weight} poin)</span>
+                      )}
+                    </span>
                     {!isTKP && isCorrect && (
                       <CheckCircle2 size={14} className="shrink-0 text-emerald-600 mt-0.5" />
                     )}
@@ -165,8 +168,10 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
           {q.explanation && (
             <div className="mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
               <p className="text-xs font-semibold text-slate-600 mb-1">Pembahasan:</p>
-              <div className="prose prose-sm max-w-none text-slate-700 text-sm"
-                dangerouslySetInnerHTML={{ __html: q.explanation }} />
+              <KatexRenderer
+                content={q.explanation}
+                className="prose prose-sm max-w-none text-slate-700 text-sm"
+              />
             </div>
           )}
         </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useRoute } from "wouter";
 import { Clock, Flag, ChevronLeft, ChevronRight, CheckCircle2, Grid3X3, X } from "lucide-react";
+import { KatexRenderer } from "../../components/KatexRenderer";
 
 interface ApiQuestion {
   id: string; text: string; categoryId: string; sectionName?: string;
@@ -172,9 +173,9 @@ export function SessionPage() {
 
             {/* Teks Soal & Opsi — scroll mandiri */}
             <div className="p-6 md:p-8 flex-1 overflow-y-auto min-h-0">
-              <div
-                className="text-base text-slate-800 leading-relaxed mb-8 font-medium q-html"
-                dangerouslySetInnerHTML={{ __html: currentQ.text }}
+              <KatexRenderer
+                content={currentQ.text}
+                className="text-base text-slate-800 leading-relaxed mb-8 font-medium"
               />
               <div className="space-y-3">
                 {currentQ.options.map((opt) => {
@@ -196,9 +197,9 @@ export function SessionPage() {
                           opt.key
                         )}
                       </div>
-                      <div
-                        className="text-slate-700 pt-1 leading-relaxed w-full q-html"
-                        dangerouslySetInnerHTML={{ __html: `<span class="md:hidden font-bold mr-2">${opt.key}.</span>${opt.text}` }}
+                      <KatexRenderer
+                        content={opt.text}
+                        className="text-slate-700 pt-1 leading-relaxed w-full"
                       />
                       {/* Hidden radio input for accessibility */}
                       <input 

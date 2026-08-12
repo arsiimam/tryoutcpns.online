@@ -40,6 +40,7 @@ import { AdminReportsPage } from "./pages/admin/AdminReportsPage";
 import { AdminCmsPage } from "./pages/admin/AdminCmsPage";
 import { AdminSettingsPage } from "./pages/admin/AdminSettingsPage";
 import { AdminNotificationsPage } from "./pages/admin/AdminNotificationsPage";
+import { AdminQuestionFormPage } from "./pages/admin/AdminQuestionFormPage";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +111,8 @@ function Router() {
       {/* Admin Routes */}
       <Route path="/admin/dashboard">{() => <AdminGuard component={AdminDashboardPage} />}</Route>
       <Route path="/admin/questions">{() => <AdminGuard component={AdminQuestionsPage} />}</Route>
+      <Route path="/admin/questions/:bundleId/add">{() => <AdminGuard component={AdminQuestionFormPage} />}</Route>
+      <Route path="/admin/questions/:bundleId/edit/:questionId">{() => <AdminGuard component={AdminQuestionFormPage} />}</Route>
       <Route path="/admin/questions/:bundleId">{() => <AdminGuard component={AdminBundleDetailPage} />}</Route>
       <Route path="/admin/categories">{() => <AdminGuard component={AdminCategoriesPage} />}</Route>
       <Route path="/admin/tryouts">{() => <AdminGuard component={AdminTryoutsPage} />}</Route>

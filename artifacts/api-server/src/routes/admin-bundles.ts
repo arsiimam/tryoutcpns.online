@@ -3,6 +3,11 @@ import { db } from "@workspace/db";
 import { questionBundlesTable, questionsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { importLimiter } from "../lib/rate-limit";
+import multer from "multer";
+import JSZip from "jszip";
+import { ObjectStorageService } from "../lib/objectStorage";
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -180,6 +185,80 @@ router.get("/admin/bundles/:id/questions", async (req, res) => {
   res.json(questions);
 });
 
+/* CREATE A QUESTION */
+router.post("/admin/bundles/:id/questions", async (req, res) => {
+  try {
+    const bundleId = Number(req.params.id);
+    const { type, content, options, correctAnswer, explanation, metadata, orderNum } = req.body;
+    if (!content?.trim()) return res.status(400).json({ error: "Teks soal wajib diisi." });
+
+    // Auto order: last + 1
+    const [{ maxOrder }] = await db.execute(
+      sql`SELECT COALESCE(MAX(order_num), 0) AS "maxOrder" FROM questions WHERE bundle_id = ${bundleId}`
+    ) as any;
+
+    const [q] = await db
+      .insert(questionsTable)
+      .values({
+        bundleId,
+        orderNum: orderNum ?? (Number(maxOrder) + 1),
+        type:     type ?? "pilihan_ganda",
+        content:  content.trim(),
+        options:  options ?? null,
+        correctAnswer: correctAnswer ?? null,
+        explanation:   explanation ?? null,
+        metadata:      metadata ?? null,
+      })
+      .returning();
+    await syncCount(bundleId);
+    res.status(201).json(q);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* UPDATE A QUESTION */
+router.put("/admin/bundles/:id/questions/:qid", async (req, res) => {
+  try {
+    const bundleId = Number(req.params.id);
+    const qid      = Number(req.params.qid);
+    const { type, content, options, correctAnswer, explanation, metadata, orderNum } = req.body;
+    if (!content?.trim()) return res.status(400).json({ error: "Teks soal wajib diisi." });
+
+    const [q] = await db
+      .update(questionsTable)
+      .set({
+        type:     type ?? "pilihan_ganda",
+        content:  content.trim(),
+        options:  options ?? null,
+        correctAnswer: correctAnswer ?? null,
+        explanation:   explanation ?? null,
+        metadata:      metadata ?? null,
+        ...(orderNum !== undefined ? { orderNum } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(questionsTable.id, qid))
+      .returning();
+    if (!q) return res.status(404).json({ error: "Soal tidak ditemukan." });
+    await syncCount(bundleId);
+    res.json(q);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* GET ONE QUESTION */
+router.get("/admin/bundles/:id/questions/:qid", async (req, res) => {
+  try {
+    const qid = Number(req.params.qid);
+    const [q] = await db.select().from(questionsTable).where(eq(questionsTable.id, qid));
+    if (!q) return res.status(404).json({ error: "Soal tidak ditemukan." });
+    res.json(q);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* DELETE A QUESTION */
 router.delete("/admin/bundles/:id/questions/:qid", async (req, res) => {
   const bundleId = Number(req.params.id);
@@ -188,6 +267,148 @@ router.delete("/admin/bundles/:id/questions/:qid", async (req, res) => {
   await syncCount(bundleId);
   res.json({ success: true });
 });
+
+/* ═══════════════════════════════════════════════════════════
+   IMPORT BUNDLE ZIP (Fase 3)
+══════════════════════════════════════════════════════════ */
+
+/**
+ * POST /admin/bundles/import-zip
+ * Accepts a ZIP file containing:
+ *   data.json   — bundle + questions in the spec format
+ *   images/     — image files referenced in questions
+ *
+ * Steps:
+ * 1. Extract data.json → parse with existing parseJson
+ * 2. Upload each image in images/ to object storage
+ * 3. Replace relative image paths with /api/storage/objects/... URLs
+ * 4. Save bundle + questions
+ */
+router.post(
+  "/admin/bundles/import-zip",
+  importLimiter,
+  upload.single("file"),
+  async (req: Request, res: Response) => {
+    if (!req.file) return res.status(400).json({ error: "File ZIP diperlukan." });
+
+    try {
+      const storageService = new ObjectStorageService();
+      const zip = await JSZip.loadAsync(req.file.buffer);
+
+      // 1. Get data.json
+      const dataFile = zip.file("data.json");
+      if (!dataFile) return res.status(400).json({ error: "File ZIP harus berisi 'data.json'." });
+
+      const rawJson = await dataFile.async("text");
+      let parsed: ReturnType<typeof parseBundle>;
+      try { parsed = parseBundle(rawJson, "json"); }
+      catch (e: any) { return res.status(400).json({ error: e.message }); }
+
+      if (!parsed.bundle.name?.trim())
+        return res.status(400).json({ error: "Nama bundle tidak ditemukan di data.json." });
+
+      // 2. Upload images → build path map {relative → storage URL}
+      const imageMap: Record<string, string> = {};
+      const privateDir = storageService.getPrivateObjectDir();
+      const { bucketName, objectName: baseObjectName } = parseGcsPath(privateDir);
+      const bucket = objectStorageClient.bucket(bucketName);
+      const imageWarnings: string[] = [];
+
+      const imageFiles = Object.entries(zip.files).filter(
+        ([name, f]) => name.startsWith("images/") && !f.dir
+      );
+
+      await Promise.all(
+        imageFiles.map(async ([name, zipEntry]) => {
+          try {
+            const buf = await zipEntry.async("nodebuffer");
+            const ext = name.split(".").pop() ?? "jpg";
+            const { randomUUID } = await import("crypto");
+            const objectId = randomUUID();
+            const gcsPath = `${baseObjectName}/uploads/${objectId}`;
+            const file = bucket.file(gcsPath);
+            const contentType = mimeFromExt(ext);
+            await file.save(buf, { contentType, resumable: false });
+            const objectPath = `/objects/uploads/${objectId}`;
+            imageMap[name.replace("images/", "")] = `/api/storage${objectPath}`;
+          } catch (e: any) {
+            imageWarnings.push(`Gambar '${name}' gagal diupload: ${e.message}`);
+          }
+        })
+      );
+
+      // 3. Replace image paths in questions
+      function replaceImagePaths(paths: string[] | undefined): string[] {
+        if (!paths) return [];
+        return paths.map(p => {
+          const filename = p.replace(/^images\//, "");
+          return imageMap[filename] ?? p;
+        });
+      }
+
+      const questions = parsed.questions.map(q => {
+        const meta = (q.metadata ?? {}) as Record<string, any>;
+        if (meta.gambar_soal) meta.gambar_soal = replaceImagePaths(meta.gambar_soal);
+        if (meta.pembahasan?.gambar_pembahasan)
+          meta.pembahasan.gambar_pembahasan = replaceImagePaths(meta.pembahasan.gambar_pembahasan);
+        return { ...q, metadata: meta };
+      });
+
+      // 4. Save bundle + questions
+      const [bundle] = await db
+        .insert(questionBundlesTable)
+        .values({
+          name:        parsed.bundle.name.trim(),
+          description: parsed.bundle.description ?? null,
+          category:    parsed.bundle.category ?? null,
+          status:      "draft",
+        })
+        .returning();
+
+      if (questions.length > 0) {
+        await db.insert(questionsTable).values(
+          questions.map((q, i) => ({
+            bundleId:      bundle.id,
+            orderNum:      q.order ?? i + 1,
+            type:          q.type ?? "multiple_choice",
+            content:       q.content,
+            options:       q.options ?? null,
+            correctAnswer: q.correct_answer ?? null,
+            explanation:   q.explanation ?? null,
+            metadata:      q.metadata ?? null,
+          }))
+        );
+      }
+      await syncCount(bundle.id);
+      const [updated] = await db.select().from(questionBundlesTable).where(eq(questionBundlesTable.id, bundle.id));
+
+      res.status(201).json({
+        bundle:        updated,
+        importedCount: questions.length,
+        imageCount:    imageFiles.length,
+        imageUploaded: Object.keys(imageMap).length,
+        warnings:      [...parsed.errors.map(e => `Soal #${e.index}: ${e.message}`), ...imageWarnings],
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+/** Parse gs://bucket/path */
+function parseGcsPath(gcsPath: string): { bucketName: string; objectName: string } {
+  const match = gcsPath.match(/^gs:\/\/([^/]+)\/(.+)$/);
+  if (!match) throw new Error(`Invalid GCS path: ${gcsPath}`);
+  return { bucketName: match[1], objectName: match[2] };
+}
+
+function mimeFromExt(ext: string): string {
+  const map: Record<string, string> = {
+    jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
+    gif: "image/gif", webp: "image/webp", svg: "image/svg+xml",
+  };
+  return map[ext.toLowerCase()] ?? "application/octet-stream";
+}
 
 /* ═══════════════════════════════════════════════════════════
    EXPORT

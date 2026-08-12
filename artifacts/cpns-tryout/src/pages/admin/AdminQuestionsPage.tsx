@@ -128,9 +128,13 @@ export function AdminQuestionsPage() {
     }
   };
 
+  const isZip = (f: File | null) => f?.name.endsWith(".zip") ?? false;
+
   /* ── import: preview ──────────────────────────────────── */
   const doPreview = async () => {
     if (!importFile) return;
+    // ZIP: skip preview, go straight to confirm step
+    if (isZip(importFile)) { setImportStep("preview"); setPreviewData({ bundleName: importFile.name, category: null, description: null, questionCount: 0, imageCount: 0, errors: [], preview: [] }); return; }
     setImportLoading(true); setImportError("");
     try {
       const content = await importFile.text();
@@ -155,12 +159,19 @@ export function AdminQuestionsPage() {
     if (!importFile) return;
     setImportLoading(true); setImportError("");
     try {
-      const content = await importFile.text();
-      const r = await fetch(`${API}/import`, {
-        method: "POST", credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, format: importFormat }),
-      });
+      let r: Response;
+      if (isZip(importFile)) {
+        const form = new FormData();
+        form.append("file", importFile);
+        r = await fetch(`${API}/import-zip`, { method: "POST", credentials: "include", body: form });
+      } else {
+        const content = await importFile.text();
+        r = await fetch(`${API}/import`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content, format: importFormat }),
+        });
+      }
       const data = await r.json();
       if (!r.ok) { setImportError(data.error ?? "Gagal mengimpor."); return; }
       setImportStep("done");
@@ -324,7 +335,7 @@ export function AdminQuestionsPage() {
           {importStep === "upload" && (
             <div className="space-y-5">
               <p className="text-sm text-slate-500">
-                Upload file bundle untuk membuat kumpulan soal baru. Format yang didukung: <strong>JSON</strong> dan <strong>HTML</strong>.
+                Upload file bundle untuk membuat kumpulan soal baru. Format yang didukung: <strong>JSON</strong>, <strong>HTML</strong>, dan <strong>ZIP</strong> (berisi data.json + folder images/).
               </p>
               {/* Drop zone */}
               <div
@@ -337,11 +348,11 @@ export function AdminQuestionsPage() {
                 ) : (
                   <>
                     <p className="font-medium text-slate-500">Klik untuk pilih file</p>
-                    <p className="text-xs text-slate-400 mt-1">.json atau .html — maks 10 MB</p>
+                    <p className="text-xs text-slate-400 mt-1">.json, .html, atau .zip (dengan gambar) — maks 50 MB</p>
                   </>
                 )}
                 <input
-                  ref={fileRef} type="file" accept=".json,.html"
+                  ref={fileRef} type="file" accept=".json,.html,.zip"
                   className="hidden"
                   onChange={e => { setImportFile(e.target.files?.[0] ?? null); setImportError(""); }}
                 />
@@ -356,8 +367,9 @@ export function AdminQuestionsPage() {
 
               <div className="bg-slate-50 rounded-lg p-3 text-xs text-slate-500 space-y-1">
                 <p className="font-semibold text-slate-600">Format file:</p>
-                <p>• <strong>JSON</strong> — format utama, lihat <code>docs/examples/bundle-twk-example.json</code></p>
-                <p>• <strong>HTML</strong> — format sekunder, lihat <code>docs/examples/bundle-tiu-example.html</code></p>
+                <p>• <strong>JSON</strong> — format utama, field: bundle + questions</p>
+                <p>• <strong>HTML</strong> — format alternatif dengan tag semantik</p>
+                <p>• <strong>ZIP</strong> — bundle dengan gambar: data.json + images/</p>
               </div>
 
               <div className="flex justify-end gap-3">

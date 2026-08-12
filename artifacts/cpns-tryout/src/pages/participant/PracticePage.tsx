@@ -1,5 +1,6 @@
 // @refresh reset
 import React, { useEffect, useState } from "react";
+import { KatexRenderer } from "../../components/KatexRenderer";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import {
   ChevronLeft,
@@ -373,9 +374,9 @@ export function PracticePage() {
 
           {/* Question text */}
           <div className="px-6 pt-6 pb-4">
-            <div
+            <KatexRenderer
+              content={q.text}
               className="text-slate-800 font-medium leading-relaxed text-base prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: q.text }}
             />
           </div>
 
@@ -420,7 +421,7 @@ export function PracticePage() {
                   >
                     {opt.key}.
                   </span>
-                  <span className="flex-1 text-slate-700 q-html" dangerouslySetInnerHTML={{ __html: opt.text ?? "" }} />
+                  <KatexRenderer content={opt.text ?? ""} block={false} className="flex-1 text-slate-700" />
                   {icon}
                 </button>
               );
@@ -431,9 +432,9 @@ export function PracticePage() {
           {showAnswers && q.explanation && (
             <div className="mx-6 mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
               <div className="font-bold text-blue-900 text-sm mb-1">Pembahasan</div>
-              <div
+              <KatexRenderer
+                content={q.explanation}
                 className="text-sm text-slate-700 leading-relaxed prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: q.explanation }}
               />
             </div>
           )}
