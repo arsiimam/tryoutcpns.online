@@ -4,7 +4,7 @@ import { KatexRenderer } from "../../components/KatexRenderer";
 import { AdminLayout } from "../../components/layouts/AdminLayout";
 import {
   ArrowLeft, Download, ChevronDown, FileText, BookOpen,
-  AlertCircle, Clock, BarChart2, Eye, Trash2, Copy,
+  AlertCircle, Clock, BarChart2, Eye, Trash2, Copy, Plus, Pencil,
 } from "lucide-react";
 
 /* ── types ──────────────────────────────────────────────── */
@@ -235,11 +235,23 @@ export function AdminTryoutDetailPage() {
                 <span className="text-xs text-slate-400">Passing score: {activeSection.passingScore}</span>
               )}
             </div>
+            <Link href={`/admin/tryouts/${id}/sections/${activeSection.id}/add`}>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                style={{ background: "#1E4D9C" }}>
+                <Plus size={13} /> Tambah Soal
+              </button>
+            </Link>
           </div>
 
           {activeSection.questions.length === 0 ? (
             <div className="p-12 text-center text-slate-400">
               <p className="font-medium">Belum ada soal di seksi ini.</p>
+              <Link href={`/admin/tryouts/${id}/sections/${activeSection.id}/add`}>
+                <button className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white mx-auto"
+                  style={{ background: "#1E4D9C" }}>
+                  <Plus size={15} /> Tambah Soal Pertama
+                </button>
+              </Link>
             </div>
           ) : (
             <table className="w-full text-sm text-left">
@@ -249,7 +261,7 @@ export function AdminTryoutDetailPage() {
                   <th className="px-4 py-3">Cuplikan Soal</th>
                   <th className="px-4 py-3 w-20 text-center">Jawaban</th>
                   <th className="px-4 py-3 w-24">Kesulitan</th>
-                  <th className="px-4 py-3 w-20 text-right">Aksi</th>
+                  <th className="px-4 py-3 w-24 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -274,6 +286,11 @@ export function AdminTryoutDetailPage() {
                       <td className="px-4 py-3 text-right">
                         <button onClick={() => setPreviewQ(q)} title="Lihat Detail"
                           className="p-1.5 rounded hover:bg-[#dce8f5] text-[#1E4D9C] mr-1"><Eye size={14} /></button>
+                        <Link href={`/admin/tryouts/${id}/questions/${q.id}/edit`}>
+                          <button title="Edit Soal" className="p-1.5 rounded hover:bg-amber-50 text-amber-500 mr-1">
+                            <Pencil size={14} />
+                          </button>
+                        </Link>
                         <button onClick={() => delQ(q)} title="Hapus"
                           className="p-1.5 rounded hover:bg-red-50 text-red-500"><Trash2 size={14} /></button>
                       </td>

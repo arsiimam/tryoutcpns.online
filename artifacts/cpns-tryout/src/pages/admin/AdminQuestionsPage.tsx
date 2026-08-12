@@ -269,7 +269,8 @@ export function AdminQuestionsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map(b => (
-                <tr key={b.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={b.id} className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  onClick={() => window.location.assign(`/admin/questions/${b.id}`)}>
                   {/* Name */}
                   <td className="px-5 py-4">
                     <div className="font-semibold text-slate-900 leading-tight">{b.name}</div>
@@ -304,7 +305,7 @@ export function AdminQuestionsPage() {
                     {new Date(b.updatedAt).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
                   </td>
                   {/* Actions */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
                       <Link href={`/admin/questions/${b.id}`}>
                         <button title="Lihat Soal" className="p-1.5 rounded hover:bg-[#dce8f5] text-[#1E4D9C]">

@@ -181,6 +181,65 @@ router.delete("/admin/tryouts/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+/* GET SINGLE QUESTION */
+router.get("/admin/tryouts/:id/questions/:qid", async (req, res) => {
+  const qid = Number(req.params.qid);
+  const [q] = await db.select().from(tryoutQuestionsTable).where(eq(tryoutQuestionsTable.id, qid));
+  if (!q) return res.status(404).json({ error: "Soal tidak ditemukan." });
+  res.json(q);
+});
+
+/* CREATE QUESTION in a section */
+router.post("/admin/tryouts/:id/sections/:sectionId/questions", async (req, res) => {
+  const tryoutId  = Number(req.params.id);
+  const sectionId = Number(req.params.sectionId);
+  const { type, content, options, correctAnswer, explanation, metadata, scoreWeight } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: "Teks soal tidak boleh kosong." });
+
+  const [maxRow] = await db.execute(sql`
+    SELECT COALESCE(MAX(order_num), 0) AS max FROM tryout_questions WHERE section_id = ${sectionId}
+  `);
+  const nextOrder = Number((maxRow as any).max ?? 0) + 1;
+
+  const [q] = await db.insert(tryoutQuestionsTable).values({
+    tryoutId,
+    sectionId,
+    orderNum:      nextOrder,
+    type:          type ?? "multiple_choice",
+    content:       content.trim(),
+    options:       options ?? null,
+    correctAnswer: Array.isArray(correctAnswer) ? correctAnswer.join(",") : (correctAnswer ?? null),
+    explanation:   explanation ?? null,
+    metadata:      metadata ?? null,
+    scoreWeight:   scoreWeight ?? 1,
+  }).returning();
+
+  await syncCounts(tryoutId);
+  res.status(201).json(q);
+});
+
+/* UPDATE QUESTION */
+router.put("/admin/tryouts/:id/questions/:qid", async (req, res) => {
+  const tryoutId = Number(req.params.id);
+  const qid      = Number(req.params.qid);
+  const { type, content, options, correctAnswer, explanation, metadata, scoreWeight } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: "Teks soal tidak boleh kosong." });
+
+  const [q] = await db.update(tryoutQuestionsTable).set({
+    type:          type ?? "multiple_choice",
+    content:       content.trim(),
+    options:       options ?? null,
+    correctAnswer: Array.isArray(correctAnswer) ? correctAnswer.join(",") : (correctAnswer ?? null),
+    explanation:   explanation ?? null,
+    metadata:      metadata ?? null,
+    scoreWeight:   scoreWeight ?? 1,
+  }).where(eq(tryoutQuestionsTable.id, qid)).returning();
+
+  if (!q) return res.status(404).json({ error: "Soal tidak ditemukan." });
+  await syncCounts(tryoutId);
+  res.json(q);
+});
+
 /* DELETE QUESTION from a tryout */
 router.delete("/admin/tryouts/:id/questions/:qid", async (req, res) => {
   const tryoutId = Number(req.params.id);
