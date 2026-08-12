@@ -2,9 +2,10 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { db } from "@workspace/db";
-import { usersTable, appSettingsTable, userSubscriptionsTable } from "@workspace/db";
-import { eq, inArray, and, desc } from "drizzle-orm";
+import { usersTable, appSettingsTable, userSubscriptionsTable, passwordResetTokensTable } from "@workspace/db";
+import { eq, inArray, and, desc, gt } from "drizzle-orm";
 import { authLimiter } from "../lib/rate-limit";
+import { sendPasswordResetEmail } from "../lib/mailer";
 
 const router = Router();
 
@@ -418,6 +419,83 @@ router.post("/auth/mobile-session", async (req, res) => {
       avatarUrl: user.avatarUrl ?? null,
     },
   });
+});
+
+/* ------------------------------------------------------------------ */
+/* POST /api/auth/forgot-password                                      */
+/* ------------------------------------------------------------------ */
+router.post("/auth/forgot-password", authLimiter, async (req, res) => {
+  const { email } = req.body as { email?: string };
+  if (!email?.trim()) return res.status(400).json({ error: "Email wajib diisi." });
+
+  // Always return 200 so we don't leak which emails are registered
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, email.toLowerCase().trim()))
+    .limit(1);
+
+  if (user && user.authProvider === "email") {
+    const token = randomUUID();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Invalidate any existing tokens for this user
+    await db
+      .delete(passwordResetTokensTable)
+      .where(eq(passwordResetTokensTable.userId, user.id));
+
+    await db.insert(passwordResetTokensTable).values({
+      userId: user.id,
+      token,
+      expiresAt,
+    });
+
+    try {
+      await sendPasswordResetEmail(user.email, user.fullName, token);
+    } catch (err) {
+      req.log.error({ err }, "Failed to send reset email");
+    }
+  }
+
+  return res.json({ ok: true });
+});
+
+/* ------------------------------------------------------------------ */
+/* POST /api/auth/reset-password                                       */
+/* ------------------------------------------------------------------ */
+router.post("/auth/reset-password", async (req, res) => {
+  const { token, password } = req.body as { token?: string; password?: string };
+  if (!token || !password) return res.status(400).json({ error: "Data tidak lengkap." });
+  if (password.length < 8) return res.status(400).json({ error: "Password minimal 8 karakter." });
+
+  const [row] = await db
+    .select()
+    .from(passwordResetTokensTable)
+    .where(
+      and(
+        eq(passwordResetTokensTable.token, token),
+        gt(passwordResetTokensTable.expiresAt, new Date()),
+      )
+    )
+    .limit(1);
+
+  if (!row || row.usedAt) {
+    return res.status(400).json({ error: "Link tidak valid atau sudah kedaluwarsa." });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+
+  await db
+    .update(usersTable)
+    .set({ passwordHash, updatedAt: new Date() })
+    .where(eq(usersTable.id, row.userId));
+
+  await db
+    .update(passwordResetTokensTable)
+    .set({ usedAt: new Date() })
+    .where(eq(passwordResetTokensTable.id, row.id));
+
+  return res.json({ ok: true });
 });
 
 export default router;

@@ -40,6 +40,7 @@ import { AdminReportsPage } from "./pages/admin/AdminReportsPage";
 import { AdminCmsPage } from "./pages/admin/AdminCmsPage";
 import { AdminSettingsPage } from "./pages/admin/AdminSettingsPage";
 import { AdminNotificationsPage } from "./pages/admin/AdminNotificationsPage";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 import { AdminQuestionFormPage } from "./pages/admin/AdminQuestionFormPage";
 import { AdminTryoutQuestionFormPage } from "./pages/admin/AdminTryoutQuestionFormPage";
 
@@ -89,6 +90,7 @@ function Router() {
       <Route path="/sign-in" component={SignInPage} />
       <Route path="/sign-up" component={SignUpPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password/:token" component={ResetPasswordPage} />
 
       {/* Legacy redirects */}
       <Route path="/login">{() => <Redirect to="/sign-in" />}</Route>
