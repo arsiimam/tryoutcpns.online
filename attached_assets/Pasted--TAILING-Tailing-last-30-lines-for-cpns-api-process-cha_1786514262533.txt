@@ -1,0 +1,35 @@
+[TAILING] Tailing last 30 lines for [cpns-api] process (change the value with --lines option)
+/root/.pm2/logs/cpns-api-error-76.log last 30 lines:
+/root/.pm2/logs/cpns-api-out-76.log last 30 lines:
+76|cpns-ap | {"level":30,"time":1786514042556,"pid":428917,"hostname":"srv1550495","req":{"id":14,"method":"GET","url":"/api/admin/bundles"},"res":{"statusCode":200},"responseTime":41,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514048678,"pid":428917,"hostname":"srv1550495","req":{"id":15,"method":"GET","url":"/api/participant/notifications"},"res":{"statusCode":200},"responseTime":4,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514078668,"pid":428917,"hostname":"srv1550495","req":{"id":16,"method":"GET","url":"/api/participant/notifications"},"res":{"statusCode":200},"responseTime":15,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514109492,"pid":428917,"hostname":"srv1550495","req":{"id":17,"method":"GET","url":"/api/participant/notifications"},"res":{"statusCode":200},"responseTime":37,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514121375,"pid":429206,"hostname":"srv1550495","port":3009,"dbHost":"localhost:5433","msg":"Server listening"}
+76|cpns-ap | {"level":30,"time":1786514130715,"pid":429206,"hostname":"srv1550495","req":{"id":1,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":200},"responseTime":32,"msg":"request completed"}
+76|cpns-ap | {"level":30,"time":1786514131064,"pid":429206,"hostname":"srv1550495","req":{"id":2,"method":"GET","url":"/api/admin/bundles"},"res":{"statusCode":200},"responseTime":10,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514133865,"pid":429206,"hostname":"srv1550495","req":{"id":3,"method":"GET","url":"/api/plans"},"res":{"statusCode":200},"responseTime":9,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514133883,"pid":429206,"hostname":"srv1550495","req":{"id":4,"method":"GET","url":"/api/admin/users"},"res":{"statusCode":200},"responseTime":25,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514134696,"pid":429206,"hostname":"srv1550495","req":{"id":5,"method":"GET","url":"/api/admin/plans"},"res":{"statusCode":200},"responseTime":8,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514135410,"pid":429206,"hostname":"srv1550495","req":{"id":6,"method":"GET","url":"/api/plans"},"res":{"statusCode":200},"responseTime":5,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514135416,"pid":429206,"hostname":"srv1550495","req":{"id":7,"method":"GET","url":"/api/admin/users"},"res":{"statusCode":200},"responseTime":9,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514135822,"pid":429206,"hostname":"srv1550495","req":{"id":8,"method":"GET","url":"/api/admin/tryouts"},"res":{"statusCode":200},"responseTime":5,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514141078,"pid":429206,"hostname":"srv1550495","req":{"id":9,"method":"GET","url":"/api/admin/tryouts/3"},"res":{"statusCode":200},"responseTime":10,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514152335,"pid":429206,"hostname":"srv1550495","req":{"id":10,"method":"GET","url":"/api/admin/tryouts"},"res":{"statusCode":200},"responseTime":22,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514169174,"pid":429206,"hostname":"srv1550495","req":{"id":11,"method":"GET","url":"/api/participant/notifications"},"res":{"statusCode":200},"responseTime":24,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514178386,"pid":429206,"hostname":"srv1550495","req":{"id":12,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":200},"responseTime":14,"msg":"request completed"}
+76|cpns-ap | {"level":30,"time":1786514178595,"pid":429206,"hostname":"srv1550495","req":{"id":13,"method":"GET","url":"/api/admin/tryouts"},"res":{"statusCode":200},"responseTime":12,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514180042,"pid":429206,"hostname":"srv1550495","req":{"id":14,"method":"GET","url":"/api/auth/me"},"res":{"statusCode":200},"responseTime":7,"msg":"request completed"}
+76|cpns-ap | {"level":30,"time":1786514180363,"pid":429206,"hostname":"srv1550495","req":{"id":15,"method":"GET","url":"/api/admin/tryouts"},"res":{"statusCode":200},"responseTime":6,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514185683,"pid":429206,"hostname":"srv1550495","req":{"id":16,"method":"POST","url":"/api/auth/logout"},"res":{"statusCode":200},"responseTime":5,"msg":"request completed"}
+76|cpns-ap | {"level":30,"time":1786514185890,"pid":429206,"hostname":"srv1550495","req":{"id":17,"method":"GET","url":"/api/plans"},"res":{"statusCode":200},"responseTime":3,"msg":"request completed"}
+76|cpns-ap | {"level":30,"time":1786514185899,"pid":429206,"hostname":"srv1550495","req":{"id":18,"method":"GET","url":"/api/site-config"},"res":{"statusCode":200},"responseTime":3,"msg":"request completed"}
+76|cpns-ap | {"level":30,"time":1786514192222,"pid":429206,"hostname":"srv1550495","req":{"id":19,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":105,"msg":"request completed"}
+76|cpns-ap | {"level":30,"time":1786514192509,"pid":429206,"hostname":"srv1550495","req":{"id":20,"method":"GET","url":"/api/admin/stats"},"res":{"statusCode":200},"responseTime":99,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514194754,"pid":429206,"hostname":"srv1550495","req":{"id":21,"method":"GET","url":"/api/admin/bundles"},"res":{"statusCode":200},"responseTime":6,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514195488,"pid":429206,"hostname":"srv1550495","req":{"id":22,"method":"GET","url":"/api/admin/subcategories"},"res":{"statusCode":200},"responseTime":7,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514195492,"pid":429206,"hostname":"srv1550495","req":{"id":23,"method":"GET","url":"/api/admin/categories"},"res":{"statusCode":200},"responseTime":6,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514198154,"pid":429206,"hostname":"srv1550495","req":{"id":24,"method":"GET","url":"/api/admin/tryouts"},"res":{"statusCode":200},"responseTime":9,"msg":"request aborted"}
+76|cpns-ap | {"level":30,"time":1786514198666,"pid":429206,"hostname":"srv1550495","req":{"id":25,"method":"GET","url":"/api/participant/notifications"},"res":{"statusCode":200},"responseTime":4,"msg":"request aborted"}
+
+root@srv1550495:/var/www/tryoutcpns# 
