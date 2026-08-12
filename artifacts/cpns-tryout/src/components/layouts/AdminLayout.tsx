@@ -138,20 +138,20 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header
-          className="h-16 flex items-center px-4 lg:px-8 shrink-0 z-30 shadow-md"
-          style={{ background: "#1E4D9C" }}
+          className="h-16 flex items-center px-4 lg:px-8 shrink-0 z-30"
+          style={{ background: "#ffffff", borderBottom: "1px solid #e2e8f0" }}
         >
           <button
             className="mr-4 lg:hidden"
-            style={{ color: "rgba(255,255,255,0.80)" }}
+            style={{ color: "#64748b" }}
             onClick={() => setIsMobileOpen(true)}
           >
             <Menu size={22} />
           </button>
 
           <div className="flex items-center gap-2">
-            <ShieldAlert size={16} style={{ color: "#E6B134" }} />
-            <h1 className="font-semibold capitalize" style={{ color: "#fff" }}>
+            <ShieldAlert size={16} style={{ color: "#1E4D9C" }} />
+            <h1 className="font-semibold capitalize" style={{ color: "#0f172a" }}>
               {pageLabel}
             </h1>
           </div>
@@ -160,10 +160,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <div className="ml-auto relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(o => !o)}
-              className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-colors"
-              style={{ background: "rgba(255,255,255,0.10)" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.18)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.10)")}
+              className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-colors"
+              style={{ background: "#f8fafc", borderColor: "#e2e8f0" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+              onMouseLeave={e => (e.currentTarget.style.background = "#f8fafc")}
             >
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
@@ -172,10 +172,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 {(user?.name ?? "A")[0].toUpperCase()}
               </div>
               <div className="hidden md:block text-left">
-                <div className="text-sm font-semibold leading-tight" style={{ color: "#fff" }}>
+                <div className="text-sm font-semibold leading-tight" style={{ color: "#0f172a" }}>
                   {user?.name ?? "Administrator"}
                 </div>
-                <div className="text-xs leading-tight" style={{ color: "rgba(255,255,255,0.65)" }}>Admin Panel</div>
+                <div className="text-xs leading-tight" style={{ color: "#64748b" }}>Admin Panel</div>
               </div>
             </button>
 

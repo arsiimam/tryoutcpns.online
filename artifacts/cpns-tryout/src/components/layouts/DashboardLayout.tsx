@@ -137,22 +137,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header
-          className="h-16 flex items-center px-4 md:px-8 shrink-0 z-30 shadow-md"
-          style={{ background: "#1E4D9C" }}
+          className="h-16 flex items-center px-4 md:px-8 shrink-0 z-30"
+          style={{ background: "#ffffff", borderBottom: "1px solid #e2e8f0" }}
         >
           <button
             className="mr-4"
-            style={{ color: "rgba(255,255,255,0.80)" }}
+            style={{ color: "#64748b" }}
             onClick={handleHamburger}
             aria-label="Toggle sidebar"
           >
             <Menu size={22} />
           </button>
 
-          <div className="flex items-center text-sm gap-2" style={{ color: "rgba(255,255,255,0.70)" }}>
+          <div className="flex items-center text-sm gap-2" style={{ color: "#94a3b8" }}>
             <span>Tryout CPNS</span>
             <ChevronRight size={14} />
-            <span className="font-semibold capitalize" style={{ color: "#fff" }}>
+            <span className="font-semibold capitalize" style={{ color: "#0f172a" }}>
               {pageName}
             </span>
           </div>
@@ -162,12 +162,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div
               className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border"
               style={{
-                background:  user?.subscriptionId ? "rgba(230,177,52,0.18)" : "rgba(255,255,255,0.12)",
-                color:       user?.subscriptionId ? "#E6B134" : "rgba(255,255,255,0.80)",
-                borderColor: user?.subscriptionId ? "rgba(230,177,52,0.45)" : "rgba(255,255,255,0.20)",
+                background:  user?.subscriptionId ? "rgba(230,177,52,0.12)" : "#f1f5f9",
+                color:       user?.subscriptionId ? "#b88a1a" : "#64748b",
+                borderColor: user?.subscriptionId ? "rgba(230,177,52,0.40)" : "#e2e8f0",
               }}
             >
-              <Star size={13} className={user?.subscriptionId ? "fill-[#E6B134]" : "fill-white/60"} />
+              <Star size={13} className={user?.subscriptionId ? "fill-[#E6B134]" : "fill-slate-400"} />
               {user?.subscriptionId ? "Premium" : "Paket Gratis"}
             </div>
 
@@ -175,10 +175,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(o => !o)}
-                className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-colors"
-                style={{ background: "rgba(255,255,255,0.10)" }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.18)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.10)")}
+                className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-colors"
+                style={{ background: "#f8fafc", borderColor: "#e2e8f0" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#f8fafc")}
               >
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
@@ -187,8 +187,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   {initial}
                 </div>
                 <div className="hidden md:block text-left">
-                  <div className="text-sm font-semibold leading-tight" style={{ color: "#fff" }}>{user?.name}</div>
-                  <div className="text-xs capitalize leading-tight" style={{ color: "rgba(255,255,255,0.65)" }}>{user?.role}</div>
+                  <div className="text-sm font-semibold leading-tight" style={{ color: "#0f172a" }}>{user?.name}</div>
+                  <div className="text-xs capitalize leading-tight" style={{ color: "#64748b" }}>{user?.role}</div>
                 </div>
               </button>
 
