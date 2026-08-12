@@ -185,6 +185,13 @@ router.get("/admin/bundles/:id/questions", async (req, res) => {
   res.json(questions);
 });
 
+/* Helper: normalise correctAnswer to a varchar-safe string */
+function normaliseCorrectAnswer(val: any): string | null {
+  if (val == null) return null;
+  if (Array.isArray(val)) return val.join(",");
+  return String(val);
+}
+
 /* CREATE A QUESTION */
 router.post("/admin/bundles/:id/questions", async (req, res) => {
   try {
@@ -205,7 +212,7 @@ router.post("/admin/bundles/:id/questions", async (req, res) => {
         type:     type ?? "pilihan_ganda",
         content:  content.trim(),
         options:  options ?? null,
-        correctAnswer: correctAnswer ?? null,
+        correctAnswer: normaliseCorrectAnswer(correctAnswer),
         explanation:   explanation ?? null,
         metadata:      metadata ?? null,
       })
@@ -231,7 +238,7 @@ router.put("/admin/bundles/:id/questions/:qid", async (req, res) => {
         type:     type ?? "pilihan_ganda",
         content:  content.trim(),
         options:  options ?? null,
-        correctAnswer: correctAnswer ?? null,
+        correctAnswer: normaliseCorrectAnswer(correctAnswer),
         explanation:   explanation ?? null,
         metadata:      metadata ?? null,
         ...(orderNum !== undefined ? { orderNum } : {}),

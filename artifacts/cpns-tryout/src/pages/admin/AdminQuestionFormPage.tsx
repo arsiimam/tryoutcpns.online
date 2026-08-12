@@ -214,8 +214,12 @@ export function AdminQuestionFormPage() {
               ? q.options.map((o: any) => ({ key: o.key, text: o.text ?? "", imageUrl: o.imageUrl ?? "" }))
               : defaultOptions()
           );
-          setCorrectKey(q.correctAnswer ?? "A");
-          setCorrectKeys(Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer ?? "A"]);
+          const ca = q.correctAnswer ?? "A";
+          // correctAnswer is stored as text: single key "A" or comma-joined "A,B" for pilihan_ganda_kompleks
+          const isPgk = (q.type ?? "") === "pilihan_ganda_kompleks";
+          const caKeys = isPgk && typeof ca === "string" && ca.includes(",") ? ca.split(",") : [ca];
+          setCorrectKey(caKeys[0] ?? "A");
+          setCorrectKeys(caKeys);
           const expl = q.explanation ?? "";
           // Try to detect step-by-step in metadata
           const meta = q.metadata ?? {};

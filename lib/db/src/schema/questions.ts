@@ -8,7 +8,7 @@ export const questionsTable = pgTable("questions", {
   type:          varchar("type", { length: 50 }).notNull().default("multiple_choice"),
   content:       text("content").notNull(),
   options:       jsonb("options"),        // [{key:"A", text:"..."}, ...]
-  correctAnswer: varchar("correct_answer", { length: 10 }),
+  correctAnswer: text("correct_answer"),
   explanation:   text("explanation"),
   metadata:      jsonb("metadata"),      // {difficulty, tags, source, ...}
   createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

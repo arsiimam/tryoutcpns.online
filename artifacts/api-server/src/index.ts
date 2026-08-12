@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { runMigrations } from "./lib/migrate";
 
 const rawPort = process.env["PORT"];
 
@@ -29,10 +30,21 @@ const dbHost = (() => {
   try { return new URL(dbUrl).host; } catch { return "unknown"; }
 })();
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
+async function start() {
+  try {
+    await runMigrations();
+  } catch (err) {
+    logger.error({ err }, "Migration failed — aborting startup");
     process.exit(1);
   }
-  logger.info({ port, dbHost }, "Server listening");
-});
+
+  app.listen(port, (err) => {
+    if (err) {
+      logger.error({ err }, "Error listening on port");
+      process.exit(1);
+    }
+    logger.info({ port, dbHost }, "Server listening");
+  });
+}
+
+start();

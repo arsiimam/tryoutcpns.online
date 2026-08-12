@@ -182,7 +182,7 @@ export function AdminBundleDetailPage() {
           <div className="p-12 text-center text-slate-400">
             <BookMarked size={40} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">Belum ada soal</p>
-            <p className="text-sm mt-1">Import soal ke bundle ini melalui halaman Bank Soal.</p>
+            <p className="text-sm mt-1">Klik "Tambah Soal" untuk membuat soal baru, atau import dari halaman Bank Soal.</p>
           </div>
         ) : (
           <>
@@ -199,13 +199,17 @@ export function AdminBundleDetailPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paged.map(q => {
-                  const diff = (q.metadata as any)?.difficulty ?? null;
+                  const diff = (q.metadata as any)?.tingkat_kesulitan ?? (q.metadata as any)?.difficulty ?? null;
                   return (
                     <tr key={q.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-4 py-3 text-center text-slate-400 font-mono text-xs">{q.orderNum}</td>
                       <td className="px-4 py-3">
                         <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded font-medium">
-                          {q.type === "multiple_choice" ? "Pilgan" : q.type === "true_false" ? "B/S" : "Essay"}
+                          {q.type === "pilihan_ganda" || q.type === "multiple_choice" ? "Pilgan"
+                            : q.type === "pilihan_ganda_kompleks" ? "PGK"
+                            : q.type === "benar_salah" || q.type === "true_false" ? "B/S"
+                            : q.type === "isian_singkat" ? "Isian"
+                            : q.type}
                         </span>
                       </td>
                       <td className="px-4 py-3 max-w-xs">
@@ -215,8 +219,8 @@ export function AdminBundleDetailPage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {q.correctAnswer ? (
-                          <span className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs inline-flex items-center justify-center">
-                            {q.correctAnswer}
+                          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs inline-flex items-center justify-center min-w-[1.75rem]">
+                            {Array.isArray(q.correctAnswer) ? q.correctAnswer.join(",") : q.correctAnswer}
                           </span>
                         ) : <span className="text-slate-300 text-xs">—</span>}
                       </td>
