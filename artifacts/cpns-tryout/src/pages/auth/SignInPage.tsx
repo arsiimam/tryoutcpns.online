@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
+import logoWhite from "../../assets/logo-white.png";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
@@ -60,7 +61,7 @@ export function SignInPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center mb-2">
-            <img src="/logo-white.png" alt="Tryout CPNS Online" className="h-14 w-auto drop-shadow-lg" />
+            <img src={logoWhite} alt="Tryout CPNS Online" className="h-14 w-auto drop-shadow-lg" />
           </Link>
           <h1 className="text-2xl font-bold text-white mt-4">Masuk ke akun Anda</h1>
           <p className="text-white/60 text-sm mt-1">Selamat datang kembali!</p>
