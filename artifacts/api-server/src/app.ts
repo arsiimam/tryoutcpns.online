@@ -6,6 +6,9 @@ import pgSession from "connect-pg-simple";
 import { pool } from "@workspace/db";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
 
 const PgStore = pgSession(session);
 
@@ -101,6 +104,28 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
 app.use("/api", router);
+
+/* ── Serve React frontend in production ─────────────────────────────────
+   Express serves the Vite build output so nginx only needs to proxy ALL
+   traffic to port 3009 — no separate static path or try_files needed.
+───────────────────────────────────────────────────────────────────────── */
+if (process.env.NODE_ENV === "production") {
+  const __apiDir = fileURLToPath(new URL(".", import.meta.url));
+  // Default: artifacts/api-server/dist/ → ../../cpns-tryout/dist/public
+  const frontendDist = process.env.FRONTEND_DIST_PATH
+    ?? path.resolve(__apiDir, "../../cpns-tryout/dist/public");
+
+  if (fs.existsSync(frontendDist)) {
+    logger.info({ frontendDist }, "Serving frontend static files");
+    app.use(express.static(frontendDist, { maxAge: "1d", index: false }));
+    // SPA fallback — any non-/api route returns index.html
+    app.get("*", (_req: Request, res: Response) => {
+      res.sendFile(path.join(frontendDist, "index.html"));
+    });
+  } else {
+    logger.warn({ frontendDist }, "Frontend dist not found — skipping static serving");
+  }
+}
 
 /* ── Global JSON error handler ──────────────────────────────────────────
    Catches body-parser SyntaxError, async route throws, and CORS errors.
