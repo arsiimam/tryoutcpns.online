@@ -36,7 +36,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
 
-  const pageSlug = location.split("/").pop() ?? "dashboard";
+  const segments = location.split("/").filter(Boolean);
+  // Jika segment terakhir adalah angka (id), gunakan segment sebelumnya sebagai label
+  const pageSlug = (/^\d+$/.test(segments[segments.length - 1] ?? ""))
+    ? (segments[segments.length - 2] ?? "dashboard")
+    : (segments[segments.length - 1] ?? "dashboard");
   const pageLabel = pageSlug.replace(/-/g, " ");
 
   React.useEffect(() => {
