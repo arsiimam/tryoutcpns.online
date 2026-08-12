@@ -4,9 +4,59 @@ import { BrandLogo } from "../BrandLogo";
 import {
   LayoutDashboard, FileText, CheckCircle, BarChart2,
   Trophy, Star, User as UserIcon, LogOut, Menu, X,
-  ChevronRight, PlayCircle,
+  ChevronRight, PlayCircle, Bell,
 } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+interface UserNotif {
+  id: string;
+  title: string;
+  body: string;
+  isRead: boolean;
+  sentAt: string;
+}
+
+function useNotifications(isLoggedIn: boolean) {
+  const [notifs, setNotifs] = React.useState<UserNotif[]>([]);
+  const [unread, setUnread] = React.useState(0);
+
+  async function load() {
+    if (!isLoggedIn) return;
+    try {
+      const res = await fetch(`${BASE}/api/participant/notifications`, { credentials: "include" });
+      if (!res.ok) return;
+      const data = await res.json();
+      setNotifs(data.notifications ?? []);
+      setUnread(data.unreadCount ?? 0);
+    } catch { /* ignore */ }
+  }
+
+  React.useEffect(() => {
+    load();
+    const t = setInterval(load, 30_000);
+    return () => clearInterval(t);
+  }, [isLoggedIn]);
+
+  async function markRead(id: string) {
+    await fetch(`${BASE}/api/participant/notifications/${id}/read`, {
+      method: "PATCH", credentials: "include",
+    });
+    setNotifs(p => p.map(n => n.id === id ? { ...n, isRead: true } : n));
+    setUnread(p => Math.max(0, p - 1));
+  }
+
+  async function markAllRead() {
+    await fetch(`${BASE}/api/participant/notifications/read-all`, {
+      method: "PATCH", credentials: "include",
+    });
+    setNotifs(p => p.map(n => ({ ...n, isRead: true })));
+    setUnread(0);
+  }
+
+  return { notifs, unread, markRead, markAllRead, reload: load };
+}
 
 const BLUE     = "#1E4D9C";   // Deep Royal Blue
 const BLUE_D   = "#0A1C3C";   // Dark Indigo — header/footer strip
@@ -27,9 +77,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const [bellOpen, setBellOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const bellRef = React.useRef<HTMLDivElement>(null);
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { notifs, unread, markRead, markAllRead } = useNotifications(!!user);
 
   const initial = (user?.name ?? "U")[0].toUpperCase();
   const pageName = location.split("/")[1] || "dashboard";
@@ -43,11 +96,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   React.useEffect(() => {
     function handler(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+        setBellOpen(false);
       }
     }
     document.addEventListener("mousedown", handler);
@@ -169,6 +225,73 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             >
               <Star size={13} className={user?.subscriptionId ? "fill-[#E6B134]" : "fill-slate-400"} />
               {user?.subscriptionId ? "Premium" : "Paket Gratis"}
+            </div>
+
+            {/* Bell notifications */}
+            <div className="relative" ref={bellRef}>
+              <button
+                onClick={() => setBellOpen(o => !o)}
+                className="relative w-9 h-9 flex items-center justify-center rounded-full border transition-colors"
+                style={{ background: "#f8fafc", borderColor: "#e2e8f0" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#f8fafc")}
+                aria-label="Notifikasi"
+              >
+                <Bell size={17} style={{ color: "#475569" }} />
+                {unread > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center font-bold"
+                    style={{ background: "#dc2626", fontSize: 10 }}
+                  >
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                )}
+              </button>
+
+              {bellOpen && (
+                <div
+                  className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 z-50"
+                  style={{ top: "100%", width: 340 }}
+                >
+                  <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                    <span className="font-semibold text-sm text-slate-800">Notifikasi</span>
+                    {unread > 0 && (
+                      <button
+                        onClick={() => markAllRead()}
+                        className="text-xs font-medium"
+                        style={{ color: "#1E4D9C" }}
+                      >
+                        Tandai semua dibaca
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                    {notifs.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-slate-400">Belum ada notifikasi.</div>
+                    ) : notifs.map((n) => (
+                      <button
+                        key={n.id}
+                        onClick={() => { if (!n.isRead) markRead(n.id); }}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors"
+                        style={{ background: n.isRead ? "transparent" : "rgba(30,77,156,0.04)" }}
+                      >
+                        <div className="flex items-start gap-2">
+                          {!n.isRead && (
+                            <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ background: "#1E4D9C" }} />
+                          )}
+                          <div className={!n.isRead ? "" : "pl-4"}>
+                            <div className="text-sm font-semibold text-slate-800 leading-tight">{n.title}</div>
+                            <div className="text-xs text-slate-500 mt-0.5 line-clamp-2">{n.body}</div>
+                            <div className="text-xs text-slate-400 mt-1">
+                              {new Date(n.sentAt).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* User dropdown */}

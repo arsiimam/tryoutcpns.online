@@ -12,3 +12,4 @@ export * from "./categories";
 export * from "./subcategories";
 export * from "./practice-sessions";
 export * from "./dummy-scores";
+export * from "./notifications";

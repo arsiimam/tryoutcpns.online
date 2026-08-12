@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { userSubscriptionsTable, paymentTransactionsTable, appSettingsTable } from "@workspace/db";
-import { eq, desc, and, gt } from "drizzle-orm";
+import { userSubscriptionsTable, paymentTransactionsTable, appSettingsTable, userNotificationsTable, notificationsTable } from "@workspace/db";
+import { eq, desc, and, gt, count } from "drizzle-orm";
 
 const router = Router();
 
@@ -67,6 +67,78 @@ router.get("/participant/transactions", requireAuth, async (req, res) => {
     res.json({ transactions: rows });
   } catch {
     res.status(500).json({ error: "Gagal mengambil riwayat transaksi." });
+  }
+});
+
+/**
+ * GET /participant/notifications — list notifications for the logged-in user
+ */
+router.get("/participant/notifications", requireAuth, async (req, res) => {
+  try {
+    const rows = await db
+      .select({
+        id:             userNotificationsTable.id,
+        notificationId: userNotificationsTable.notificationId,
+        isRead:         userNotificationsTable.isRead,
+        readAt:         userNotificationsTable.readAt,
+        createdAt:      userNotificationsTable.createdAt,
+        title:          notificationsTable.title,
+        body:           notificationsTable.body,
+        sentAt:         notificationsTable.createdAt,
+      })
+      .from(userNotificationsTable)
+      .innerJoin(notificationsTable, eq(userNotificationsTable.notificationId, notificationsTable.id))
+      .where(eq(userNotificationsTable.userId, req.session.userId!))
+      .orderBy(desc(userNotificationsTable.createdAt))
+      .limit(50);
+
+    const [{ unreadCount }] = await db
+      .select({ unreadCount: count() })
+      .from(userNotificationsTable)
+      .where(and(
+        eq(userNotificationsTable.userId, req.session.userId!),
+        eq(userNotificationsTable.isRead, false),
+      ));
+
+    return res.json({ notifications: rows, unreadCount: Number(unreadCount) });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * PATCH /participant/notifications/:id/read — mark one notification as read
+ */
+router.patch("/participant/notifications/:id/read", requireAuth, async (req, res) => {
+  try {
+    await db
+      .update(userNotificationsTable)
+      .set({ isRead: true, readAt: new Date() })
+      .where(and(
+        eq(userNotificationsTable.id, req.params.id),
+        eq(userNotificationsTable.userId, req.session.userId!),
+      ));
+    return res.json({ ok: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * PATCH /participant/notifications/read-all — mark all as read
+ */
+router.patch("/participant/notifications/read-all", requireAuth, async (req, res) => {
+  try {
+    await db
+      .update(userNotificationsTable)
+      .set({ isRead: true, readAt: new Date() })
+      .where(and(
+        eq(userNotificationsTable.userId, req.session.userId!),
+        eq(userNotificationsTable.isRead, false),
+      ));
+    return res.json({ ok: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

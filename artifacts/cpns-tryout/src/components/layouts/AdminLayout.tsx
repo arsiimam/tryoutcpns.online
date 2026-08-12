@@ -4,7 +4,7 @@ import { BrandLogo } from "../BrandLogo";
 import {
   LayoutDashboard, Users, FileQuestion, BookOpen, Clock,
   Settings, CreditCard, Tag, BarChart3, LogOut, Menu, X,
-  ShieldAlert, SlidersHorizontal, Star,
+  ShieldAlert, SlidersHorizontal, Star, Bell,
 } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
@@ -22,6 +22,7 @@ const adminNavItems = [
   { icon: Star,              label: "Paket Langganan",    href: "/admin/subscriptions" },
   { icon: CreditCard,        label: "Pembayaran",         href: "/admin/payments" },
   { icon: Tag,               label: "Kupon Promo",        href: "/admin/coupons" },
+  { icon: Bell,              label: "Notifikasi",         href: "/admin/notifications" },
   { icon: BarChart3,         label: "Laporan",            href: "/admin/reports" },
   { icon: Settings,          label: "CMS Web",            href: "/admin/cms" },
   { icon: SlidersHorizontal, label: "Pengaturan",         href: "/admin/settings" },
