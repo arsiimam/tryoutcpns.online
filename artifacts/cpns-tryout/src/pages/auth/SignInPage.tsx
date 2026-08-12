@@ -59,7 +59,7 @@ export function SignInPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center mb-2">
-            <img src="/logo-white.png" alt="Tryout CPNS Online" className="h-14 w-auto drop-shadow-lg" />
+            <AppLogo className="h-14 w-14 drop-shadow-lg" />
           </Link>
           <h1 className="text-2xl font-bold text-white mt-4">Masuk ke akun Anda</h1>
           <p className="text-white/60 text-sm mt-1">Selamat datang kembali!</p>
@@ -148,6 +148,18 @@ export function SignInPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+function AppLogo({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" className={className} aria-label="Tryout CPNS Online">
+      <rect width="48" height="48" rx="10" fill="white" fillOpacity="0.15"/>
+      <path d="M12 24C12 17.373 17.373 12 24 12C27.314 12 30.314 13.343 32.485 15.515" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M36 24C36 30.627 30.627 36 24 36C20.686 36 17.686 34.657 15.515 32.485" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round"/>
+      <circle cx="24" cy="24" r="5" fill="#f59e0b"/>
+      <path d="M24 19V16M24 32V29M19 24H16M32 24H29" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
   );
 }
 
