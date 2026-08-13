@@ -265,6 +265,53 @@ router.put("/admin/settings", requireAdmin, async (req, res) => {
 });
 
 /* ------------------------------------------------------------------ */
+/* POST /api/admin/settings/test-email                                */
+/* ------------------------------------------------------------------ */
+router.post("/admin/settings/test-email", requireAdmin, async (req: any, res) => {
+  const { to } = req.body as { to?: string };
+  if (!to?.trim()) return res.status(400).json({ error: "Alamat email tujuan wajib diisi." });
+
+  try {
+    const map = await getAllSettings();
+    const host  = map["smtp_host"]  || process.env.SMTP_HOST  || "";
+    const port  = parseInt(map["smtp_port"] || process.env.SMTP_PORT || "587", 10);
+    const user  = map["smtp_user"]  || process.env.SMTP_USER  || "";
+    const pass  = map["smtp_pass"]  || process.env.SMTP_PASS  || "";
+    const from  = map["smtp_from"]  || process.env.SMTP_FROM  || user || "noreply@tryoutcpns.online";
+
+    if (!host || !user || !pass) {
+      return res.status(400).json({
+        error: `Konfigurasi SMTP belum lengkap. Pastikan SMTP Host, Email, dan Password sudah diisi. (host=${host||"–"}, user=${user||"–"}, pass=${pass?"✓":"–"})`,
+      });
+    }
+
+    const nodemailer = await import("nodemailer");
+    const transport = nodemailer.default.createTransport({
+      host, port, secure: port === 465,
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false },
+    });
+
+    // Verify koneksi dulu
+    await transport.verify();
+
+    await transport.sendMail({
+      from,
+      to: to.trim(),
+      subject: "✅ Test Email — Tryout CPNS Online",
+      text: `Ini adalah email percobaan dari Tryout CPNS Online.\n\nKonfigurasi SMTP berhasil!\n\nHost: ${host}:${port}\nUser: ${user}`,
+      html: `<p>Ini adalah email percobaan dari <strong>Tryout CPNS Online</strong>.</p><p>✅ Konfigurasi SMTP berhasil!</p><p style="color:#64748b;font-size:13px">Host: ${host}:${port} · User: ${user}</p>`,
+    });
+
+    return res.json({ ok: true, message: `Email test berhasil dikirim ke ${to.trim()}.` });
+  } catch (err: any) {
+    return res.status(500).json({
+      error: `Gagal kirim email: ${err?.message ?? String(err)}`,
+    });
+  }
+});
+
+/* ------------------------------------------------------------------ */
 /* GET /api/admin/settings/passing-grades                             */
 /* ------------------------------------------------------------------ */
 router.get("/admin/settings/passing-grades", requireAdmin, async (_req, res) => {

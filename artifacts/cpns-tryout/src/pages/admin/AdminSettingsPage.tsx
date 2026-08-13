@@ -183,6 +183,9 @@ export function AdminSettingsPage() {
   const [smtpPassMasked, setSmtpPassMasked] = useState("");
   const [smtpPassSource, setSmtpPassSource] = useState<"database"|"environment"|"none">("none");
   const [savingSmtp,   setSavingSmtp]   = useState(false);
+  const [testEmailTo,  setTestEmailTo]  = useState("");
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState<{ok: boolean; msg: string} | null>(null);
 
   const callbackUrlGoogle  = `${window.location.origin}/api/auth/google/callback`;
   const callbackUrlDuitku  = `${window.location.origin}/api/payment/callback`;
@@ -215,6 +218,24 @@ export function AdminSettingsPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleTestEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (!testEmailTo.trim()) return;
+    setTestingEmail(true); setTestEmailResult(null);
+    try {
+      const r = await fetch("/api/admin/settings/test-email", {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: testEmailTo }),
+      });
+      const d = await r.json();
+      if (r.ok) setTestEmailResult({ ok: true,  msg: d.message ?? "Email terkirim!" });
+      else      setTestEmailResult({ ok: false, msg: d.error  ?? "Gagal kirim email." });
+    } catch (err: any) {
+      setTestEmailResult({ ok: false, msg: err.message });
+    } finally { setTestingEmail(false); }
   }
 
   async function handleSaveSmtp(e: React.FormEvent) {
@@ -1177,6 +1198,29 @@ export function AdminSettingsPage() {
               </button>
             </div>
           </form>
+
+          {/* ── Test kirim email ── */}
+          <div className="border-t p-5">
+            <p className="text-sm font-semibold text-slate-700 mb-3">Uji Koneksi Email</p>
+            <form onSubmit={handleTestEmail} className="flex gap-2 items-start flex-wrap">
+              <input
+                value={testEmailTo} onChange={e => { setTestEmailTo(e.target.value); setTestEmailResult(null); }}
+                placeholder="Email tujuan test, misal: admin@email.com"
+                type="email" required
+                className="flex-1 min-w-[220px] px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <button type="submit" disabled={testingEmail}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-semibold transition-colors disabled:opacity-60 bg-sky-50 border-sky-300 text-sky-700 hover:bg-sky-100">
+                {testingEmail ? <><RefreshCw size={14} className="animate-spin"/> Mengirim…</> : <><Mail size={14}/> Kirim Test</>}
+              </button>
+            </form>
+            {testEmailResult && (
+              <div className={`mt-3 flex items-start gap-2 p-3 rounded-lg text-sm ${testEmailResult.ok ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-red-50 text-red-800 border border-red-200"}`}>
+                {testEmailResult.ok ? <CheckCircle2 size={16} className="shrink-0 mt-0.5"/> : <AlertCircle size={16} className="shrink-0 mt-0.5"/>}
+                <span>{testEmailResult.msg}</span>
+              </div>
+            )}
+          </div>
         </SectionCard>
 
       </div>
