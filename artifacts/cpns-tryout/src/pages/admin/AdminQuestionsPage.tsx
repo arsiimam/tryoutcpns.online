@@ -478,8 +478,12 @@ function RootBundleCard({ node, expanded, onToggle, onEdit, onDelete, onToggleSt
           }
         </div>
 
-        {/* Name + meta — SELURUH AREA INI BISA DIKLIK → buka editor soal */}
-        <div onClick={() => navigate(`/admin/questions/${node.id}`)} className="flex-1 min-w-0 group/name cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors">
+        {/* Name + meta */}
+        {/* Folder (punya anak): klik nama = toggle expand. Leaf: klik = buka editor soal */}
+        <div
+          onClick={() => hasChildren ? onToggle(node.id) : navigate(`/admin/questions/${node.id}`)}
+          className="flex-1 min-w-0 group/name cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors"
+        >
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-slate-800 text-sm group-hover/name:text-primary transition-colors">{node.name}</span>
             {node.category && (
@@ -493,7 +497,7 @@ function RootBundleCard({ node, expanded, onToggle, onEdit, onDelete, onToggleSt
           </div>
           <div className="text-xs text-slate-400 mt-0.5">
             {hasChildren
-              ? `${node.children.length} sub-bundle`
+              ? `${node.children.length} sub-bundle · klik untuk buka`
               : `${node.questionCount} soal · klik untuk input soal`
             }
             {node.description && ` · ${node.description}`}
