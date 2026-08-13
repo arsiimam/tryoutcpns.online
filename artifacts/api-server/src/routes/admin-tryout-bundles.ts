@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
 import { tryoutBundlesTable, tryoutSectionsTable, tryoutQuestionsTable, appSettingsTable } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, max } from "drizzle-orm";
 import { importLimiter } from "../lib/rate-limit";
 
 /* ── Global passing grades helper ──────────────────────── */
@@ -183,25 +183,34 @@ router.delete("/admin/tryouts/:id", async (req, res) => {
 
 /* CREATE SECTION */
 router.post("/admin/tryouts/:id/sections", async (req, res) => {
-  const tryoutId = Number(req.params.id);
-  const { name, category, passingScore, timeLimitMinutes } = req.body;
-  if (!name?.trim()) return res.status(400).json({ error: "Nama seksi tidak boleh kosong." });
+  try {
+    const tryoutId = Number(req.params.id);
+    const { name, category, passingScore, timeLimitMinutes } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: "Nama seksi tidak boleh kosong." });
 
-  const [maxRow] = await db.execute(sql`
-    SELECT COALESCE(MAX(order_num), 0) AS max FROM tryout_sections WHERE tryout_id = ${tryoutId}
-  `);
-  const orderNum = Number((maxRow as any).max) + 1;
+    // Cek tryout ada
+    const [bundle] = await db.select({ id: tryoutBundlesTable.id })
+      .from(tryoutBundlesTable).where(eq(tryoutBundlesTable.id, tryoutId));
+    if (!bundle) return res.status(404).json({ error: "Tryout tidak ditemukan." });
 
-  const [section] = await db.insert(tryoutSectionsTable).values({
-    tryoutId,
-    name: name.trim(),
-    category: category?.trim() || null,
-    orderNum,
-    passingScore: passingScore ? Number(passingScore) : null,
-    timeLimitMinutes: timeLimitMinutes ? Number(timeLimitMinutes) : null,
-  }).returning();
+    // Hitung order_num berikutnya
+    const [row] = await db.select({ maxOrder: max(tryoutSectionsTable.orderNum) })
+      .from(tryoutSectionsTable).where(eq(tryoutSectionsTable.tryoutId, tryoutId));
+    const orderNum = (row?.maxOrder ?? 0) + 1;
 
-  res.status(201).json({ ...section, questions: [] });
+    const [section] = await db.insert(tryoutSectionsTable).values({
+      tryoutId,
+      name: name.trim(),
+      category: category?.trim() || null,
+      orderNum,
+      passingScore: passingScore ? Number(passingScore) : null,
+      timeLimitMinutes: timeLimitMinutes ? Number(timeLimitMinutes) : null,
+    }).returning();
+
+    res.status(201).json({ ...section, questions: [] });
+  } catch (err) {
+    throw err; // biarkan global error handler, tapi sudah di-log
+  }
 });
 
 /* DELETE SECTION */
