@@ -143,7 +143,10 @@ export function TryoutListPage() {
 
             return (
               <div key={to.id} className="bg-white rounded-xl border shadow-sm overflow-hidden flex flex-col">
-                <div className="p-6 border-b flex-1">
+                <div
+                  className="p-6 border-b flex-1 cursor-pointer hover:bg-slate-50 transition-colors"
+                  onClick={() => setLocation(isLocked ? "/subscription" : `/tryout/${to.id}`)}>
+
 
                   {/* Badge baris */}
                   <div className="flex justify-between items-start mb-4">
