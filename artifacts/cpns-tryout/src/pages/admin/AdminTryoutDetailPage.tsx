@@ -4,7 +4,7 @@ import { KatexRenderer } from "../../components/KatexRenderer";
 import { AdminLayout } from "../../components/layouts/AdminLayout";
 import {
   ArrowLeft, Download, ChevronDown, FileText, BookOpen,
-  AlertCircle, Clock, BarChart2, Eye, Trash2, Copy, Plus, Pencil,
+  AlertCircle, Clock, BarChart2, Eye, Trash2, Copy, Plus, Pencil, X, Layers,
 } from "lucide-react";
 
 /* ── types ──────────────────────────────────────────────── */
@@ -51,6 +51,15 @@ export function AdminTryoutDetailPage() {
   const [tab,     setTab]     = useState("info");   // "info" | section id string
   const [previewQ, setPreviewQ] = useState<Question | null>(null);
 
+  // section modal
+  const [showSectionModal, setShowSectionModal] = useState(false);
+  const [secName,     setSecName]     = useState("");
+  const [secCategory, setSecCategory] = useState("");
+  const [secPassing,  setSecPassing]  = useState("");
+  const [secTime,     setSecTime]     = useState("");
+  const [secSaving,   setSecSaving]   = useState(false);
+  const [secError,    setSecError]    = useState("");
+
   /* ── load ───────────────────────────────────────────── */
   useEffect(() => {
     if (!id) return;
@@ -80,6 +89,48 @@ export function AdminTryoutDetailPage() {
           ? { ...s, questionCount: s.questionCount - 1, questions: s.questions.filter(x => x.id !== q.id) }
           : s),
       } : prev);
+    }
+  };
+
+  /* ── add section ────────────────────────────────────── */
+  const openSectionModal = () => {
+    setSecName(""); setSecCategory(""); setSecPassing(""); setSecTime(""); setSecError("");
+    setShowSectionModal(true);
+  };
+  const saveSection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!secName.trim()) { setSecError("Nama seksi wajib diisi."); return; }
+    setSecSaving(true); setSecError("");
+    try {
+      const r = await fetch(`${API}/${id}/sections`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: secName, category: secCategory || null,
+          passingScore: secPassing ? Number(secPassing) : null,
+          timeLimitMinutes: secTime ? Number(secTime) : null,
+        }),
+      });
+      if (!r.ok) { const d = await r.json(); setSecError(d.error ?? "Gagal menyimpan."); return; }
+      const newSec: Section = await r.json();
+      setBundle(prev => prev ? { ...prev, sections: [...prev.sections, newSec] } : prev);
+      setTab(String(newSec.id));
+      setShowSectionModal(false);
+    } catch { setSecError("Terjadi kesalahan."); }
+    finally { setSecSaving(false); }
+  };
+
+  /* ── delete section ──────────────────────────────────── */
+  const delSection = async (sec: Section) => {
+    if (!confirm(`Hapus seksi "${sec.name}" beserta ${sec.questionCount} soal di dalamnya?`)) return;
+    const r = await fetch(`${API}/${id}/sections/${sec.id}`, { method: "DELETE", credentials: "include" });
+    if (r.ok) {
+      setBundle(prev => {
+        if (!prev) return prev;
+        const sections = prev.sections.filter(s => s.id !== sec.id);
+        return { ...prev, sections, totalQuestions: prev.totalQuestions - sec.questionCount };
+      });
+      setTab(prev => prev === String(sec.id) ? (bundle?.sections.find(s => s.id !== sec.id) ? String(bundle.sections.find(s => s.id !== sec.id)!.id) : "info") : prev);
     }
   };
 
@@ -128,19 +179,34 @@ export function AdminTryoutDetailPage() {
           </div>
           {bundle.description && <p className="text-sm text-slate-500 mt-2 max-w-2xl">{bundle.description}</p>}
         </div>
-        <ExportDropdown onExport={exportB} />
+        <div className="flex items-center gap-2">
+          <button onClick={openSectionModal}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-white"
+            style={{ background: "#1E4D9C" }}>
+            <Layers size={14} /> Tambah Seksi
+          </button>
+          <ExportDropdown onExport={exportB} />
+        </div>
       </div>
 
       {/* ── Tabs ────────────────────────────────────────── */}
-      <div className="flex gap-1 mb-6 border-b">
+      <div className="flex gap-1 mb-6 border-b flex-wrap">
         <TabBtn active={tab === "info"} onClick={() => setTab("info")}>Informasi</TabBtn>
         {bundle.sections.map(s => (
-          <TabBtn key={s.id} active={tab === String(s.id)} onClick={() => setTab(String(s.id))}>
-            {s.name}
-            <span className="ml-1.5 px-1.5 py-0.5 bg-slate-100 text-slate-500 text-xs rounded-full font-normal">
-              {s.questionCount}
-            </span>
-          </TabBtn>
+          <div key={s.id} className="relative flex items-center group">
+            <TabBtn active={tab === String(s.id)} onClick={() => setTab(String(s.id))}>
+              {s.name}
+              <span className="ml-1.5 px-1.5 py-0.5 bg-slate-100 text-slate-500 text-xs rounded-full font-normal">
+                {s.questionCount}
+              </span>
+            </TabBtn>
+            <button
+              onClick={() => delSection(s)}
+              title="Hapus seksi"
+              className="hidden group-hover:flex absolute -top-1 -right-1 w-4 h-4 items-center justify-center rounded-full bg-red-500 text-white z-10">
+              <X size={9} />
+            </button>
+          </div>
         ))}
       </div>
 
@@ -171,7 +237,14 @@ export function AdminTryoutDetailPage() {
           <div className="bg-white rounded-xl border shadow-sm p-6">
             <h3 className="font-semibold text-slate-800 mb-4">Komposisi Soal</h3>
             {bundle.sections.length === 0 ? (
-              <p className="text-sm text-slate-400">Belum ada seksi / soal.</p>
+              <div className="text-center py-6">
+                <p className="text-sm text-slate-400 mb-4">Belum ada seksi / soal.</p>
+                <button onClick={openSectionModal}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+                  style={{ background: "#1E4D9C" }}>
+                  <Plus size={14} /> Tambah Seksi Pertama
+                </button>
+              </div>
             ) : (
               <div className="space-y-3">
                 {bundle.sections.map(s => (
@@ -300,6 +373,56 @@ export function AdminTryoutDetailPage() {
               </tbody>
             </table>
           )}
+        </div>
+      )}
+
+      {/* ── Add Section Modal ───────────────────────────── */}
+      {showSectionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h2 className="font-bold text-base text-slate-900">Tambah Seksi Baru</h2>
+              <button onClick={() => setShowSectionModal(false)} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500"><X size={16} /></button>
+            </div>
+            <form onSubmit={saveSection} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Nama Seksi <span className="text-red-500">*</span></label>
+                <input value={secName} onChange={e => setSecName(e.target.value)} required
+                  placeholder="cth: TWK, TIU, TKP"
+                  className="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Kategori <span className="text-slate-400 font-normal">(opsional)</span></label>
+                <input value={secCategory} onChange={e => setSecCategory(e.target.value)}
+                  placeholder="cth: SKD, SKB"
+                  className="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Passing Score <span className="text-slate-400 font-normal">(opsional)</span></label>
+                  <input type="number" min={0} value={secPassing} onChange={e => setSecPassing(e.target.value)}
+                    placeholder="cth: 65"
+                    className="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Waktu (menit) <span className="text-slate-400 font-normal">(opsional)</span></label>
+                  <input type="number" min={1} value={secTime} onChange={e => setSecTime(e.target.value)}
+                    placeholder="cth: 30"
+                    className="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                </div>
+              </div>
+              {secError && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{secError}</p>}
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setShowSectionModal(false)}
+                  className="flex-1 h-10 rounded-lg border text-sm font-medium text-slate-600 hover:bg-slate-50">Batal</button>
+                <button type="submit" disabled={secSaving}
+                  className="flex-1 h-10 rounded-lg text-sm font-medium text-white disabled:opacity-60"
+                  style={{ background: "#1E4D9C" }}>
+                  {secSaving ? "Menyimpan..." : "Simpan Seksi"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

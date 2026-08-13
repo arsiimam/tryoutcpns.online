@@ -181,6 +181,39 @@ router.delete("/admin/tryouts/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+/* CREATE SECTION */
+router.post("/admin/tryouts/:id/sections", async (req, res) => {
+  const tryoutId = Number(req.params.id);
+  const { name, category, passingScore, timeLimitMinutes } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: "Nama seksi tidak boleh kosong." });
+
+  const [maxRow] = await db.execute(sql`
+    SELECT COALESCE(MAX(order_num), 0) AS max FROM tryout_sections WHERE tryout_id = ${tryoutId}
+  `);
+  const orderNum = Number((maxRow as any).max) + 1;
+
+  const [section] = await db.insert(tryoutSectionsTable).values({
+    tryoutId,
+    name: name.trim(),
+    category: category?.trim() || null,
+    orderNum,
+    passingScore: passingScore ? Number(passingScore) : null,
+    timeLimitMinutes: timeLimitMinutes ? Number(timeLimitMinutes) : null,
+  }).returning();
+
+  res.status(201).json({ ...section, questions: [] });
+});
+
+/* DELETE SECTION */
+router.delete("/admin/tryouts/:id/sections/:sectionId", async (req, res) => {
+  const sectionId = Number(req.params.sectionId);
+  const [section] = await db.delete(tryoutSectionsTable)
+    .where(eq(tryoutSectionsTable.id, sectionId)).returning();
+  if (!section) return res.status(404).json({ error: "Seksi tidak ditemukan." });
+  await syncCounts(Number(req.params.id));
+  res.json({ success: true });
+});
+
 /* GET SINGLE QUESTION */
 router.get("/admin/tryouts/:id/questions/:qid", async (req, res) => {
   const qid = Number(req.params.qid);
