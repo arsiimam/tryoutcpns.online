@@ -453,6 +453,7 @@ interface CardProps {
 function RootBundleCard({ node, expanded, onToggle, onEdit, onDelete, onToggleStatus, onExport, onAddChild }: CardProps) {
   const hasChildren = node.children.length > 0;
   const isOpen = expanded.has(node.id);
+  const [, navigate] = useLocation();
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -478,7 +479,7 @@ function RootBundleCard({ node, expanded, onToggle, onEdit, onDelete, onToggleSt
         </div>
 
         {/* Name + meta — SELURUH AREA INI BISA DIKLIK → buka editor soal */}
-        <NavDiv to={`/admin/bundles/${node.id}`} className="flex-1 min-w-0 group/name cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors">
+        <div onClick={() => navigate(`/admin/bundles/${node.id}`)} className="flex-1 min-w-0 group/name cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-slate-800 text-sm group-hover/name:text-primary transition-colors">{node.name}</span>
             {node.category && (
@@ -497,7 +498,7 @@ function RootBundleCard({ node, expanded, onToggle, onEdit, onDelete, onToggleSt
             }
             {node.description && ` · ${node.description}`}
           </div>
-        </NavDiv>
+        </div>
 
         {/* Actions */}
         <div className="flex items-center gap-1 shrink-0">
@@ -561,6 +562,7 @@ function ChildBundleRow({
   onEdit: (b: Bundle) => void; onDelete: (b: Bundle) => void;
   onToggleStatus: (b: Bundle) => void; onExport: (b: Bundle, fmt: "json"|"html") => void;
 }) {
+  const [, navigate] = useLocation();
   return (
     <div className={`flex items-center gap-3 px-4 py-3 ${!isLast ? "border-b border-slate-100" : ""} hover:bg-white transition-colors group/row`}>
       {/* Indent */}
@@ -570,7 +572,7 @@ function ChildBundleRow({
       <FileText size={16} className="shrink-0 text-blue-400" />
 
       {/* Info — SELURUH AREA INI BISA DIKLIK → buka editor soal */}
-      <NavDiv to={`/admin/bundles/${bundle.id}`} className="flex-1 min-w-0 cursor-pointer">
+      <div onClick={() => navigate(`/admin/bundles/${bundle.id}`)} className="flex-1 min-w-0 cursor-pointer">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-slate-700 text-sm group-hover/row:text-primary transition-colors">{bundle.name}</span>
           {bundle.category && (
@@ -584,7 +586,7 @@ function ChildBundleRow({
           {bundle.questionCount} soal · klik untuk input soal
           {bundle.description ? ` · ${bundle.description}` : ""}
         </div>
-      </NavDiv>
+      </div>
 
       {/* Actions */}
       <div className="flex items-center gap-1 shrink-0">
@@ -634,21 +636,6 @@ function ExportMenu({ b, onExport }: { b: Bundle; onExport: (b: Bundle, fmt: "js
   );
 }
 
-/* ── NavDiv: clickable div that navigates (avoids nested <a>) ── */
-function NavDiv({ to, className, children }: { to: string; className?: string; children: React.ReactNode }) {
-  const [, navigate] = useLocation();
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => navigate(to)}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(to); }}
-      className={className}
-    >
-      {children}
-    </div>
-  );
-}
 
 /* ── Modal wrapper ────────────────────────────────────── */
 function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
