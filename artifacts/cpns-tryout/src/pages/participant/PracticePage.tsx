@@ -288,6 +288,16 @@ export function PracticePage() {
   /* ════════════════════════════════════════════
      SESSION VIEW
   ════════════════════════════════════════════ */
+
+  function getCatMeta(category: string | null | undefined) {
+    const cat = (category ?? "").toUpperCase();
+    if (cat.includes("TWK")) return { code: "TWK", color: "text-blue-700",   bgColor: "bg-blue-50",   borderColor: "border-blue-200", badgeClass: "bg-blue-100 text-blue-700" };
+    if (cat.includes("TIU")) return { code: "TIU", color: "text-violet-700", bgColor: "bg-violet-50", borderColor: "border-violet-200", badgeClass: "bg-violet-100 text-violet-700" };
+    if (cat.includes("TKP")) return { code: "TKP", color: "text-emerald-700",bgColor: "bg-emerald-50",borderColor: "border-emerald-200", badgeClass: "bg-emerald-100 text-emerald-700" };
+    if (cat.includes("SKB")) return { code: "SKB", color: "text-orange-700", bgColor: "bg-orange-50", borderColor: "border-orange-200", badgeClass: "bg-orange-100 text-orange-700" };
+    return { code: cat || "SOAL", color: "text-slate-700", bgColor: "bg-slate-50", borderColor: "border-slate-200", badgeClass: "bg-slate-100 text-slate-700" };
+  }
+
   if (!selectedBundle || questions.length === 0) {
     return (
       <DashboardLayout>
