@@ -120,7 +120,9 @@ if (process.env.NODE_ENV === "production") {
     app.use(express.static(frontendDist, { maxAge: "1d", index: false }));
     // SPA fallback — any non-/api route returns index.html
     // Express 5 requires named wildcard: /{*path} instead of *
+    // No-cache on index.html so nginx/CDN never serves stale JS bundles
     app.get("/{*path}", (_req: Request, res: Response) => {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       res.sendFile(path.join(frontendDist, "index.html"));
     });
   } else {
