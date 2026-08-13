@@ -250,7 +250,7 @@ export function AdminTryoutDetailPage() {
                 {bundle.sections.map(s => (
                   <div key={s.id} className="flex items-center gap-3">
                     <span className="w-12 text-xs font-bold text-[#0A1C3C] bg-[#dce8f5] px-2 py-0.5 rounded text-center">
-                      {s.category ?? s.name}
+                      {s.name}
                     </span>
                     <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
                       <div
@@ -301,7 +301,7 @@ export function AdminTryoutDetailPage() {
           <div className="px-5 py-3 border-b bg-slate-50 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="px-2 py-0.5 bg-[#dce8f5] text-[#0A1C3C] text-xs font-bold rounded uppercase">
-                {activeSection.category ?? activeSection.name}
+                {activeSection.name}
               </span>
               <span className="text-sm text-slate-500">{activeSection.questionCount} soal</span>
               {activeSection.passingScore != null && (

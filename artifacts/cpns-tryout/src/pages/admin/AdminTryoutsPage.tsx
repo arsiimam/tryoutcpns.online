@@ -293,7 +293,7 @@ export function AdminTryoutsPage() {
                         {b.sections.map(s => (
                           <span key={s.id}
                             className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded font-medium">
-                            {s.category ?? s.name}: {s.questionCount}
+                            {s.name}: {s.questionCount}
                           </span>
                         ))}
                       </div>
