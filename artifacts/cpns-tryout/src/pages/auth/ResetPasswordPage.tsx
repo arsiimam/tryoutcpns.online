@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import logoWhite from "../../assets/logo-white.png";
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 
@@ -51,7 +50,7 @@ export function ResetPasswordPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <a href="/" className="inline-flex items-center justify-center mb-2">
-            <img src={logoWhite} alt="Tryout CPNS Online" className="h-14 w-auto drop-shadow-lg" />
+            <img src="/logo-white.png" alt="Tryout CPNS Online" className="h-14 w-auto drop-shadow-lg" />
           </a>
           <h1 className="text-2xl font-bold text-white mt-4">Buat Password Baru</h1>
           <p className="text-white/60 text-sm mt-1">Masukkan password baru untuk akun Anda</p>
