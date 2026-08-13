@@ -14,6 +14,8 @@ import {
   LayoutGrid,
   Loader2,
   Send,
+  Lock,
+  Crown,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -26,6 +28,7 @@ interface BundleInfo {
   category: string;
   questionCount: number;
   sortOrder: number;
+  isPremium: boolean;
 }
 
 interface PracticeQuestion {
@@ -94,13 +97,28 @@ export function PracticePage() {
   const getChildren = (id: string) => allBundles.filter(b => b.parentId === id);
 
   /* ── Start practice for a leaf bundle ── */
+  const [premiumError, setPremiumError] = useState<string | null>(null);
+
   const startBundle = async (bundle: BundleInfo) => {
+    if (bundle.isPremium) {
+      // Optimistic: try fetch, handle 403 server-side
+    }
+    setPremiumError(null);
     setView("loading");
     setSelectedBundle(bundle);
     try {
       const r = await fetch(`/api/participant/practice/bundles/${bundle.id}/questions`, {
         credentials: "include",
       });
+      if (r.status === 403) {
+        const d = await r.json();
+        if (d.error === "premium_required") {
+          setPremiumError(d.message ?? "Konten ini hanya untuk pengguna Premium.");
+          setView("bundles");
+          setSelectedBundle(null);
+          return;
+        }
+      }
       const d = await r.json();
       setQuestions(d.questions ?? []);
       setCurrentIndex(0);
@@ -255,6 +273,16 @@ export function PracticePage() {
           </div>
         </div>
 
+        {/* Premium error toast */}
+        {premiumError && (
+          <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+            <Lock size={16} className="text-amber-500 shrink-0" />
+            <span className="flex-1">{premiumError}</span>
+            <a href="/langganan" className="font-semibold underline whitespace-nowrap">Langganan Premium →</a>
+            <button onClick={() => setPremiumError(null)} className="text-amber-500 hover:text-amber-700"><X size={14} /></button>
+          </div>
+        )}
+
         {/* Bundle list */}
         <div className="space-y-3">
           {children.map((b) => (
@@ -262,16 +290,30 @@ export function PracticePage() {
               key={b.id}
               onClick={() => startBundle(b)}
               disabled={view === "loading"}
-              className="w-full bg-white rounded-xl border border-slate-200 hover:border-primary/40 hover:shadow-sm transition-all px-5 py-4 text-left group disabled:opacity-60 disabled:cursor-wait flex items-center gap-4"
+              className={`w-full bg-white rounded-xl border transition-all px-5 py-4 text-left group disabled:opacity-60 disabled:cursor-wait flex items-center gap-4
+                ${b.isPremium
+                  ? "border-amber-200 hover:border-amber-400 hover:shadow-sm"
+                  : "border-slate-200 hover:border-primary/40 hover:shadow-sm"}`}
             >
-              <div className="w-9 h-9 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 group-hover:bg-primary/5 group-hover:border-primary/20 transition-colors">
-                <BookOpen size={16} className="text-slate-500 group-hover:text-primary transition-colors" />
+              <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-colors
+                ${b.isPremium
+                  ? "border-amber-200 bg-amber-50 group-hover:bg-amber-100"
+                  : "border-slate-200 bg-slate-50 group-hover:bg-primary/5 group-hover:border-primary/20"}`}>
+                {b.isPremium
+                  ? <Crown size={16} className="text-amber-500" />
+                  : <BookOpen size={16} className="text-slate-500 group-hover:text-primary transition-colors" />}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-800 text-sm leading-snug">{b.name}</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-800 text-sm leading-snug">{b.name}</span>
+                  {b.isPremium && (
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase tracking-wide">Premium</span>
+                  )}
+                </div>
                 {b.description && <div className="text-xs text-slate-400 mt-0.5 truncate">{b.description}</div>}
               </div>
-              <div className="text-xs text-slate-400 shrink-0">
+              <div className="text-xs text-slate-400 shrink-0 flex items-center gap-1.5">
+                {b.isPremium && <Lock size={12} className="text-amber-400" />}
                 {b.questionCount ?? "?"} soal
               </div>
               <ChevronRight size={16} className="text-slate-300 group-hover:text-primary/60 shrink-0 transition-colors" />

@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 
 export const questionBundlesTable = pgTable("question_bundles", {
   id:            serial("id").primaryKey(),
@@ -7,6 +7,7 @@ export const questionBundlesTable = pgTable("question_bundles", {
   description:   text("description"),
   category:      varchar("category", { length: 100 }),
   status:        varchar("status", { length: 20 }).notNull().default("draft"),
+  isPremium:     boolean("is_premium").notNull().default(false),
   questionCount: integer("question_count").notNull().default(0),
   sortOrder:     integer("sort_order").notNull().default(0),
   createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

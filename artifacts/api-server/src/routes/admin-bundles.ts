@@ -44,7 +44,7 @@ router.get("/admin/bundles", async (_req, res) => {
 
 /* CREATE EMPTY BUNDLE */
 router.post("/admin/bundles", async (req, res) => {
-  const { name, description, category, parentId } = req.body;
+  const { name, description, category, parentId, isPremium } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama bundle wajib diisi." });
   const [bundle] = await db
     .insert(questionBundlesTable)
@@ -53,6 +53,7 @@ router.post("/admin/bundles", async (req, res) => {
       description: description ?? null,
       category: category ?? null,
       parentId: parentId ? Number(parentId) : null,
+      isPremium: isPremium === true,
       status: "draft",
     })
     .returning();
@@ -139,7 +140,7 @@ router.get("/admin/bundles/:id", async (req, res) => {
 /* UPDATE BUNDLE METADATA */
 router.put("/admin/bundles/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { name, description, category, parentId, sortOrder } = req.body;
+  const { name, description, category, parentId, sortOrder, isPremium } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama bundle wajib diisi." });
   // Prevent circular parent
   if (parentId && Number(parentId) === id)
@@ -152,6 +153,7 @@ router.put("/admin/bundles/:id", async (req, res) => {
       category: category ?? null,
       parentId: parentId ? Number(parentId) : null,
       ...(sortOrder !== undefined ? { sortOrder: Number(sortOrder) } : {}),
+      ...(isPremium !== undefined ? { isPremium: isPremium === true } : {}),
       updatedAt: new Date(),
     })
     .where(eq(questionBundlesTable.id, id))

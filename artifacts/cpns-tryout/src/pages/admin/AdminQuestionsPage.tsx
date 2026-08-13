@@ -6,7 +6,7 @@ import {
   Upload, FileText, Eye, Edit2, Trash2, Download, X,
   BookOpen, Search, AlertCircle, CheckCircle,
   Plus, ChevronDown, ChevronRight, Folder, FolderOpen,
-  GripVertical, ArrowRight,
+  GripVertical, ArrowRight, Crown, Lock,
 } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────── */
@@ -17,6 +17,7 @@ interface Bundle {
   description: string | null;
   category: string | null;
   status: "draft" | "published";
+  isPremium: boolean;
   questionCount: number;
   sortOrder: number;
   createdAt: string;
@@ -68,6 +69,7 @@ export function AdminQuestionsPage() {
   const [mDesc,       setMDesc]       = useState("");
   const [mCat,        setMCat]        = useState("");
   const [mParentId,   setMParentId]   = useState<string>("");
+  const [mIsPremium,  setMIsPremium]  = useState(false);
   const [mSaving,     setMSaving]     = useState(false);
   const [mError,      setMError]      = useState("");
 
@@ -132,7 +134,7 @@ export function AdminQuestionsPage() {
   /* ── open create / edit modal ───────────────────────── */
   const openCreate = (defaultParentId?: number) => {
     setEditTarget(null);
-    setMName(""); setMDesc(""); setMCat("");
+    setMName(""); setMDesc(""); setMCat(""); setMIsPremium(false);
     setMParentId(defaultParentId ? String(defaultParentId) : "");
     setMError(""); setShowModal(true);
   };
@@ -140,6 +142,7 @@ export function AdminQuestionsPage() {
     setEditTarget(b);
     setMName(b.name); setMDesc(b.description ?? ""); setMCat(b.category ?? "");
     setMParentId(b.parentId ? String(b.parentId) : "");
+    setMIsPremium(b.isPremium ?? false);
     setMError(""); setShowModal(true);
   };
 
@@ -152,6 +155,7 @@ export function AdminQuestionsPage() {
         name: mName.trim(), description: mDesc.trim() || null,
         category: mCat.trim() || null,
         parentId: mParentId ? Number(mParentId) : null,
+        isPremium: mIsPremium,
       };
       const url   = editTarget ? `${API}/${editTarget.id}` : API;
       const method = editTarget ? "PUT" : "POST";
@@ -313,6 +317,17 @@ export function AdminQuestionsPage() {
                 </select>
               </div>
             </div>
+            {/* Premium toggle */}
+            <label className="flex items-center gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50 cursor-pointer hover:bg-amber-100 transition-colors">
+              <input type="checkbox" checked={mIsPremium} onChange={e => setMIsPremium(e.target.checked)}
+                className="w-4 h-4 accent-amber-500" />
+              <div>
+                <div className="flex items-center gap-1.5 font-semibold text-amber-800 text-sm">
+                  <Crown size={14} className="text-amber-500" /> Bundle Premium (Berbayar)
+                </div>
+                <div className="text-xs text-amber-600 mt-0.5">Hanya pengguna berlangganan yang bisa mengakses soal ini.</div>
+              </div>
+            </label>
             {mError && (
               <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
                 <AlertCircle size={15} /> {mError}
@@ -585,6 +600,11 @@ function ChildBundleRow({
           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[bundle.status]}`}>
             {bundle.status}
           </span>
+          {bundle.isPremium && (
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-100 text-amber-700 text-xs rounded font-semibold">
+              <Crown size={10} /> Premium
+            </span>
+          )}
         </div>
         <div className="text-xs text-slate-400 mt-0.5">
           {bundle.questionCount} soal · klik untuk input soal

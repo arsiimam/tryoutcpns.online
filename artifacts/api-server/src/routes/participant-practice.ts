@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { questionBundlesTable, questionsTable, practiceSessionsTable } from "@workspace/db";
-import { eq, and, asc, desc, sql } from "drizzle-orm";
+import { questionBundlesTable, questionsTable, practiceSessionsTable, userSubscriptionsTable } from "@workspace/db";
+import { eq, and, asc, desc, sql, gt } from "drizzle-orm";
 
 const router = Router();
 
@@ -26,6 +26,7 @@ router.get("/bundles", requireAuth, async (_req: any, res) => {
         questionCount: questionBundlesTable.questionCount,
         sortOrder:     questionBundlesTable.sortOrder,
         status:        questionBundlesTable.status,
+        isPremium:     questionBundlesTable.isPremium,
       })
       .from(questionBundlesTable)
       .where(eq(questionBundlesTable.status, "published"))
@@ -57,6 +58,23 @@ router.get("/bundles/:id/questions", requireAuth, async (req: any, res) => {
       );
 
     if (!bundle) return res.status(404).json({ error: "Bundle tidak ditemukan." });
+
+    // Cek akses premium
+    if (bundle.isPremium) {
+      const userId = req.session?.userId;
+      const [activeSub] = await db
+        .select({ id: userSubscriptionsTable.id })
+        .from(userSubscriptionsTable)
+        .where(and(
+          eq(userSubscriptionsTable.userId, userId),
+          eq(userSubscriptionsTable.status, "active"),
+          gt(userSubscriptionsTable.expiresAt, new Date()),
+        ))
+        .limit(1);
+      if (!activeSub) {
+        return res.status(403).json({ error: "premium_required", message: "Konten ini hanya untuk pengguna Premium." });
+      }
+    }
 
     const rows = await db
       .select()
