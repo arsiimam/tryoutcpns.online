@@ -339,7 +339,7 @@ export function AdminTryoutDetailPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {activeSection.questions.map(q => {
-                  const diff = q.metadata?.difficulty ?? null;
+                  const diff = q.metadata?.tingkat_kesulitan ?? q.metadata?.difficulty ?? null;
                   return (
                     <tr key={q.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-4 py-3 text-center text-slate-400 font-mono text-xs">{q.orderNum}</td>
