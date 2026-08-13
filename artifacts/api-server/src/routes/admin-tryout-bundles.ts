@@ -238,10 +238,9 @@ router.post("/admin/tryouts/:id/sections/:sectionId/questions", async (req, res)
   const { type, content, options, correctAnswer, explanation, metadata, scoreWeight } = req.body;
   if (!content?.trim()) return res.status(400).json({ error: "Teks soal tidak boleh kosong." });
 
-  const [maxRow] = await db.execute(sql`
-    SELECT COALESCE(MAX(order_num), 0) AS max FROM tryout_questions WHERE section_id = ${sectionId}
-  `);
-  const nextOrder = Number((maxRow as any).max ?? 0) + 1;
+  const [row] = await db.select({ maxOrder: max(tryoutQuestionsTable.orderNum) })
+    .from(tryoutQuestionsTable).where(eq(tryoutQuestionsTable.sectionId, sectionId));
+  const nextOrder = (row?.maxOrder ?? 0) + 1;
 
   const [q] = await db.insert(tryoutQuestionsTable).values({
     tryoutId,
