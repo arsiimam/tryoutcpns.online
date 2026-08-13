@@ -112,7 +112,7 @@ interface Option { key: string; text: string; imageUrl: string }
 interface Step   { text: string }
 
 function defaultOptions(): Option[] {
-  return ["A", "B", "C", "D"].map(k => ({ key: k, text: "", imageUrl: "" }));
+  return ["A", "B", "C", "D", "E"].map(k => ({ key: k, text: "", imageUrl: "" }));
 }
 
 /* ── Main ──────────────────────────────────────────────── */
