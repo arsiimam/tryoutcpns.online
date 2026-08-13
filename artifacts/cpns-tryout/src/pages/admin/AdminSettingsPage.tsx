@@ -3,7 +3,7 @@ import { AdminLayout } from "../../components/layouts/AdminLayout";
 import { PageHeader } from "../../components/ui/shared";
 import {
   Eye, EyeOff, Copy, CheckCircle2, Save, RefreshCw,
-  AlertCircle, Zap, Globe, Clock, ShieldCheck, Target, Users, BarChart2,
+  AlertCircle, Zap, Globe, Clock, ShieldCheck, Target, Users, BarChart2, Mail,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -172,6 +172,18 @@ export function AdminSettingsPage() {
   const [dummyStats, setDummyStats]         = useState<{ inDb: number; stats: { mean: number; std: number; min: number; max: number } } | null>(null);
   const [generatingDummy, setGeneratingDummy] = useState(false);
 
+  /* SMTP state */
+  const [smtpHost,     setSmtpHost]     = useState("");
+  const [smtpPort,     setSmtpPort]     = useState("587");
+  const [smtpUser,     setSmtpUser]     = useState("");
+  const [smtpPass,     setSmtpPass]     = useState("");
+  const [smtpFrom,     setSmtpFrom]     = useState("");
+  const [appUrl,       setAppUrl]       = useState("");
+  const [showSmtpPass, setShowSmtpPass] = useState(false);
+  const [smtpPassMasked, setSmtpPassMasked] = useState("");
+  const [smtpPassSource, setSmtpPassSource] = useState<"database"|"environment"|"none">("none");
+  const [savingSmtp,   setSavingSmtp]   = useState(false);
+
   const callbackUrlGoogle  = `${window.location.origin}/api/auth/google/callback`;
   const callbackUrlDuitku  = `${window.location.origin}/api/payment/callback`;
   const callbackUrlMidtrans = `${window.location.origin}/api/payment/midtrans-notification`;
@@ -192,8 +204,41 @@ export function AdminSettingsPage() {
       setSocialTiktok(data.social_tiktok ?? "");
       setSocialTelegram(data.social_telegram ?? "");
       setSocialFacebook(data.social_facebook ?? "");
+      // SMTP
+      setSmtpHost((data as any).smtp_host ?? "");
+      setSmtpPort((data as any).smtp_port ?? "587");
+      setSmtpUser((data as any).smtp_user ?? "");
+      setSmtpFrom((data as any).smtp_from ?? "");
+      setAppUrl((data as any).app_url ?? "");
+      setSmtpPassMasked((data as any).smtp_pass_masked ?? "");
+      setSmtpPassSource((data as any).smtp_pass_source ?? "none");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSaveSmtp(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingSmtp(true);
+    try {
+      const body: Record<string, string> = {
+        smtp_host: smtpHost, smtp_port: smtpPort,
+        smtp_user: smtpUser, smtp_from: smtpFrom, app_url: appUrl,
+      };
+      if (smtpPass.trim()) body.smtp_pass = smtpPass.trim();
+      const r = await fetch("/api/admin/settings", {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error("Gagal menyimpan");
+      setSmtpPass("");
+      showToast("success", "Konfigurasi email berhasil disimpan.");
+      loadSettings();
+    } catch (e: any) {
+      showToast("error", e.message);
+    } finally {
+      setSavingSmtp(false);
     }
   }
 
@@ -1044,6 +1089,94 @@ export function AdminSettingsPage() {
               <span className="text-xs text-slate-400">Reset aman — data user asli tidak tersentuh</span>
             </div>
           </div>
+        </SectionCard>
+
+        {/* ── SMTP / Email ── */}
+        <SectionCard
+          icon={<Mail size={20} className="text-sky-600" />}
+          title="Konfigurasi Email (SMTP)"
+          subtitle="Pengaturan server email untuk kirim reset password dan notifikasi."
+        >
+          <form onSubmit={handleSaveSmtp} className="p-5 space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              {/* Host */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">SMTP Host</label>
+                <input
+                  value={smtpHost} onChange={e => setSmtpHost(e.target.value)}
+                  placeholder="smtp.gmail.com"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+              {/* Port */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Port</label>
+                <input
+                  value={smtpPort} onChange={e => setSmtpPort(e.target.value)}
+                  placeholder="587"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+              {/* User */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email Pengirim (User)</label>
+                <input
+                  value={smtpUser} onChange={e => setSmtpUser(e.target.value)}
+                  placeholder="noreply@domain.com"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Password / App Password
+                  <SourceBadge source={smtpPassSource} />
+                </label>
+                {smtpPassMasked && (
+                  <div className="mb-1 px-3 py-2 text-sm border rounded-lg bg-slate-50 text-slate-500 font-mono">
+                    {smtpPassMasked}
+                  </div>
+                )}
+                <div className="relative">
+                  <input
+                    type={showSmtpPass ? "text" : "password"}
+                    value={smtpPass} onChange={e => setSmtpPass(e.target.value)}
+                    placeholder={smtpPassMasked ? "Isi untuk mengganti…" : "App Password Gmail / SMTP pass"}
+                    className="w-full px-3 py-2 border rounded-lg text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                  <button type="button" onClick={() => setShowSmtpPass(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    {showSmtpPass ? <EyeOff size={16}/> : <Eye size={16}/>}
+                  </button>
+                </div>
+              </div>
+              {/* From */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nama &amp; Email Pengirim (From)</label>
+                <input
+                  value={smtpFrom} onChange={e => setSmtpFrom(e.target.value)}
+                  placeholder='Tryout CPNS Online <noreply@domain.com>'
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+              {/* App URL */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">URL Aplikasi (untuk link email)</label>
+                <input
+                  value={appUrl} onChange={e => setAppUrl(e.target.value)}
+                  placeholder="https://tryoutcpns.online"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+            </div>
+            <div className="pt-2">
+              <button type="submit" disabled={savingSmtp}
+                className="flex items-center gap-2 px-5 py-2 rounded-lg text-white text-sm font-semibold transition-opacity disabled:opacity-60"
+                style={{ background: BLUE }}>
+                {savingSmtp ? <><RefreshCw size={14} className="animate-spin"/> Menyimpan…</> : <><Save size={14}/> Simpan Pengaturan Email</>}
+              </button>
+            </div>
+          </form>
         </SectionCard>
 
       </div>

@@ -149,6 +149,16 @@ router.get("/admin/settings", requireAdmin, async (_req, res) => {
     social_tiktok:    socialTiktok,
     social_telegram:  socialTelegram,
     social_facebook:  socialFacebook,
+
+    /* SMTP / Email */
+    smtp_host:        map["smtp_host"]  || process.env.SMTP_HOST  || "",
+    smtp_port:        map["smtp_port"]  || process.env.SMTP_PORT  || "587",
+    smtp_user:        map["smtp_user"]  || process.env.SMTP_USER  || "",
+    smtp_pass_masked: maskSecret(map["smtp_pass"] || process.env.SMTP_PASS || ""),
+    smtp_pass_source: map["smtp_pass"]
+      ? "database" : process.env.SMTP_PASS ? "environment" : "none",
+    smtp_from:        map["smtp_from"]  || process.env.SMTP_FROM  || "",
+    app_url:          map["app_url"]    || process.env.APP_URL    || "",
   });
 });
 
@@ -234,6 +244,16 @@ router.put("/admin/settings", requireAdmin, async (req, res) => {
     if (typeof (body as any)[key] === "string") {
       await upsertSetting(key, ((body as any)[key] as string).trim());
     }
+  }
+
+  // ---- SMTP / Email ----
+  for (const key of ["smtp_host", "smtp_port", "smtp_user", "smtp_from", "app_url"] as const) {
+    if (typeof (body as any)[key] === "string") {
+      await upsertSetting(key, ((body as any)[key] as string).trim());
+    }
+  }
+  if (typeof (body as any).smtp_pass === "string" && (body as any).smtp_pass.trim()) {
+    await upsertSetting("smtp_pass", (body as any).smtp_pass.trim());
   }
 
   if (googleChanged)   invalidateGoogleCredCache();
