@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { db } from "@workspace/db";
 import { usersTable, appSettingsTable, userSubscriptionsTable, passwordResetTokensTable } from "@workspace/db";
-import { eq, inArray, and, desc, gt } from "drizzle-orm";
+import { eq, inArray, and, desc, gt, sql } from "drizzle-orm";
 import { authLimiter } from "../lib/rate-limit";
 import { sendPasswordResetEmail } from "../lib/mailer";
 
@@ -157,6 +157,13 @@ router.post("/auth/login", authLimiter, async (req, res) => {
   if (!valid) {
     return res.status(401).json({ error: "Email atau password salah." });
   }
+
+  // Enforce single active session: hapus sesi lama milik user ini
+  try {
+    await db.execute(
+      sql`DELETE FROM user_sessions WHERE sess->>'userId' = ${user.id}`
+    );
+  } catch (_) { /* non-fatal */ }
 
   req.session.userId   = user.id;
   req.session.userRole = user.role;

@@ -121,7 +121,7 @@ function ImageUploader({
       });
       const { uploadURL, objectPath } = await res.json();
       await fetch(uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
-      onChange(`/api/storage${objectPath}`);
+      onChange(`/api/storage/public-objects${objectPath}`);
     } catch {
       setErr("Upload gagal.");
     } finally {
@@ -134,7 +134,7 @@ function ImageUploader({
       <label className="text-xs font-semibold text-slate-500 uppercase">{label}</label>
       {value ? (
         <div className="flex items-start gap-2">
-          <img src={`${BASE}${value}`} alt="preview" className="h-24 rounded border border-slate-200 object-contain" />
+          <img src={value.startsWith("http") ? value : `${BASE}${value}`} alt="preview" className="h-24 rounded border border-slate-200 object-contain" />
           <button type="button" onClick={() => onChange("")} className="text-red-400 hover:text-red-600">
             <X size={16} />
           </button>
@@ -242,7 +242,7 @@ export function AdminQuestionFormPage() {
         if (saved) {
           const d = JSON.parse(saved);
           setStem(d.stem ?? "");
-          setOptions(d.options ?? defaultOptions());
+          setOptions(Array.isArray(d.options) && d.options.length > 0 ? d.options : defaultOptions());
           setCorrectKey(d.correctKey ?? "A");
           setCorrectKeys(d.correctKeys ?? ["A"]);
           setType(d.type ?? "pilihan_ganda");

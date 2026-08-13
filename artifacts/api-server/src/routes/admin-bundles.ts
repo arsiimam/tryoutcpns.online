@@ -216,15 +216,19 @@ router.post("/admin/bundles/:id/questions", async (req, res) => {
     if (!content?.trim()) return res.status(400).json({ error: "Teks soal wajib diisi." });
 
     // Auto order: last + 1
-    const [{ maxOrder }] = await db.execute(
-      sql`SELECT COALESCE(MAX(order_num), 0) AS "maxOrder" FROM questions WHERE bundle_id = ${bundleId}`
-    ) as any;
+    const lastQ = await db
+      .select({ orderNum: questionsTable.orderNum })
+      .from(questionsTable)
+      .where(eq(questionsTable.bundleId, bundleId))
+      .orderBy(desc(questionsTable.orderNum))
+      .limit(1);
+    const maxOrder = lastQ[0]?.orderNum ?? 0;
 
     const [q] = await db
       .insert(questionsTable)
       .values({
         bundleId,
-        orderNum: orderNum ?? (Number(maxOrder) + 1),
+        orderNum: orderNum ?? (maxOrder + 1),
         type:     type ?? "pilihan_ganda",
         content:  content.trim(),
         options:  options ?? null,

@@ -38,9 +38,8 @@ function hasAuthenticatedSession(
 router.post(
   '/storage/uploads/request-url',
   async (req: Request, res: Response) => {
-    if (!hasAuthenticatedSession(req)) {
+    if (!(req as any).session?.userId) {
       res.status(401).json({ error: 'Unauthorized' });
-
       return;
     }
 
