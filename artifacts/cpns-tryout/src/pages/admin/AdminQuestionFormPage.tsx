@@ -121,7 +121,7 @@ function ImageUploader({
       });
       const { uploadURL, objectPath } = await res.json();
       await fetch(uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
-      onChange(`/api/storage/public-objects${objectPath}`);
+      onChange(`/api/storage${objectPath}`);
     } catch {
       setErr("Upload gagal.");
     } finally {

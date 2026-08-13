@@ -77,8 +77,13 @@ function ImageGallery({ images, baseUrl }: { images: string[]; baseUrl?: string 
 
   if (!images || images.length === 0) return null;
 
+  const appBase = import.meta.env.BASE_URL.replace(/\/$/, "");
   function resolveUrl(path: string) {
-    if (path.startsWith("http") || path.startsWith("/api/storage")) return path;
+    if (path.startsWith("http")) return path;
+    // Absolute API paths need the app base prefix so Replit routes them correctly
+    if (path.startsWith("/api/storage") || path.startsWith("/objects/")) {
+      return `${appBase}${path}`;
+    }
     return baseUrl ? `${baseUrl}/${path}` : path;
   }
 
@@ -125,8 +130,10 @@ export function QuestionRenderer({
   showAnswer = false,
   onSelect,
   questionNumber,
-  storageBaseUrl = "/api/storage/objects",
+  storageBaseUrl,
 }: QuestionRendererProps) {
+  const _defaultBase = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/storage/objects`;
+  if (!storageBaseUrl) storageBaseUrl = _defaultBase;
   const { content, options, correctAnswer, explanation, metadata } = question;
   const pembahasan = metadata?.pembahasan;
   const gambarSoal = metadata?.gambar_soal ?? [];
@@ -191,7 +198,7 @@ export function QuestionRenderer({
                   <KatexRenderer content={opt.text} block={false} />
                   {opt.imageUrl && (
                     <img
-                      src={opt.imageUrl}
+                      src={resolveUrl(opt.imageUrl)}
                       alt={`Opsi ${opt.key}`}
                       className="mt-1 max-h-24 rounded border border-slate-200"
                       loading="lazy"
