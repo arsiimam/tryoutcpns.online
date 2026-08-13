@@ -82,6 +82,35 @@ export function PracticePage() {
       .finally(() => setLoadingBundles(false));
   }, []);
 
+  /* ── Browser back-button support ── */
+  useEffect(() => {
+    // Mark current history entry so we can detect a "back" into this page
+    history.replaceState({ practiceView: "groups" }, "");
+
+    const onPop = (_e: PopStateEvent) => {
+      setView(prev => {
+        if (prev === "session" || prev === "submitting") {
+          // Back from session → restore bundle list
+          setSelectedBundle(null);
+          setQuestions([]);
+          // Push a new entry so subsequent back still works
+          history.pushState({ practiceView: "bundles" }, "");
+          return "bundles";
+        }
+        if (prev === "bundles") {
+          // Back from bundle list → restore group list
+          setSelectedGroup(null);
+          history.pushState({ practiceView: "groups" }, "");
+          return "groups";
+        }
+        return prev;
+      });
+    };
+
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   /* ── Compute roots and children ── */
   const childIds = new Set(allBundles.filter(b => b.parentId).map(b => b.id));
 
@@ -125,6 +154,7 @@ export function PracticePage() {
       setAnswers({});
       setShowAnswers(false);
       setView("session");
+      history.pushState({ practiceView: "session", bundleId: bundle.id }, "");
     } catch {
       setView("bundles");
     }
@@ -137,6 +167,7 @@ export function PracticePage() {
     if (hasChildren(group.id)) {
       setSelectedGroup(group);
       setView("bundles");
+      history.pushState({ practiceView: "bundles", groupId: group.id }, "");
     } else {
       // It's a leaf root → start directly
       startBundle(group);

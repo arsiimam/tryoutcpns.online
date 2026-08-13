@@ -119,11 +119,18 @@ function ImageUploader({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
       });
-      const { uploadURL, objectPath } = await res.json();
-      await fetch(uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      const data = await res.json();
+      if (!res.ok) {
+        setErr(data?.error ?? `Gagal mendapat URL upload (${res.status}).`);
+        return;
+      }
+      const { uploadURL, objectPath } = data;
+      if (!uploadURL || !objectPath) { setErr("Respons server tidak valid."); return; }
+      const put = await fetch(uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      if (!put.ok) { setErr(`Gagal upload ke storage (${put.status}).`); return; }
       onChange(`/api/storage${objectPath}`);
-    } catch {
-      setErr("Upload gagal.");
+    } catch (e: any) {
+      setErr(e?.message ? `Upload gagal: ${e.message}` : "Upload gagal. Periksa koneksi.");
     } finally {
       setUploading(false);
     }
