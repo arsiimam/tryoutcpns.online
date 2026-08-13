@@ -103,28 +103,44 @@ router.get("/tryouts", requireAuth, async (req: any, res) => {
         sql`${tryoutSectionsTable.tryoutId} IN (${sql.join(tryouts.map(t => sql`${t.id}`), sql`, `)})`
       );
 
-    // Ambil hasil terakhir per tryout untuk user ini
+    // Ambil hasil terakhir per tryout untuk user ini (termasuk rank)
     const tryoutIds = tryouts.map(t => t.id);
     let lastResultMap: Record<string, any> = {};
     if (tryoutIds.length) {
-      const results = await db
-        .select({
+      const inClause = sql.join(tryoutIds.map(id => sql`${id}`), sql`, `);
+
+      const [results, dummyTotal, countRows] = await Promise.all([
+        db.select({
           tryoutId:   tryoutResultsTable.tryoutId,
           totalScore: tryoutResultsTable.totalScore,
           twkScore:   tryoutResultsTable.twkScore,
           tiuScore:   tryoutResultsTable.tiuScore,
           tkpScore:   tryoutResultsTable.tkpScore,
           passed:     tryoutResultsTable.passed,
+          rank:       tryoutResultsTable.rank,
           createdAt:  tryoutResultsTable.createdAt,
         })
-        .from(tryoutResultsTable)
-        .where(
-          and(
+          .from(tryoutResultsTable)
+          .where(and(
             eq(tryoutResultsTable.userId, userId),
-            sql`${tryoutResultsTable.tryoutId} IN (${sql.join(tryoutIds.map(id => sql`${id}`), sql`, `)})`
-          )
-        )
-        .orderBy(desc(tryoutResultsTable.createdAt));
+            sql`${tryoutResultsTable.tryoutId} IN (${inClause})`
+          ))
+          .orderBy(desc(tryoutResultsTable.createdAt)),
+
+        totalDummyCount(),
+
+        db.execute(sql`
+          SELECT tryout_id, COUNT(*)::int AS cnt
+          FROM tryout_results
+          WHERE tryout_id IN (${inClause})
+          GROUP BY tryout_id
+        `),
+      ]);
+
+      const countMap: Record<string, number> = {};
+      for (const row of countRows.rows as any[]) {
+        countMap[String(row.tryout_id)] = Number(row.cnt) + dummyTotal;
+      }
 
       // Simpan hanya hasil terbaru per tryout
       for (const r of results) {
@@ -136,6 +152,8 @@ router.get("/tryouts", requireAuth, async (req: any, res) => {
             tiuScore:   r.tiuScore,
             tkpScore:   r.tkpScore,
             passed:     r.passed,
+            rank:       r.rank ?? 0,
+            totalParticipants: countMap[key] ?? dummyTotal + 1,
             completedAt: r.createdAt,
           };
         }

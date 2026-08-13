@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader } from "../../components/ui/shared";
 import { Link, useLocation } from "wouter";
-import { Clock, FileText, Target, PlayCircle, Lock, RotateCcw, CheckCircle2, XCircle, X } from "lucide-react";
+import { Clock, FileText, Target, PlayCircle, Lock, RotateCcw, CheckCircle2, XCircle, X, Trophy } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
 interface LastResult {
@@ -11,6 +11,8 @@ interface LastResult {
   tiuScore: number | null;
   tkpScore: number | null;
   passed: boolean;
+  rank: number;
+  totalParticipants: number;
   completedAt: string;
 }
 
@@ -180,13 +182,14 @@ export function TryoutListPage() {
                     </div>
                   </div>
 
-                  {/* Score terakhir — tanpa label "Hasil Terakhir" */}
+                  {/* Score + ranking terakhir */}
                   {hasResult && to.lastResult && (
-                    <div className={`rounded-xl px-3 py-2.5 ${to.lastResult.passed
+                    <div className={`rounded-xl px-3 py-2.5 space-y-2 ${to.lastResult.passed
                       ? "bg-emerald-50 border border-emerald-200"
                       : "bg-red-50 border border-red-200"}`}>
+                      {/* Baris 1: skor & status */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-sm">
+                        <div className="flex items-center gap-1.5 text-sm flex-wrap">
                           {to.lastResult.passed
                             ? <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
                             : <XCircle size={14} className="text-red-500 shrink-0" />}
@@ -201,6 +204,18 @@ export function TryoutListPage() {
                           {to.lastResult.passed ? "LULUS" : "BELUM LULUS"}
                         </span>
                       </div>
+                      {/* Baris 2: ranking nasional */}
+                      {to.lastResult.rank > 0 && (
+                        <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                          <Trophy size={12} className="text-amber-500 shrink-0" />
+                          <span>
+                            Peringkat <span className="font-bold text-slate-800">#{to.lastResult.rank}</span>
+                            {" "}dari{" "}
+                            <span className="font-bold text-slate-800">{to.lastResult.totalParticipants.toLocaleString("id-ID")}</span>
+                            {" "}peserta
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
