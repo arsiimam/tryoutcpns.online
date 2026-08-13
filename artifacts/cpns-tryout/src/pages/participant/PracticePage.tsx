@@ -107,21 +107,22 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 }
 
 /* ── Main Page ────────────────────────────── */
-type View = "selection" | "loading" | "session" | "submitting";
+type View = "categories" | "bundles" | "loading" | "session" | "submitting";
 
 export function PracticePage() {
   const [bundles, setBundles] = useState<BundleInfo[]>([]);
   const [loadingBundles, setLoadingBundles] = useState(true);
 
-  const [view, setView] = useState<View>("selection");
-  const [selectedBundle, setSelectedBundle] = useState<BundleInfo | null>(null);
-  const [questions, setQuestions] = useState<PracticeQuestion[]>([]);
+  const [view, setView]                         = useState<View>("categories");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedBundle, setSelectedBundle]     = useState<BundleInfo | null>(null);
+  const [questions, setQuestions]               = useState<PracticeQuestion[]>([]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [showAnswers, setShowAnswers] = useState(false);
-  const [showNav, setShowNav] = useState(true);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [answers, setAnswers]           = useState<Record<string, string>>({});
+  const [showAnswers, setShowAnswers]   = useState(false);
+  const [showNav, setShowNav]           = useState(true);
+  const [submitError, setSubmitError]   = useState<string | null>(null);
 
   /* ── Fetch bundles on mount ── */
   useEffect(() => {
@@ -154,14 +155,19 @@ export function PracticePage() {
       setShowAnswers(false);
       setView("session");
     } catch {
-      setView("selection");
+      setView("bundles");
     }
   };
 
   const [, navigate] = useLocation();
 
+  const openCategory = (catKey: string) => {
+    setSelectedCategory(catKey);
+    setView("bundles");
+  };
+
   const exitSession = () => {
-    setView("selection");
+    setView("bundles");
     setSelectedBundle(null);
     setQuestions([]);
   };
@@ -194,77 +200,116 @@ export function PracticePage() {
   };
 
   /* ════════════════════════════════════════════
-     SELECTION VIEW
+     CATEGORY CARDS VIEW
   ════════════════════════════════════════════ */
-  if (view === "selection" || view === "loading") {
+  if (view === "categories") {
+    const catKeys = Object.keys(grouped);
     return (
       <DashboardLayout>
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900">Latihan Soal</h1>
-          <p className="text-slate-500 mt-1">
-            Pilih bundle soal latihan. Kerjakan tanpa batas waktu dan cek jawaban langsung.
-          </p>
+          <p className="text-slate-500 mt-1">Pilih kategori soal yang ingin kamu latih.</p>
         </div>
 
         {loadingBundles ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="animate-spin text-primary" size={32} />
           </div>
-        ) : Object.keys(grouped).length === 0 ? (
+        ) : catKeys.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border">
             <BookOpen size={48} className="mx-auto text-slate-300 mb-4" />
             <p className="font-semibold text-slate-700 text-lg">Belum ada bundle soal tersedia</p>
-            <p className="text-slate-400 text-sm mt-1">
-              Admin belum mempublikasikan bundle soal latihan. Cek lagi nanti.
-            </p>
+            <p className="text-slate-400 text-sm mt-1">Admin belum mempublikasikan bundle latihan.</p>
           </div>
         ) : (
-          <div className="grid gap-6">
-            {Object.entries(grouped).map(([catKey, catBundles], catIdx) => {
-              const meta = getCatMeta(catKey, catIdx);
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {catKeys.map((catKey, catIdx) => {
+              const meta     = getCatMeta(catKey, catIdx);
+              const count    = grouped[catKey].length;
+              const totalSoal= grouped[catKey].reduce((s, b) => s + (b.questionCount ?? 0), 0);
               return (
-                <div
+                <button
                   key={catKey}
-                  className={`rounded-2xl border ${meta.borderColor} ${meta.bgColor} p-6`}
+                  onClick={() => openCategory(catKey)}
+                  className={`rounded-2xl border-2 ${meta.borderColor} ${meta.bgColor} p-6 text-left hover:shadow-lg transition-all group`}
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg border-2 ${meta.borderColor} bg-white ${meta.color}`}
-                    >
-                      {meta.code}
-                    </div>
-                    <div>
-                      <h2 className={`font-bold text-lg ${meta.color}`}>{meta.name}</h2>
-                      <p className="text-sm text-slate-500">{meta.description}</p>
-                    </div>
+                  {/* Icon badge */}
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl border-2 ${meta.borderColor} bg-white ${meta.color} mb-4 group-hover:scale-105 transition-transform`}>
+                    {meta.code}
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {catBundles.map((b) => (
-                      <button
-                        key={b.id}
-                        onClick={() => startBundle(b)}
-                        disabled={view === "loading"}
-                        className="bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all p-4 text-left group disabled:opacity-60 disabled:cursor-wait"
-                      >
-                        <div className={`text-xs font-bold uppercase tracking-wider mb-2 ${meta.color}`}>
-                          {meta.code}
-                        </div>
-                        <div className="font-bold text-slate-800 text-base mb-1 group-hover:text-slate-900 line-clamp-2 leading-snug">
-                          {b.name}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                          <BookOpen size={14} />
-                          {b.questionCount ?? "?"} soal · Tanpa timer
-                        </div>
-                      </button>
-                    ))}
+                  <h2 className={`font-bold text-lg leading-snug ${meta.color} mb-1`}>{meta.name}</h2>
+                  <p className="text-sm text-slate-500 mb-4 line-clamp-2">{meta.description}</p>
+                  <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
+                    <span className={`px-2.5 py-1 rounded-full ${meta.badgeClass}`}>
+                      {count} paket
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <BookOpen size={12} /> {totalSoal} soal
+                    </span>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
         )}
+      </DashboardLayout>
+    );
+  }
+
+  /* ════════════════════════════════════════════
+     BUNDLE LIST VIEW (per kategori)
+  ════════════════════════════════════════════ */
+  if (view === "bundles" || view === "loading") {
+    const catKey    = selectedCategory ?? Object.keys(grouped)[0] ?? "";
+    const meta      = getCatMeta(catKey);
+    const catBundles= grouped[catKey] ?? [];
+    return (
+      <DashboardLayout>
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 mb-6">
+          <button
+            onClick={() => { setView("categories"); setSelectedCategory(null); }}
+            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
+          >
+            <ChevronLeft size={16} /> Latihan Soal
+          </button>
+          <span className="text-slate-300">/</span>
+          <span className={`font-semibold text-sm ${meta.color}`}>{meta.name}</span>
+        </div>
+
+        {/* Category header */}
+        <div className={`rounded-2xl border-2 ${meta.borderColor} ${meta.bgColor} px-6 py-4 flex items-center gap-4 mb-6`}>
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg border-2 ${meta.borderColor} bg-white ${meta.color} shrink-0`}>
+            {meta.code}
+          </div>
+          <div>
+            <h1 className={`font-bold text-xl ${meta.color}`}>{meta.name}</h1>
+            <p className="text-sm text-slate-500">{meta.description}</p>
+          </div>
+        </div>
+
+        {/* Bundle grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {catBundles.map((b) => (
+            <button
+              key={b.id}
+              onClick={() => startBundle(b)}
+              disabled={view === "loading"}
+              className="bg-white rounded-xl border-2 border-slate-200 hover:border-slate-300 hover:shadow-md transition-all p-5 text-left group disabled:opacity-60 disabled:cursor-wait"
+            >
+              <div className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-3 ${meta.badgeClass}`}>
+                {meta.code}
+              </div>
+              <div className="font-bold text-slate-800 text-base mb-2 group-hover:text-slate-900 leading-snug">
+                {b.name}
+              </div>
+              <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                <BookOpen size={14} />
+                {b.questionCount ?? "?"} soal · Tanpa timer
+              </div>
+            </button>
+          ))}
+        </div>
       </DashboardLayout>
     );
   }
