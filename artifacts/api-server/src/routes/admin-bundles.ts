@@ -33,22 +33,28 @@ function syncCount(bundleId: number) {
    BUNDLE CRUD
 ══════════════════════════════════════════════════════════ */
 
-/* LIST */
+/* LIST (includes parentId for tree building) */
 router.get("/admin/bundles", async (_req, res) => {
   const bundles = await db
     .select()
     .from(questionBundlesTable)
-    .orderBy(desc(questionBundlesTable.createdAt));
+    .orderBy(questionBundlesTable.sortOrder, questionBundlesTable.createdAt);
   res.json(bundles);
 });
 
 /* CREATE EMPTY BUNDLE */
 router.post("/admin/bundles", async (req, res) => {
-  const { name, description, category } = req.body;
+  const { name, description, category, parentId } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama bundle wajib diisi." });
   const [bundle] = await db
     .insert(questionBundlesTable)
-    .values({ name: name.trim(), description, category, status: "draft" })
+    .values({
+      name: name.trim(),
+      description: description ?? null,
+      category: category ?? null,
+      parentId: parentId ? Number(parentId) : null,
+      status: "draft",
+    })
     .returning();
   res.status(201).json(bundle);
 });
@@ -133,11 +139,21 @@ router.get("/admin/bundles/:id", async (req, res) => {
 /* UPDATE BUNDLE METADATA */
 router.put("/admin/bundles/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { name, description, category } = req.body;
+  const { name, description, category, parentId, sortOrder } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Nama bundle wajib diisi." });
+  // Prevent circular parent
+  if (parentId && Number(parentId) === id)
+    return res.status(400).json({ error: "Bundle tidak bisa menjadi parent-nya sendiri." });
   const [bundle] = await db
     .update(questionBundlesTable)
-    .set({ name: name.trim(), description, category, updatedAt: new Date() })
+    .set({
+      name: name.trim(),
+      description: description ?? null,
+      category: category ?? null,
+      parentId: parentId ? Number(parentId) : null,
+      ...(sortOrder !== undefined ? { sortOrder: Number(sortOrder) } : {}),
+      updatedAt: new Date(),
+    })
     .where(eq(questionBundlesTable.id, id))
     .returning();
   if (!bundle) return res.status(404).json({ error: "Bundle tidak ditemukan." });

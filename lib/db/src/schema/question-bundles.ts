@@ -2,11 +2,13 @@ import { pgTable, serial, varchar, text, integer, timestamp } from "drizzle-orm/
 
 export const questionBundlesTable = pgTable("question_bundles", {
   id:            serial("id").primaryKey(),
+  parentId:      integer("parent_id"),  // self-ref: set via ALTER TABLE on VPS
   name:          varchar("name", { length: 255 }).notNull(),
   description:   text("description"),
   category:      varchar("category", { length: 100 }),
   status:        varchar("status", { length: 20 }).notNull().default("draft"),
   questionCount: integer("question_count").notNull().default(0),
+  sortOrder:     integer("sort_order").notNull().default(0),
   createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt:     timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

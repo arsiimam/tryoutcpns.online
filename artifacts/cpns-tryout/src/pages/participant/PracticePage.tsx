@@ -20,10 +20,12 @@ import { useLocation } from "wouter";
 /* ── Types ────────────────────────────────── */
 interface BundleInfo {
   id: string;
+  parentId: string | null;
   name: string;
   description: string;
   category: string;
   questionCount: number;
+  sortOrder: number;
 }
 
 interface PracticeQuestion {
@@ -33,62 +35,6 @@ interface PracticeQuestion {
   correctAnswer: string | null;
   explanation: string;
   difficulty: "mudah" | "sedang" | "sulit";
-}
-
-/* ── Category style map ───────────────────── */
-interface CatMeta {
-  code: string; name: string; description: string;
-  color: string; bgColor: string; borderColor: string; badgeClass: string;
-}
-
-const KNOWN_CATS: Record<string, CatMeta> = {
-  TWK: {
-    code: "TWK", name: "Tes Wawasan Kebangsaan",
-    description: "Soal wawasan kebangsaan, Pancasila, UUD 1945, dan NKRI",
-    color: "text-blue-700", bgColor: "bg-blue-50",
-    borderColor: "border-blue-200", badgeClass: "bg-blue-100 text-blue-800",
-  },
-  TIU: {
-    code: "TIU", name: "Tes Intelegensi Umum",
-    description: "Soal logika, matematika, verbal, analogi, dan figural",
-    color: "text-purple-700", bgColor: "bg-purple-50",
-    borderColor: "border-purple-200", badgeClass: "bg-purple-100 text-purple-800",
-  },
-  TKP: {
-    code: "TKP", name: "Tes Karakteristik Pribadi",
-    description: "Soal sikap, perilaku, dan karakteristik kepribadian ASN",
-    color: "text-emerald-700", bgColor: "bg-emerald-50",
-    borderColor: "border-emerald-200", badgeClass: "bg-emerald-100 text-emerald-800",
-  },
-  SKD: {
-    code: "SKD", name: "Seleksi Kompetensi Dasar",
-    description: "Paket gabungan TWK + TIU + TKP",
-    color: "text-indigo-700", bgColor: "bg-indigo-50",
-    borderColor: "border-indigo-200", badgeClass: "bg-indigo-100 text-indigo-800",
-  },
-  SKB: {
-    code: "SKB", name: "Seleksi Kompetensi Bidang",
-    description: "Soal kompetensi bidang jabatan yang dilamar",
-    color: "text-rose-700", bgColor: "bg-rose-50",
-    borderColor: "border-rose-200", badgeClass: "bg-rose-100 text-rose-800",
-  },
-};
-
-const FALLBACK_COLORS = [
-  { color: "text-amber-700", bgColor: "bg-amber-50", borderColor: "border-amber-200", badgeClass: "bg-amber-100 text-amber-800" },
-  { color: "text-cyan-700", bgColor: "bg-cyan-50", borderColor: "border-cyan-200", badgeClass: "bg-cyan-100 text-cyan-800" },
-  { color: "text-teal-700", bgColor: "bg-teal-50", borderColor: "border-teal-200", badgeClass: "bg-teal-100 text-teal-800" },
-];
-
-function getCatMeta(cat: string, fallbackIdx = 0): CatMeta {
-  const key = cat.toUpperCase();
-  if (KNOWN_CATS[key]) return KNOWN_CATS[key];
-  const fb = FALLBACK_COLORS[fallbackIdx % FALLBACK_COLORS.length];
-  return {
-    code: key || "—", name: cat || "Lainnya",
-    description: "Kumpulan soal latihan",
-    ...fb,
-  };
 }
 
 /* ── Sub-components ───────────────────────── */
@@ -107,16 +53,16 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 }
 
 /* ── Main Page ────────────────────────────── */
-type View = "categories" | "bundles" | "loading" | "session" | "submitting";
+type View = "groups" | "bundles" | "loading" | "session" | "submitting";
 
 export function PracticePage() {
-  const [bundles, setBundles] = useState<BundleInfo[]>([]);
+  const [allBundles, setAllBundles] = useState<BundleInfo[]>([]);
   const [loadingBundles, setLoadingBundles] = useState(true);
 
-  const [view, setView]                         = useState<View>("categories");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedBundle, setSelectedBundle]     = useState<BundleInfo | null>(null);
-  const [questions, setQuestions]               = useState<PracticeQuestion[]>([]);
+  const [view, setView]                       = useState<View>("groups");
+  const [selectedGroup, setSelectedGroup]     = useState<BundleInfo | null>(null);
+  const [selectedBundle, setSelectedBundle]   = useState<BundleInfo | null>(null);
+  const [questions, setQuestions]             = useState<PracticeQuestion[]>([]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers]           = useState<Record<string, string>>({});
@@ -128,19 +74,26 @@ export function PracticePage() {
   useEffect(() => {
     fetch("/api/participant/practice/bundles", { credentials: "include" })
       .then((r) => r.json())
-      .then((d) => setBundles(d.bundles ?? []))
+      .then((d) => setAllBundles(d.bundles?.map((b: any) => ({ ...b, id: String(b.id), parentId: b.parentId ? String(b.parentId) : null })) ?? []))
       .catch(() => {})
       .finally(() => setLoadingBundles(false));
   }, []);
 
-  /* ── Group bundles by category ── */
-  const grouped = bundles.reduce<Record<string, BundleInfo[]>>((acc, b) => {
-    const key = b.category?.toUpperCase() || "Lainnya";
-    (acc[key] = acc[key] || []).push(b);
-    return acc;
-  }, {});
+  /* ── Compute roots and children ── */
+  const childIds = new Set(allBundles.filter(b => b.parentId).map(b => b.id));
 
-  /* ── Start practice for a bundle ── */
+  // Groups = root bundles that have children
+  const groupBundles = allBundles.filter(b => !b.parentId && childIds.has(b.id) === false
+    ? false // will be handled below
+    : !b.parentId
+  );
+  // Actually: roots = bundles with no parentId
+  const roots = allBundles.filter(b => !b.parentId);
+  // A root is a "group" (folder) if it has children, otherwise it's a leaf
+  const hasChildren = (id: string) => allBundles.some(b => b.parentId === id);
+  const getChildren = (id: string) => allBundles.filter(b => b.parentId === id);
+
+  /* ── Start practice for a leaf bundle ── */
   const startBundle = async (bundle: BundleInfo) => {
     setView("loading");
     setSelectedBundle(bundle);
@@ -161,15 +114,22 @@ export function PracticePage() {
 
   const [, navigate] = useLocation();
 
-  const openCategory = (catKey: string) => {
-    setSelectedCategory(catKey);
-    setView("bundles");
+  const openGroup = (group: BundleInfo) => {
+    // If it has children → show children
+    if (hasChildren(group.id)) {
+      setSelectedGroup(group);
+      setView("bundles");
+    } else {
+      // It's a leaf root → start directly
+      startBundle(group);
+    }
   };
 
   const exitSession = () => {
-    setView("bundles");
     setSelectedBundle(null);
     setQuestions([]);
+    if (selectedGroup) setView("bundles");
+    else setView("groups");
   };
 
   const submitSession = async () => {
@@ -200,10 +160,9 @@ export function PracticePage() {
   };
 
   /* ════════════════════════════════════════════
-     CATEGORY CARDS VIEW
+     GROUPS VIEW (root bundles)
   ════════════════════════════════════════════ */
-  if (view === "categories") {
-    const catKeys = Object.keys(grouped);
+  if (view === "groups") {
     return (
       <DashboardLayout>
         <div className="mb-6">
@@ -215,34 +174,41 @@ export function PracticePage() {
           <div className="flex items-center justify-center h-40">
             <Loader2 className="animate-spin text-primary" size={32} />
           </div>
-        ) : catKeys.length === 0 ? (
+        ) : roots.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border">
             <BookOpen size={48} className="mx-auto text-slate-300 mb-4" />
             <p className="font-semibold text-slate-700 text-lg">Belum ada bundle soal tersedia</p>
             <p className="text-slate-400 text-sm mt-1">Admin belum mempublikasikan bundle latihan.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {catKeys.map((catKey, catIdx) => {
-              const meta     = getCatMeta(catKey, catIdx);
-              const count    = grouped[catKey].length;
-              const totalSoal= grouped[catKey].reduce((s, b) => s + (b.questionCount ?? 0), 0);
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {roots.map((root) => {
+              const children = getChildren(root.id);
+              const isFolder = children.length > 0;
+              const totalSoal = isFolder
+                ? children.reduce((s, b) => s + (b.questionCount ?? 0), 0)
+                : root.questionCount;
+              const label = root.category || root.name.substring(0, 5).toUpperCase();
               return (
                 <button
-                  key={catKey}
-                  onClick={() => openCategory(catKey)}
-                  className={`rounded-2xl border-2 ${meta.borderColor} ${meta.bgColor} p-6 text-left hover:shadow-lg transition-all group`}
+                  key={root.id}
+                  onClick={() => openGroup(root)}
+                  className="bg-white rounded-2xl border border-slate-200 hover:border-primary/40 hover:shadow-md p-6 text-left transition-all group"
                 >
-                  {/* Icon badge */}
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl border-2 ${meta.borderColor} bg-white ${meta.color} mb-4 group-hover:scale-105 transition-transform`}>
-                    {meta.code}
+                  {/* Badge */}
+                  <div className="w-12 h-12 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center font-black text-sm text-slate-700 mb-4 group-hover:bg-primary/5 group-hover:border-primary/30 transition-colors">
+                    {label.substring(0, 5)}
                   </div>
-                  <h2 className={`font-bold text-lg leading-snug ${meta.color} mb-1`}>{meta.name}</h2>
-                  <p className="text-sm text-slate-500 mb-4 line-clamp-2">{meta.description}</p>
-                  <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
-                    <span className={`px-2.5 py-1 rounded-full ${meta.badgeClass}`}>
-                      {count} paket
-                    </span>
+                  <h2 className="font-bold text-slate-800 text-base leading-snug mb-1">
+                    {root.name}
+                  </h2>
+                  {root.description && (
+                    <p className="text-sm text-slate-500 mb-3 line-clamp-2">{root.description}</p>
+                  )}
+                  <div className="flex items-center gap-3 text-xs text-slate-400 mt-3">
+                    {isFolder && (
+                      <span className="font-semibold text-slate-500">{children.length} paket</span>
+                    )}
                     <span className="flex items-center gap-1">
                       <BookOpen size={12} /> {totalSoal} soal
                     </span>
@@ -257,58 +223,63 @@ export function PracticePage() {
   }
 
   /* ════════════════════════════════════════════
-     BUNDLE LIST VIEW (per kategori)
+     BUNDLE LIST VIEW (children of selected group)
   ════════════════════════════════════════════ */
   if (view === "bundles" || view === "loading") {
-    const catKey    = selectedCategory ?? Object.keys(grouped)[0] ?? "";
-    const meta      = getCatMeta(catKey);
-    const catBundles= grouped[catKey] ?? [];
+    const group     = selectedGroup;
+    const groupName = group?.name ?? "Latihan Soal";
+    const catLabel  = group?.category || group?.name?.substring(0, 5).toUpperCase() || "—";
+    const children  = group ? getChildren(group.id) : [];
     return (
       <DashboardLayout>
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6 text-sm">
           <button
-            onClick={() => { setView("categories"); setSelectedCategory(null); }}
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
+            onClick={() => { setView("groups"); setSelectedGroup(null); }}
+            className="flex items-center gap-1.5 text-slate-500 hover:text-slate-800 transition-colors"
           >
             <ChevronLeft size={16} /> Latihan Soal
           </button>
           <span className="text-slate-300">/</span>
-          <span className={`font-semibold text-sm ${meta.color}`}>{meta.name}</span>
+          <span className="font-semibold text-slate-700">{groupName}</span>
         </div>
 
-        {/* Category header */}
-        <div className={`rounded-2xl border-2 ${meta.borderColor} ${meta.bgColor} px-6 py-4 flex items-center gap-4 mb-6`}>
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg border-2 ${meta.borderColor} bg-white ${meta.color} shrink-0`}>
-            {meta.code}
+        {/* Group header */}
+        <div className="bg-white rounded-2xl border border-slate-200 px-6 py-4 flex items-center gap-4 mb-6">
+          <div className="w-11 h-11 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center font-black text-sm text-slate-700 shrink-0">
+            {catLabel.substring(0, 5)}
           </div>
           <div>
-            <h1 className={`font-bold text-xl ${meta.color}`}>{meta.name}</h1>
-            <p className="text-sm text-slate-500">{meta.description}</p>
+            <h1 className="font-bold text-lg text-slate-800">{groupName}</h1>
+            {group?.description && <p className="text-sm text-slate-500">{group.description}</p>}
           </div>
         </div>
 
-        {/* Bundle grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {catBundles.map((b) => (
+        {/* Bundle list */}
+        <div className="space-y-3">
+          {children.map((b) => (
             <button
               key={b.id}
               onClick={() => startBundle(b)}
               disabled={view === "loading"}
-              className="bg-white rounded-xl border-2 border-slate-200 hover:border-slate-300 hover:shadow-md transition-all p-5 text-left group disabled:opacity-60 disabled:cursor-wait"
+              className="w-full bg-white rounded-xl border border-slate-200 hover:border-primary/40 hover:shadow-sm transition-all px-5 py-4 text-left group disabled:opacity-60 disabled:cursor-wait flex items-center gap-4"
             >
-              <div className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-3 ${meta.badgeClass}`}>
-                {meta.code}
+              <div className="w-9 h-9 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 group-hover:bg-primary/5 group-hover:border-primary/20 transition-colors">
+                <BookOpen size={16} className="text-slate-500 group-hover:text-primary transition-colors" />
               </div>
-              <div className="font-bold text-slate-800 text-base mb-2 group-hover:text-slate-900 leading-snug">
-                {b.name}
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-slate-800 text-sm leading-snug">{b.name}</div>
+                {b.description && <div className="text-xs text-slate-400 mt-0.5 truncate">{b.description}</div>}
               </div>
-              <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                <BookOpen size={14} />
-                {b.questionCount ?? "?"} soal · Tanpa timer
+              <div className="text-xs text-slate-400 shrink-0">
+                {b.questionCount ?? "?"} soal
               </div>
+              <ChevronRight size={16} className="text-slate-300 group-hover:text-primary/60 shrink-0 transition-colors" />
             </button>
           ))}
+          {children.length === 0 && !loadingBundles && (
+            <div className="text-center py-10 text-slate-400 text-sm">Belum ada soal tersedia.</div>
+          )}
         </div>
       </DashboardLayout>
     );

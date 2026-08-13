@@ -19,15 +19,17 @@ router.get("/bundles", requireAuth, async (_req: any, res) => {
     const bundles = await db
       .select({
         id:            questionBundlesTable.id,
+        parentId:      questionBundlesTable.parentId,
         name:          questionBundlesTable.name,
         description:   questionBundlesTable.description,
         category:      questionBundlesTable.category,
         questionCount: questionBundlesTable.questionCount,
+        sortOrder:     questionBundlesTable.sortOrder,
         status:        questionBundlesTable.status,
       })
       .from(questionBundlesTable)
       .where(eq(questionBundlesTable.status, "published"))
-      .orderBy(questionBundlesTable.category, asc(questionBundlesTable.id));
+      .orderBy(questionBundlesTable.sortOrder, asc(questionBundlesTable.id));
 
     return res.json({ bundles });
   } catch (err: any) {
