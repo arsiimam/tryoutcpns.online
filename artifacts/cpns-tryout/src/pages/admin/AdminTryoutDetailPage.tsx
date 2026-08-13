@@ -53,6 +53,7 @@ export function AdminTryoutDetailPage() {
 
   // section modal
   const [showSectionModal, setShowSectionModal] = useState(false);
+  const [editingSection,  setEditingSection]  = useState<Section | null>(null);
   const [secName,     setSecName]     = useState("");
   const [secCategory, setSecCategory] = useState("");
   const [secPassing,  setSecPassing]  = useState("");
@@ -92,9 +93,14 @@ export function AdminTryoutDetailPage() {
     }
   };
 
-  /* ── add section ────────────────────────────────────── */
-  const openSectionModal = () => {
-    setSecName(""); setSecCategory(""); setSecPassing(""); setSecTime(""); setSecError("");
+  /* ── add / edit section ─────────────────────────────── */
+  const openSectionModal = (sec?: Section) => {
+    setEditingSection(sec ?? null);
+    setSecName(sec?.name ?? "");
+    setSecCategory(sec?.category ?? "");
+    setSecPassing(sec?.passingScore != null ? String(sec.passingScore) : "");
+    setSecTime(sec?.timeLimitMinutes != null ? String(sec.timeLimitMinutes) : "");
+    setSecError("");
     setShowSectionModal(true);
   };
   const saveSection = async (e: React.FormEvent) => {
@@ -102,8 +108,10 @@ export function AdminTryoutDetailPage() {
     if (!secName.trim()) { setSecError("Nama seksi wajib diisi."); return; }
     setSecSaving(true); setSecError("");
     try {
-      const r = await fetch(`${API}/${id}/sections`, {
-        method: "POST", credentials: "include",
+      const isEdit = !!editingSection;
+      const url = isEdit ? `${API}/${id}/sections/${editingSection!.id}` : `${API}/${id}/sections`;
+      const r = await fetch(url, {
+        method: isEdit ? "PUT" : "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: secName, category: secCategory || null,
@@ -112,9 +120,16 @@ export function AdminTryoutDetailPage() {
         }),
       });
       if (!r.ok) { const d = await r.json(); setSecError(d.error ?? "Gagal menyimpan."); return; }
-      const newSec: Section = await r.json();
-      setBundle(prev => prev ? { ...prev, sections: [...prev.sections, newSec] } : prev);
-      setTab(String(newSec.id));
+      const saved: Section = await r.json();
+      if (isEdit) {
+        setBundle(prev => prev ? {
+          ...prev,
+          sections: prev.sections.map(s => s.id === saved.id ? { ...s, ...saved } : s),
+        } : prev);
+      } else {
+        setBundle(prev => prev ? { ...prev, sections: [...prev.sections, saved] } : prev);
+        setTab(String(saved.id));
+      }
       setShowSectionModal(false);
     } catch { setSecError("Terjadi kesalahan."); }
     finally { setSecSaving(false); }
@@ -200,6 +215,14 @@ export function AdminTryoutDetailPage() {
                 {s.questionCount}
               </span>
             </TabBtn>
+            {/* Edit button */}
+            <button
+              onClick={() => openSectionModal(s)}
+              title="Edit seksi"
+              className="hidden group-hover:flex absolute -top-1 left-1 w-4 h-4 items-center justify-center rounded-full bg-amber-400 text-white z-10">
+              <Pencil size={8} />
+            </button>
+            {/* Delete button */}
             <button
               onClick={() => delSection(s)}
               title="Hapus seksi"
@@ -381,7 +404,7 @@ export function AdminTryoutDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-5 border-b">
-              <h2 className="font-bold text-base text-slate-900">Tambah Seksi Baru</h2>
+              <h2 className="font-bold text-base text-slate-900">{editingSection ? "Edit Seksi" : "Tambah Seksi Baru"}</h2>
               <button onClick={() => setShowSectionModal(false)} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500"><X size={16} /></button>
             </div>
             <form onSubmit={saveSection} className="p-5 space-y-4">
@@ -418,7 +441,7 @@ export function AdminTryoutDetailPage() {
                 <button type="submit" disabled={secSaving}
                   className="flex-1 h-10 rounded-lg text-sm font-medium text-white disabled:opacity-60"
                   style={{ background: "#1E4D9C" }}>
-                  {secSaving ? "Menyimpan..." : "Simpan Seksi"}
+                  {secSaving ? "Menyimpan..." : editingSection ? "Simpan Perubahan" : "Simpan Seksi"}
                 </button>
               </div>
             </form>

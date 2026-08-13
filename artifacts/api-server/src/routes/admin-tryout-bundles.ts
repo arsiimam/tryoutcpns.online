@@ -212,6 +212,23 @@ router.post("/admin/tryouts/:id/sections", async (req, res) => {
   }
 });
 
+/* UPDATE SECTION */
+router.put("/admin/tryouts/:id/sections/:sectionId", async (req, res) => {
+  const sectionId = Number(req.params.sectionId);
+  const { name, category, passingScore, timeLimitMinutes } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: "Nama seksi tidak boleh kosong." });
+
+  const [section] = await db.update(tryoutSectionsTable).set({
+    name: name.trim(),
+    category: category?.trim() || null,
+    passingScore: passingScore ? Number(passingScore) : null,
+    timeLimitMinutes: timeLimitMinutes ? Number(timeLimitMinutes) : null,
+  }).where(eq(tryoutSectionsTable.id, sectionId)).returning();
+
+  if (!section) return res.status(404).json({ error: "Seksi tidak ditemukan." });
+  res.json({ ...section, questions: [] });
+});
+
 /* DELETE SECTION */
 router.delete("/admin/tryouts/:id/sections/:sectionId", async (req, res) => {
   const sectionId = Number(req.params.sectionId);
