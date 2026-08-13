@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
 import { tryoutBundlesTable, tryoutSectionsTable, tryoutQuestionsTable, appSettingsTable } from "@workspace/db";
-import { eq, desc, sql, max } from "drizzle-orm";
+import { eq, desc, sql, max, count } from "drizzle-orm";
 import { importLimiter } from "../lib/rate-limit";
 
 /* ── Global passing grades helper ──────────────────────── */
@@ -27,18 +27,17 @@ router.use(requireAdmin);
 async function syncCounts(tryoutId: number) {
   const sections = await db.select().from(tryoutSectionsTable).where(eq(tryoutSectionsTable.tryoutId, tryoutId));
   for (const s of sections) {
-    await db.execute(sql`
-      UPDATE tryout_sections SET question_count = (
-        SELECT COUNT(*) FROM tryout_questions WHERE section_id = ${s.id}
-      ) WHERE id = ${s.id}
-    `);
+    const [{ qCount }] = await db.select({ qCount: count() })
+      .from(tryoutQuestionsTable).where(eq(tryoutQuestionsTable.sectionId, s.id));
+    await db.update(tryoutSectionsTable)
+      .set({ questionCount: qCount })
+      .where(eq(tryoutSectionsTable.id, s.id));
   }
-  await db.execute(sql`
-    UPDATE tryout_bundles SET
-      total_questions = (SELECT COUNT(*) FROM tryout_questions WHERE tryout_id = ${tryoutId}),
-      updated_at = NOW()
-    WHERE id = ${tryoutId}
-  `);
+  const [{ total }] = await db.select({ total: count() })
+    .from(tryoutQuestionsTable).where(eq(tryoutQuestionsTable.tryoutId, tryoutId));
+  await db.update(tryoutBundlesTable)
+    .set({ totalQuestions: total, updatedAt: new Date() })
+    .where(eq(tryoutBundlesTable.id, tryoutId));
 }
 
 /* ═══════════════════════════════════════════════════════
