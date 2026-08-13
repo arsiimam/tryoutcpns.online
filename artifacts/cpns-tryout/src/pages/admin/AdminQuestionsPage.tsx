@@ -226,7 +226,7 @@ export function AdminQuestionsPage() {
     <AdminLayout>
       <PageHeader
         title="Bank Soal"
-        subtitle="Kelola bundle soal latihan. Buat grup (folder) dan isi dengan sub-bundle."
+        subtitle="Klik nama bundle untuk membuka editor soal. Buat Grup untuk mengelompokkan beberapa bundle."
         actions={
           <div className="flex gap-2">
             <button onClick={() => { setShowImport(true); setImportStep("upload"); setImportFile(null); setPreviewData(null); setImportError(""); setImportParentId(""); }}
@@ -453,13 +453,12 @@ interface CardProps {
 function RootBundleCard({ node, expanded, onToggle, onEdit, onDelete, onToggleStatus, onExport, onAddChild }: CardProps) {
   const hasChildren = node.children.length > 0;
   const isOpen = expanded.has(node.id);
-  const isFolder = hasChildren || !node.questionCount; // treat as folder if it has children or no questions
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       {/* Root row */}
-      <div className="flex items-center gap-3 px-5 py-4">
-        {/* Expand toggle */}
+      <div className="flex items-center gap-3 px-4 py-3.5">
+        {/* Expand toggle (folder) or spacer */}
         <button
           onClick={() => hasChildren && onToggle(node.id)}
           className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${hasChildren ? "hover:bg-slate-100 text-slate-600 cursor-pointer" : "text-slate-300 cursor-default"}`}
@@ -478,37 +477,32 @@ function RootBundleCard({ node, expanded, onToggle, onEdit, onDelete, onToggleSt
           }
         </div>
 
-        {/* Name + meta */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-slate-800 text-sm">{node.name}</span>
-            {node.category && (
-              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full font-medium">
-                {node.category}
+        {/* Name + meta — SELURUH AREA INI BISA DIKLIK → buka editor soal */}
+        <Link href={`/admin/bundles/${node.id}`}>
+          <a className="flex-1 min-w-0 group/name cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-slate-800 text-sm group-hover/name:text-primary transition-colors">{node.name}</span>
+              {node.category && (
+                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full font-medium">
+                  {node.category}
+                </span>
+              )}
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[node.status]}`}>
+                {node.status}
               </span>
-            )}
-            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[node.status]}`}>
-              {node.status}
-            </span>
-          </div>
-          <div className="text-xs text-slate-400 mt-0.5">
-            {hasChildren
-              ? `${node.children.length} sub-bundle`
-              : `${node.questionCount} soal`
-            }
-            {node.description && ` · ${node.description}`}
-          </div>
-        </div>
+            </div>
+            <div className="text-xs text-slate-400 mt-0.5">
+              {hasChildren
+                ? `${node.children.length} sub-bundle`
+                : `${node.questionCount} soal · klik untuk input soal`
+              }
+              {node.description && ` · ${node.description}`}
+            </div>
+          </a>
+        </Link>
 
         {/* Actions */}
         <div className="flex items-center gap-1 shrink-0">
-          {!hasChildren && node.questionCount > 0 && (
-            <Link href={`/admin/bundles/${node.id}`}>
-              <a className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="Lihat soal">
-                <Eye size={15} />
-              </a>
-            </Link>
-          )}
           <button onClick={() => onAddChild(node.id)} title="Tambah sub-bundle"
             className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
             <Plus size={15} />
@@ -570,36 +564,34 @@ function ChildBundleRow({
   onToggleStatus: (b: Bundle) => void; onExport: (b: Bundle, fmt: "json"|"html") => void;
 }) {
   return (
-    <div className={`flex items-center gap-3 px-5 py-3.5 ${!isLast ? "border-b border-slate-100" : ""} hover:bg-white/70 transition-colors`}>
-      {/* Indent + icon */}
+    <div className={`flex items-center gap-3 px-4 py-3 ${!isLast ? "border-b border-slate-100" : ""} hover:bg-white transition-colors group/row`}>
+      {/* Indent */}
       <div className="w-8 shrink-0 flex items-center justify-center">
         <ArrowRight size={14} className="text-slate-300" />
       </div>
       <FileText size={16} className="shrink-0 text-blue-400" />
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-slate-700 text-sm">{bundle.name}</span>
-          {bundle.category && (
-            <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-xs rounded font-medium">{bundle.category}</span>
-          )}
-          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[bundle.status]}`}>
-            {bundle.status}
-          </span>
-        </div>
-        <div className="text-xs text-slate-400">{bundle.questionCount} soal{bundle.description ? ` · ${bundle.description}` : ""}</div>
-      </div>
+      {/* Info — SELURUH AREA INI BISA DIKLIK → buka editor soal */}
+      <Link href={`/admin/bundles/${bundle.id}`}>
+        <a className="flex-1 min-w-0 cursor-pointer">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-slate-700 text-sm group-hover/row:text-primary transition-colors">{bundle.name}</span>
+            {bundle.category && (
+              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-xs rounded font-medium">{bundle.category}</span>
+            )}
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[bundle.status]}`}>
+              {bundle.status}
+            </span>
+          </div>
+          <div className="text-xs text-slate-400 mt-0.5">
+            {bundle.questionCount} soal · klik untuk input soal
+            {bundle.description ? ` · ${bundle.description}` : ""}
+          </div>
+        </a>
+      </Link>
 
       {/* Actions */}
       <div className="flex items-center gap-1 shrink-0">
-        {bundle.questionCount > 0 && (
-          <Link href={`/admin/bundles/${bundle.id}`}>
-            <a className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="Lihat soal">
-              <Eye size={15} />
-            </a>
-          </Link>
-        )}
         <button onClick={() => onEdit(bundle)} title="Edit"
           className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
           <Edit2 size={15} />
