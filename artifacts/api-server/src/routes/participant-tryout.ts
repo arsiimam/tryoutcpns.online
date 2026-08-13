@@ -38,7 +38,8 @@ function buildTryoutCard(tryout: any, sections: any[]) {
   const pass = { TWK: 0, TIU: 0, TKP: 0, total: tryout.passingGrade };
 
   for (const s of sections) {
-    const cat = (s.category ?? "").toUpperCase() as keyof typeof comp;
+    // Gunakan name sebagai fallback jika category tidak ada / tidak cocok
+    const cat = ((s.category || s.name) ?? "").toUpperCase() as keyof typeof comp;
     if (cat in comp) {
       comp[cat] += s.questionCount ?? 0;
       if (s.passingScore) pass[cat] = s.passingScore;
@@ -102,9 +103,52 @@ router.get("/tryouts", requireAuth, async (req: any, res) => {
         sql`${tryoutSectionsTable.tryoutId} IN (${sql.join(tryouts.map(t => sql`${t.id}`), sql`, `)})`
       );
 
+    // Ambil hasil terakhir per tryout untuk user ini
+    const tryoutIds = tryouts.map(t => t.id);
+    let lastResultMap: Record<string, any> = {};
+    if (tryoutIds.length) {
+      const results = await db
+        .select({
+          tryoutId:   tryoutResultsTable.tryoutId,
+          totalScore: tryoutResultsTable.totalScore,
+          twkScore:   tryoutResultsTable.twkScore,
+          tiuScore:   tryoutResultsTable.tiuScore,
+          tkpScore:   tryoutResultsTable.tkpScore,
+          passed:     tryoutResultsTable.passed,
+          createdAt:  tryoutResultsTable.createdAt,
+        })
+        .from(tryoutResultsTable)
+        .where(
+          and(
+            eq(tryoutResultsTable.userId, userId),
+            sql`${tryoutResultsTable.tryoutId} IN (${sql.join(tryoutIds.map(id => sql`${id}`), sql`, `)})`
+          )
+        )
+        .orderBy(desc(tryoutResultsTable.createdAt));
+
+      // Simpan hanya hasil terbaru per tryout
+      for (const r of results) {
+        const key = String(r.tryoutId);
+        if (!lastResultMap[key]) {
+          lastResultMap[key] = {
+            totalScore: r.totalScore,
+            twkScore:   r.twkScore,
+            tiuScore:   r.tiuScore,
+            tkpScore:   r.tkpScore,
+            passed:     r.passed,
+            completedAt: r.createdAt,
+          };
+        }
+      }
+    }
+
     const cards = tryouts.map(t => {
       const secs = sections.filter(s => s.tryoutId === t.id);
-      return { ...buildTryoutCard(t, secs), hasPremium: premium };
+      return {
+        ...buildTryoutCard(t, secs),
+        hasPremium: premium,
+        lastResult: lastResultMap[String(t.id)] ?? null,
+      };
     });
 
     return res.json({ tryouts: cards });
@@ -164,21 +208,25 @@ router.post("/tryouts/:id/sessions", requireAuth, async (req: any, res) => {
       }
     }
 
-    // Check for existing in-progress session
-    const existing = await db
-      .select()
-      .from(tryoutSessionsTable)
-      .where(
-        and(
-          eq(tryoutSessionsTable.userId, userId),
-          eq(tryoutSessionsTable.tryoutId, tryoutId),
-          eq(tryoutSessionsTable.status, "in_progress"),
-        )
-      )
-      .limit(1);
+    const force = req.body?.force === true || req.query?.force === "true";
 
-    if (existing.length > 0) {
-      return res.json({ session: existing[0] });
+    if (!force) {
+      // Check for existing in-progress session (resume)
+      const existing = await db
+        .select()
+        .from(tryoutSessionsTable)
+        .where(
+          and(
+            eq(tryoutSessionsTable.userId, userId),
+            eq(tryoutSessionsTable.tryoutId, tryoutId),
+            eq(tryoutSessionsTable.status, "in_progress"),
+          )
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        return res.json({ session: existing[0] });
+      }
     }
 
     // Create new session
