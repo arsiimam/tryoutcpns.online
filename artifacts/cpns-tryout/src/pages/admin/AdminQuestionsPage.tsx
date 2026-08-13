@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AdminLayout } from "../../components/layouts/AdminLayout";
 import { PageHeader } from "../../components/ui/shared";
 import {
@@ -478,28 +478,26 @@ function RootBundleCard({ node, expanded, onToggle, onEdit, onDelete, onToggleSt
         </div>
 
         {/* Name + meta — SELURUH AREA INI BISA DIKLIK → buka editor soal */}
-        <Link href={`/admin/bundles/${node.id}`}>
-          <a className="flex-1 min-w-0 group/name cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-slate-800 text-sm group-hover/name:text-primary transition-colors">{node.name}</span>
-              {node.category && (
-                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full font-medium">
-                  {node.category}
-                </span>
-              )}
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[node.status]}`}>
-                {node.status}
+        <NavDiv to={`/admin/bundles/${node.id}`} className="flex-1 min-w-0 group/name cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-slate-800 text-sm group-hover/name:text-primary transition-colors">{node.name}</span>
+            {node.category && (
+              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full font-medium">
+                {node.category}
               </span>
-            </div>
-            <div className="text-xs text-slate-400 mt-0.5">
-              {hasChildren
-                ? `${node.children.length} sub-bundle`
-                : `${node.questionCount} soal · klik untuk input soal`
-              }
-              {node.description && ` · ${node.description}`}
-            </div>
-          </a>
-        </Link>
+            )}
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[node.status]}`}>
+              {node.status}
+            </span>
+          </div>
+          <div className="text-xs text-slate-400 mt-0.5">
+            {hasChildren
+              ? `${node.children.length} sub-bundle`
+              : `${node.questionCount} soal · klik untuk input soal`
+            }
+            {node.description && ` · ${node.description}`}
+          </div>
+        </NavDiv>
 
         {/* Actions */}
         <div className="flex items-center gap-1 shrink-0">
@@ -572,23 +570,21 @@ function ChildBundleRow({
       <FileText size={16} className="shrink-0 text-blue-400" />
 
       {/* Info — SELURUH AREA INI BISA DIKLIK → buka editor soal */}
-      <Link href={`/admin/bundles/${bundle.id}`}>
-        <a className="flex-1 min-w-0 cursor-pointer">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-slate-700 text-sm group-hover/row:text-primary transition-colors">{bundle.name}</span>
-            {bundle.category && (
-              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-xs rounded font-medium">{bundle.category}</span>
-            )}
-            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[bundle.status]}`}>
-              {bundle.status}
-            </span>
-          </div>
-          <div className="text-xs text-slate-400 mt-0.5">
-            {bundle.questionCount} soal · klik untuk input soal
-            {bundle.description ? ` · ${bundle.description}` : ""}
-          </div>
-        </a>
-      </Link>
+      <NavDiv to={`/admin/bundles/${bundle.id}`} className="flex-1 min-w-0 cursor-pointer">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium text-slate-700 text-sm group-hover/row:text-primary transition-colors">{bundle.name}</span>
+          {bundle.category && (
+            <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-xs rounded font-medium">{bundle.category}</span>
+          )}
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[bundle.status]}`}>
+            {bundle.status}
+          </span>
+        </div>
+        <div className="text-xs text-slate-400 mt-0.5">
+          {bundle.questionCount} soal · klik untuk input soal
+          {bundle.description ? ` · ${bundle.description}` : ""}
+        </div>
+      </NavDiv>
 
       {/* Actions */}
       <div className="flex items-center gap-1 shrink-0">
@@ -634,6 +630,22 @@ function ExportMenu({ b, onExport }: { b: Bundle; onExport: (b: Bundle, fmt: "js
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/* ── NavDiv: clickable div that navigates (avoids nested <a>) ── */
+function NavDiv({ to, className, children }: { to: string; className?: string; children: React.ReactNode }) {
+  const [, navigate] = useLocation();
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(to)}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(to); }}
+      className={className}
+    >
+      {children}
     </div>
   );
 }
