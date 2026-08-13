@@ -479,7 +479,7 @@ function RootBundleCard({ node, expanded, onToggle, onEdit, onDelete, onToggleSt
         </div>
 
         {/* Name + meta — SELURUH AREA INI BISA DIKLIK → buka editor soal */}
-        <div onClick={() => navigate(`/admin/bundles/${node.id}`)} className="flex-1 min-w-0 group/name cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors">
+        <div onClick={() => navigate(`/admin/questions/${node.id}`)} className="flex-1 min-w-0 group/name cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-slate-800 text-sm group-hover/name:text-primary transition-colors">{node.name}</span>
             {node.category && (
@@ -572,7 +572,7 @@ function ChildBundleRow({
       <FileText size={16} className="shrink-0 text-blue-400" />
 
       {/* Info — SELURUH AREA INI BISA DIKLIK → buka editor soal */}
-      <div onClick={() => navigate(`/admin/bundles/${bundle.id}`)} className="flex-1 min-w-0 cursor-pointer">
+      <div onClick={() => navigate(`/admin/questions/${bundle.id}`)} className="flex-1 min-w-0 cursor-pointer">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-slate-700 text-sm group-hover/row:text-primary transition-colors">{bundle.name}</span>
           {bundle.category && (
