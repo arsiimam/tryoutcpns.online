@@ -9,6 +9,7 @@
 import React from "react";
 import { KatexRenderer } from "./KatexRenderer";
 import { X, ZoomIn } from "lucide-react";
+import { resolveStorageUrl } from "../lib/storage-url";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -71,16 +72,6 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
 }
 
 // ── Image gallery ──────────────────────────────────────────────────────────
-
-function resolveStorageUrl(path: string, baseUrl?: string) {
-  const appBase = import.meta.env.BASE_URL.replace(/\/$/, "");
-  if (path.startsWith("http")) return path;
-  // Absolute API paths need the app base prefix so Replit routes them correctly
-  if (path.startsWith("/api/storage") || path.startsWith("/objects/")) {
-    return `${appBase}${path}`;
-  }
-  return baseUrl ? `${baseUrl}/${path}` : path;
-}
 
 function ImageGallery({ images, baseUrl }: { images: string[]; baseUrl?: string }) {
   const [lightbox, setLightbox] = React.useState<string | null>(null);

@@ -2,11 +2,13 @@ import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useRoute } from "wouter";
 import { Clock, Flag, ChevronLeft, ChevronRight, CheckCircle2, Grid3X3, X } from "lucide-react";
 import { KatexRenderer } from "../../components/KatexRenderer";
+import { resolveStorageUrl } from "../../lib/storage-url";
 
 interface ApiQuestion {
   id: string; text: string; categoryId: string; sectionName?: string;
-  options: { key: string; text: string }[];
+  options: { key: string; text: string; imageUrl?: string }[];
   correctAnswer?: string; explanation?: string; scoreWeight?: number;
+  metadata?: { gambar_soal?: string[] };
 }
 interface ApiSession {
   id: string; userId: string; tryoutId: number | string; status: string;
@@ -177,6 +179,15 @@ export function SessionPage() {
                 content={currentQ.text}
                 className="text-base text-slate-800 leading-relaxed mb-8 font-medium"
               />
+              {currentQ.metadata?.gambar_soal?.map((image, index) => (
+                <img
+                  key={`${image}-${index}`}
+                  src={resolveStorageUrl(image)}
+                  alt={`Gambar soal ${index + 1}`}
+                  className="mb-6 max-h-96 max-w-full rounded-lg border border-slate-200 object-contain"
+                  loading="lazy"
+                />
+              ))}
               <div className="space-y-3">
                 {currentQ.options.map((opt) => {
                   const isSelected = session.answers[currentQ.id] === opt.key;
@@ -201,6 +212,14 @@ export function SessionPage() {
                         content={opt.text}
                         className="text-slate-700 pt-1 leading-relaxed w-full"
                       />
+                      {opt.imageUrl && (
+                        <img
+                          src={resolveStorageUrl(opt.imageUrl)}
+                          alt={`Gambar opsi ${opt.key}`}
+                          className="mt-1 max-h-28 max-w-[14rem] rounded border border-slate-200 object-contain"
+                          loading="lazy"
+                        />
+                      )}
                       {/* Hidden radio input for accessibility */}
                       <input 
                         type="radio" 

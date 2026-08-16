@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { KatexRenderer } from "../../components/KatexRenderer";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
+import { resolveStorageUrl } from "../../lib/storage-url";
 import {
   CheckCircle2, XCircle, ArrowLeft, BookOpen, Filter,
   ChevronDown, ChevronUp, Trophy, Target, Clock,
@@ -22,9 +23,13 @@ interface Question {
   id: string;
   orderNum: number;
   content: string;
-  options: { key: string; text?: string; weight?: number }[];
+  options: { key: string; text?: string; imageUrl?: string; weight?: number }[];
   correctAnswer: string | null;
   explanation: string;
+  metadata?: {
+    gambar_soal?: string[];
+    pembahasan?: { gambar_pembahasan?: string[] };
+  };
   sectionId: number;
   sectionName: string;
   sectionCat: string;
@@ -111,6 +116,15 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
         <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3">
           {/* Full question */}
           <KatexRenderer content={q.content} className="prose prose-sm max-w-none text-slate-800" />
+          {q.metadata?.gambar_soal?.map((image, imageIndex) => (
+            <img
+              key={`${image}-${imageIndex}`}
+              src={resolveStorageUrl(image)}
+              alt={`Gambar soal ${imageIndex + 1}`}
+              className="max-h-80 max-w-full rounded-lg border border-slate-200 object-contain"
+              loading="lazy"
+            />
+          ))}
 
           {/* Options */}
           {q.options.length > 0 && (
@@ -129,6 +143,14 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
                       border-current">{opt.key}</span>
                     <span className="flex-1">
                       <KatexRenderer content={opt.text ?? ""} block={false} />
+                      {opt.imageUrl && (
+                        <img
+                          src={resolveStorageUrl(opt.imageUrl)}
+                          alt={`Gambar opsi ${opt.key}`}
+                          className="mt-1 max-h-24 max-w-[12rem] rounded border border-slate-200 object-contain"
+                          loading="lazy"
+                        />
+                      )}
                       {isTKP && opt.weight !== undefined && (
                         <span className="ml-2 text-xs text-slate-400">({opt.weight} poin)</span>
                       )}
@@ -172,6 +194,15 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
                 content={q.explanation}
                 className="prose prose-sm max-w-none text-slate-700 text-sm"
               />
+              {q.metadata?.pembahasan?.gambar_pembahasan?.map((image, imageIndex) => (
+                <img
+                  key={`${image}-${imageIndex}`}
+                  src={resolveStorageUrl(image)}
+                  alt={`Gambar pembahasan ${imageIndex + 1}`}
+                  className="mt-3 max-h-80 max-w-full rounded-lg border border-slate-200 object-contain"
+                  loading="lazy"
+                />
+              ))}
             </div>
           )}
         </div>

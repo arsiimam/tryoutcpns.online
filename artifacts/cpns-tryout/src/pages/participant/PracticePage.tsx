@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { KatexRenderer } from "../../components/KatexRenderer";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
+import { resolveStorageUrl } from "../../lib/storage-url";
 import {
   ChevronLeft,
   ChevronRight,
@@ -34,9 +35,13 @@ interface BundleInfo {
 interface PracticeQuestion {
   id: string;
   text: string;
-  options: { key: string; text: string }[];
+  options: { key: string; text: string; imageUrl?: string }[];
   correctAnswer: string | null;
   explanation: string;
+  metadata?: {
+    gambar_soal?: string[];
+    pembahasan?: { gambar_pembahasan?: string[] };
+  };
   difficulty: "mudah" | "sedang" | "sulit";
 }
 
@@ -477,6 +482,15 @@ export function PracticePage() {
               content={q.text}
               className="text-slate-800 font-medium leading-relaxed text-base prose prose-sm max-w-none"
             />
+            {q.metadata?.gambar_soal?.map((image, index) => (
+              <img
+                key={`${image}-${index}`}
+                src={resolveStorageUrl(image)}
+                alt={`Gambar soal ${index + 1}`}
+                className="mt-3 max-h-80 max-w-full rounded-lg border border-slate-200 object-contain"
+                loading="lazy"
+              />
+            ))}
           </div>
 
           {/* Options */}
@@ -521,6 +535,14 @@ export function PracticePage() {
                     {opt.key}.
                   </span>
                   <KatexRenderer content={opt.text ?? ""} block={false} className="flex-1 text-slate-700" />
+                  {opt.imageUrl && (
+                    <img
+                      src={resolveStorageUrl(opt.imageUrl)}
+                      alt={`Gambar opsi ${opt.key}`}
+                      className="mt-1 max-h-24 max-w-[12rem] rounded border border-slate-200 object-contain"
+                      loading="lazy"
+                    />
+                  )}
                   {icon}
                 </button>
               );
@@ -535,6 +557,15 @@ export function PracticePage() {
                 content={q.explanation}
                 className="text-sm text-slate-700 leading-relaxed prose prose-sm max-w-none"
               />
+              {q.metadata?.pembahasan?.gambar_pembahasan?.map((image, index) => (
+                <img
+                  key={`${image}-${index}`}
+                  src={resolveStorageUrl(image)}
+                  alt={`Gambar pembahasan ${index + 1}`}
+                  className="mt-3 max-h-80 max-w-full rounded-lg border border-blue-100 object-contain"
+                  loading="lazy"
+                />
+              ))}
             </div>
           )}
 

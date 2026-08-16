@@ -88,6 +88,7 @@ router.get("/bundles/:id/questions", requireAuth, async (req: any, res) => {
       options:       Array.isArray(q.options) ? q.options : [],
       correctAnswer: q.correctAnswer ?? null,
       explanation:   q.explanation ?? "",
+      metadata:      q.metadata ?? null,
       difficulty:    (q.metadata as any)?.difficulty ?? "sedang",
     }));
 
@@ -311,6 +312,7 @@ router.get("/history/:bundleId", requireAuth, async (req: any, res) => {
         options:       Array.isArray(q.options) ? q.options : [],
         correctAnswer: q.correctAnswer ?? null,
         explanation:   q.explanation ?? "",
+        metadata:      q.metadata ?? null,
         userAnswer,
         isCorrect,
       };

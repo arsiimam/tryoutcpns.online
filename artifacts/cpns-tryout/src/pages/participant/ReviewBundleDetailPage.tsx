@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
+import { KatexRenderer } from "../../components/KatexRenderer";
+import { resolveStorageUrl } from "../../lib/storage-url";
 import {
   CheckCircle2, XCircle, Heart, ChevronLeft,
   Clock, BarChart2, ChevronDown, ChevronUp,
@@ -10,9 +12,13 @@ interface ReviewQuestion {
   id: string;
   text: string;
   categoryId: string;
-  options: { key: string; text: string }[];
+  options: { key: string; text: string; imageUrl?: string }[];
   correctAnswer: string | null;
   explanation: string;
+  metadata?: {
+    gambar_soal?: string[];
+    pembahasan?: { gambar_pembahasan?: string[] };
+  };
   userAnswer: string | null;
   isCorrect: boolean;
   isFavorite?: boolean;
@@ -243,6 +249,15 @@ export function ReviewBundleDetailPage() {
                       <div className="flex-1">
                         <div className="prose prose-sm max-w-none text-slate-800"
                           dangerouslySetInnerHTML={{ __html: q.text }} />
+                        {q.metadata?.gambar_soal?.map((image, imageIndex) => (
+                          <img
+                            key={`${image}-${imageIndex}`}
+                            src={resolveStorageUrl(image)}
+                            alt={`Gambar soal ${imageIndex + 1}`}
+                            className="mt-3 max-h-80 max-w-full rounded-lg border border-slate-200 object-contain"
+                            loading="lazy"
+                          />
+                        ))}
                       </div>
                       <button onClick={() => toggleFav(q.id)}
                         className={`shrink-0 transition-colors ${q.isFavorite ? "text-red-500" : "text-slate-300 hover:text-red-400"}`}>
@@ -261,7 +276,17 @@ export function ReviewBundleDetailPage() {
                         return (
                           <div key={opt.key} className={cls}>
                             <span className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-current">{opt.key}</span>
-                            <span className="flex-1">{opt.text}</span>
+                            <span className="flex-1">
+                              <KatexRenderer content={opt.text ?? ""} block={false} />
+                              {opt.imageUrl && (
+                                <img
+                                  src={resolveStorageUrl(opt.imageUrl)}
+                                  alt={`Gambar opsi ${opt.key}`}
+                                  className="mt-1 max-h-24 max-w-[12rem] rounded border border-slate-200 object-contain"
+                                  loading="lazy"
+                                />
+                              )}
+                            </span>
                             {isCorrect && <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />}
                             {isUser && !isCorrect && <XCircle size={15} className="text-red-400 shrink-0" />}
                           </div>
@@ -280,6 +305,15 @@ export function ReviewBundleDetailPage() {
                       <div className="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                         <div className="prose prose-sm max-w-none text-blue-900 text-sm"
                           dangerouslySetInnerHTML={{ __html: q.explanation }} />
+                        {q.metadata?.pembahasan?.gambar_pembahasan?.map((image, imageIndex) => (
+                          <img
+                            key={`${image}-${imageIndex}`}
+                            src={resolveStorageUrl(image)}
+                            alt={`Gambar pembahasan ${imageIndex + 1}`}
+                            className="mt-3 max-h-80 max-w-full rounded-lg border border-blue-100 object-contain"
+                            loading="lazy"
+                          />
+                        ))}
                       </div>
                     )}
                   </div>

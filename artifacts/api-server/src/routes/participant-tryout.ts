@@ -293,6 +293,7 @@ router.get("/sessions/:sessionId", requireAuth, async (req: any, res) => {
         options:       tryoutQuestionsTable.options,
         correctAnswer: tryoutQuestionsTable.correctAnswer,
         explanation:   tryoutQuestionsTable.explanation,
+         metadata:      tryoutQuestionsTable.metadata,
         scoreWeight:   tryoutQuestionsTable.scoreWeight,
         sectionId:     tryoutQuestionsTable.sectionId,
         sectionName:   tryoutSectionsTable.name,
@@ -312,6 +313,7 @@ router.get("/sessions/:sessionId", requireAuth, async (req: any, res) => {
       options: Array.isArray(q.options) ? q.options : [],
       correctAnswer: q.correctAnswer,
       explanation: q.explanation ?? "",
+       metadata: q.metadata ?? null,
       scoreWeight: q.scoreWeight,
     }));
 
@@ -867,6 +869,7 @@ router.get("/review", requireAuth, async (req: any, res) => {
         options:       tryoutQuestionsTable.options,
         correctAnswer: tryoutQuestionsTable.correctAnswer,
         explanation:   tryoutQuestionsTable.explanation,
+         metadata:      tryoutQuestionsTable.metadata,
         sectionCat:    tryoutSectionsTable.category,
       })
       .from(tryoutQuestionsTable)
@@ -882,6 +885,7 @@ router.get("/review", requireAuth, async (req: any, res) => {
       options: Array.isArray(q.options) ? q.options : [],
       correctAnswer: q.correctAnswer,
       explanation: q.explanation ?? "",
+       metadata: q.metadata ?? null,
       userAnswer: answers[String(q.id)] ?? null,
       isCorrect: !!q.correctAnswer && answers[String(q.id)] === q.correctAnswer,
     }));
@@ -940,6 +944,7 @@ router.get("/tryout-review/:sessionId", requireAuth, async (req: any, res) => {
         options:       tryoutQuestionsTable.options,
         correctAnswer: tryoutQuestionsTable.correctAnswer,
         explanation:   tryoutQuestionsTable.explanation,
+         metadata:      tryoutQuestionsTable.metadata,
         scoreWeight:   tryoutQuestionsTable.scoreWeight,
         sectionId:     tryoutSectionsTable.id,
         sectionName:   tryoutSectionsTable.name,
@@ -998,6 +1003,7 @@ router.get("/tryout-review/:sessionId", requireAuth, async (req: any, res) => {
         options:       Array.isArray(q.options) ? q.options : [],
         correctAnswer: q.correctAnswer,
         explanation:   q.explanation ?? "",
+         metadata:      q.metadata ?? null,
         sectionId:     q.sectionId,
         sectionName:   q.sectionName,
         sectionCat:    (q.sectionCat ?? "").toUpperCase(),
