@@ -72,28 +72,28 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
 
 // ── Image gallery ──────────────────────────────────────────────────────────
 
+function resolveStorageUrl(path: string, baseUrl?: string) {
+  const appBase = import.meta.env.BASE_URL.replace(/\/$/, "");
+  if (path.startsWith("http")) return path;
+  // Absolute API paths need the app base prefix so Replit routes them correctly
+  if (path.startsWith("/api/storage") || path.startsWith("/objects/")) {
+    return `${appBase}${path}`;
+  }
+  return baseUrl ? `${baseUrl}/${path}` : path;
+}
+
 function ImageGallery({ images, baseUrl }: { images: string[]; baseUrl?: string }) {
   const [lightbox, setLightbox] = React.useState<string | null>(null);
 
   if (!images || images.length === 0) return null;
 
-  const appBase = import.meta.env.BASE_URL.replace(/\/$/, "");
-  function resolveUrl(path: string) {
-    if (path.startsWith("http")) return path;
-    // Absolute API paths need the app base prefix so Replit routes them correctly
-    if (path.startsWith("/api/storage") || path.startsWith("/objects/")) {
-      return `${appBase}${path}`;
-    }
-    return baseUrl ? `${baseUrl}/${path}` : path;
-  }
-
   return (
     <>
       <div className="flex flex-wrap gap-2 mt-2">
         {images.map((img, i) => (
-          <div key={i} className="relative group cursor-zoom-in" onClick={() => setLightbox(resolveUrl(img))}>
+          <div key={i} className="relative group cursor-zoom-in" onClick={() => setLightbox(resolveStorageUrl(img, baseUrl))}>
             <img
-              src={resolveUrl(img)}
+              src={resolveStorageUrl(img, baseUrl)}
               alt={`Gambar ${i + 1}`}
               className="h-32 w-auto max-w-xs object-contain rounded-lg border border-slate-200 bg-slate-50"
               loading="lazy"
@@ -198,7 +198,7 @@ export function QuestionRenderer({
                   <KatexRenderer content={opt.text} block={false} />
                   {opt.imageUrl && (
                     <img
-                      src={resolveUrl(opt.imageUrl)}
+                      src={resolveStorageUrl(opt.imageUrl, storageBaseUrl)}
                       alt={`Opsi ${opt.key}`}
                       className="mt-1 max-h-24 rounded border border-slate-200"
                       loading="lazy"

@@ -21,6 +21,15 @@ fi
 [ -z "${DATABASE_URL:-}" ] && { echo "ERROR: DATABASE_URL belum diisi di .env"; exit 1; }
 [ -z "${SESSION_SECRET:-}" ] && { echo "ERROR: SESSION_SECRET belum diisi di .env"; exit 1; }
 
+if [ "${OBJECT_STORAGE_MODE:-}" = "local" ]; then
+  [ -z "${LOCAL_STORAGE_DIR:-}" ] && {
+    echo "ERROR: LOCAL_STORAGE_DIR wajib diisi saat OBJECT_STORAGE_MODE=local"
+    exit 1
+  }
+  mkdir -p "$LOCAL_STORAGE_DIR/uploads"
+  echo "✓ Folder penyimpanan gambar: $LOCAL_STORAGE_DIR/uploads"
+fi
+
 echo ""
 echo "=== [1/4] Git pull dari GitHub ==="
 git pull origin main

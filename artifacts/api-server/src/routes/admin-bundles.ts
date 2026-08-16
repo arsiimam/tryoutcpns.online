@@ -5,7 +5,7 @@ import { eq, desc, sql } from "drizzle-orm";
 import { importLimiter } from "../lib/rate-limit";
 import multer from "multer";
 import JSZip from "jszip";
-import { ObjectStorageService } from "../lib/objectStorage";
+import { ObjectStorageService, objectStorageClient } from "../lib/objectStorage";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
@@ -338,9 +338,15 @@ router.post(
 
       // 2. Upload images → build path map {relative → storage URL}
       const imageMap: Record<string, string> = {};
-      const privateDir = storageService.getPrivateObjectDir();
-      const { bucketName, objectName: baseObjectName } = parseGcsPath(privateDir);
-      const bucket = objectStorageClient.bucket(bucketName);
+      const localStorage = storageService.isLocalStorage();
+      let baseObjectName = "";
+      let bucket: ReturnType<typeof objectStorageClient.bucket> | undefined;
+      if (!localStorage) {
+        const privateDir = storageService.getPrivateObjectDir();
+        const { bucketName, objectName } = parseGcsPath(privateDir);
+        baseObjectName = objectName;
+        bucket = objectStorageClient.bucket(bucketName);
+      }
       const imageWarnings: string[] = [];
 
       const imageFiles = Object.entries(zip.files).filter(
@@ -353,12 +359,20 @@ router.post(
             const buf = await zipEntry.async("nodebuffer");
             const ext = name.split(".").pop() ?? "jpg";
             const { randomUUID } = await import("crypto");
-            const objectId = randomUUID();
-            const gcsPath = `${baseObjectName}/uploads/${objectId}`;
-            const file = bucket.file(gcsPath);
             const contentType = mimeFromExt(ext);
-            await file.save(buf, { contentType, resumable: false });
-            const objectPath = `/objects/uploads/${objectId}`;
+             let objectPath: string;
+             if (localStorage) {
+               objectPath = await storageService.saveLocalObjectEntityFromBuffer(
+                 buf,
+                 contentType,
+               );
+             } else {
+               const objectId = randomUUID();
+               const gcsPath = `${baseObjectName}/uploads/${objectId}`;
+               const file = bucket!.file(gcsPath);
+               await file.save(buf, { contentType, resumable: false });
+               objectPath = `/objects/uploads/${objectId}`;
+             }
             imageMap[name.replace("images/", "")] = `/api/storage${objectPath}`;
           } catch (e: any) {
             imageWarnings.push(`Gambar '${name}' gagal diupload: ${e.message}`);

@@ -3,7 +3,13 @@ import {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
 } from '@workspace/api-zod';
-import { Router, type IRouter, type Request, type Response } from 'express';
+import {
+  raw,
+  Router,
+  type IRouter,
+  type Request,
+  type Response,
+} from 'express';
 
 import { ObjectPermission } from '../lib/objectAcl';
 import {
@@ -52,9 +58,20 @@ router.post(
     try {
       const { name, size, contentType } = parsed.data;
 
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      const objectPath =
-        objectStorageService.normalizeObjectEntityPath(uploadURL);
+      let uploadURL: string;
+      let objectPath: string;
+      if (objectStorageService.isLocalStorage()) {
+        const localUpload =
+          objectStorageService.createLocalObjectEntityUploadURL(
+            `${req.protocol}://${req.get('host')}`,
+          );
+        uploadURL = localUpload.uploadURL;
+        objectPath = localUpload.objectPath;
+      } else {
+        uploadURL = await objectStorageService.getObjectEntityUploadURL();
+        objectPath =
+          objectStorageService.normalizeObjectEntityPath(uploadURL);
+      }
 
       res.json(
         RequestUploadUrlResponse.parse({
@@ -66,6 +83,60 @@ router.post(
     } catch (error) {
       req.log.error({ err: error }, 'Error generating upload URL');
       res.status(500).json({ error: 'Failed to generate upload URL' });
+    }
+  },
+);
+
+/**
+ * PUT /storage/uploads/local/:objectId
+ *
+ * Receives the file body for VPS-local storage. The URL is an expiring,
+ * HMAC-signed ticket returned by the request-url endpoint, so this endpoint
+ * does not need a session cookie.
+ */
+router.put(
+  '/storage/uploads/local/:objectId',
+  raw({ type: '*/*', limit: '15mb' }),
+  async (req: Request, res: Response) => {
+    if (!objectStorageService.isLocalStorage()) {
+      res.status(404).json({ error: 'Local storage is not enabled.' });
+      return;
+    }
+
+    const rawObjectId = req.params.objectId;
+    const objectId = Array.isArray(rawObjectId) ? rawObjectId[0] : rawObjectId;
+    if (!objectId) {
+      res.status(400).json({ error: 'ID upload tidak valid.' });
+      return;
+    }
+    const expires = String(req.query.expires ?? '');
+    const signature = String(req.query.signature ?? '');
+    if (
+      !objectStorageService.verifyLocalUploadTicket(
+        objectId,
+        expires,
+        signature,
+      )
+    ) {
+      res.status(403).json({ error: 'Upload URL tidak valid atau sudah kedaluwarsa.' });
+      return;
+    }
+
+    if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+      res.status(400).json({ error: 'File gambar kosong atau tidak valid.' });
+      return;
+    }
+
+    try {
+      await objectStorageService.saveLocalObjectEntity(
+        `/objects/uploads/${objectId}`,
+        req.body,
+        req.get('content-type') || 'application/octet-stream',
+      );
+      res.status(200).json({ ok: true });
+    } catch (error) {
+      req.log.error({ err: error }, 'Error saving local object');
+      res.status(500).json({ error: 'Gagal menyimpan gambar di server.' });
     }
   },
 );
