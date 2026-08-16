@@ -2,7 +2,11 @@
 import React, { useEffect, useState } from "react";
 import { KatexRenderer } from "../../components/KatexRenderer";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
-import { resolveStorageUrl } from "../../lib/storage-url";
+import {
+  getExplanationImages,
+  getQuestionImages,
+  resolveStorageUrl,
+} from "../../lib/storage-url";
 import {
   ChevronLeft,
   ChevronRight,
@@ -38,10 +42,7 @@ interface PracticeQuestion {
   options: { key: string; text: string; imageUrl?: string }[];
   correctAnswer: string | null;
   explanation: string;
-  metadata?: {
-    gambar_soal?: string[];
-    pembahasan?: { gambar_pembahasan?: string[] };
-  };
+  metadata?: unknown;
   difficulty: "mudah" | "sedang" | "sulit";
 }
 
@@ -482,7 +483,7 @@ export function PracticePage() {
               content={q.text}
               className="text-slate-800 font-medium leading-relaxed text-base prose prose-sm max-w-none"
             />
-            {q.metadata?.gambar_soal?.map((image, index) => (
+            {getQuestionImages(q.metadata).map((image, index) => (
               <img
                 key={`${image}-${index}`}
                 src={resolveStorageUrl(image)}
@@ -557,7 +558,7 @@ export function PracticePage() {
                 content={q.explanation}
                 className="text-sm text-slate-700 leading-relaxed prose prose-sm max-w-none"
               />
-              {q.metadata?.pembahasan?.gambar_pembahasan?.map((image, index) => (
+              {getExplanationImages(q.metadata).map((image, index) => (
                 <img
                   key={`${image}-${index}`}
                   src={resolveStorageUrl(image)}

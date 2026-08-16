@@ -9,7 +9,11 @@
 import React from "react";
 import { KatexRenderer } from "./KatexRenderer";
 import { X, ZoomIn } from "lucide-react";
-import { resolveStorageUrl } from "../lib/storage-url";
+import {
+  getExplanationImages,
+  getQuestionImages,
+  resolveStorageUrl,
+} from "../lib/storage-url";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -127,8 +131,8 @@ export function QuestionRenderer({
   if (!storageBaseUrl) storageBaseUrl = _defaultBase;
   const { content, options, correctAnswer, explanation, metadata } = question;
   const pembahasan = metadata?.pembahasan;
-  const gambarSoal = metadata?.gambar_soal ?? [];
-  const gambarPembahasan = pembahasan?.gambar_pembahasan ?? [];
+  const gambarSoal = getQuestionImages(metadata);
+  const gambarPembahasan = getExplanationImages(metadata);
   const langkah = pembahasan?.langkah ?? [];
   const tag = pembahasan?.tag ?? [];
 

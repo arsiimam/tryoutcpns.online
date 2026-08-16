@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { KatexRenderer } from "../../components/KatexRenderer";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
-import { resolveStorageUrl } from "../../lib/storage-url";
+import {
+  getExplanationImages,
+  getQuestionImages,
+  resolveStorageUrl,
+} from "../../lib/storage-url";
 import {
   CheckCircle2, XCircle, ArrowLeft, BookOpen, Filter,
   ChevronDown, ChevronUp, Trophy, Target, Clock,
@@ -26,10 +30,7 @@ interface Question {
   options: { key: string; text?: string; imageUrl?: string; weight?: number }[];
   correctAnswer: string | null;
   explanation: string;
-  metadata?: {
-    gambar_soal?: string[];
-    pembahasan?: { gambar_pembahasan?: string[] };
-  };
+  metadata?: unknown;
   sectionId: number;
   sectionName: string;
   sectionCat: string;
@@ -116,7 +117,7 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
         <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3">
           {/* Full question */}
           <KatexRenderer content={q.content} className="prose prose-sm max-w-none text-slate-800" />
-          {q.metadata?.gambar_soal?.map((image, imageIndex) => (
+          {getQuestionImages(q.metadata).map((image, imageIndex) => (
             <img
               key={`${image}-${imageIndex}`}
               src={resolveStorageUrl(image)}
@@ -194,7 +195,7 @@ function QuestionCard({ q, num }: { q: Question; num: number }) {
                 content={q.explanation}
                 className="prose prose-sm max-w-none text-slate-700 text-sm"
               />
-              {q.metadata?.pembahasan?.gambar_pembahasan?.map((image, imageIndex) => (
+              {getExplanationImages(q.metadata).map((image, imageIndex) => (
                 <img
                   key={`${image}-${imageIndex}`}
                   src={resolveStorageUrl(image)}

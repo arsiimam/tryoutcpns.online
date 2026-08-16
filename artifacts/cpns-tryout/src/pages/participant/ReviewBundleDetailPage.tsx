@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { KatexRenderer } from "../../components/KatexRenderer";
-import { resolveStorageUrl } from "../../lib/storage-url";
+import {
+  getExplanationImages,
+  getQuestionImages,
+  resolveStorageUrl,
+} from "../../lib/storage-url";
 import {
   CheckCircle2, XCircle, Heart, ChevronLeft,
   Clock, BarChart2, ChevronDown, ChevronUp,
@@ -15,10 +19,7 @@ interface ReviewQuestion {
   options: { key: string; text: string; imageUrl?: string }[];
   correctAnswer: string | null;
   explanation: string;
-  metadata?: {
-    gambar_soal?: string[];
-    pembahasan?: { gambar_pembahasan?: string[] };
-  };
+  metadata?: unknown;
   userAnswer: string | null;
   isCorrect: boolean;
   isFavorite?: boolean;
@@ -249,7 +250,7 @@ export function ReviewBundleDetailPage() {
                       <div className="flex-1">
                         <div className="prose prose-sm max-w-none text-slate-800"
                           dangerouslySetInnerHTML={{ __html: q.text }} />
-                        {q.metadata?.gambar_soal?.map((image, imageIndex) => (
+                        {getQuestionImages(q.metadata).map((image, imageIndex) => (
                           <img
                             key={`${image}-${imageIndex}`}
                             src={resolveStorageUrl(image)}
@@ -305,7 +306,7 @@ export function ReviewBundleDetailPage() {
                       <div className="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                         <div className="prose prose-sm max-w-none text-blue-900 text-sm"
                           dangerouslySetInnerHTML={{ __html: q.explanation }} />
-                        {q.metadata?.pembahasan?.gambar_pembahasan?.map((image, imageIndex) => (
+                        {getExplanationImages(q.metadata).map((image, imageIndex) => (
                           <img
                             key={`${image}-${imageIndex}`}
                             src={resolveStorageUrl(image)}

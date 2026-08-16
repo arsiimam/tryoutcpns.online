@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "wouter";
 import { KatexRenderer } from "../../components/KatexRenderer";
-import { resolveStorageUrl } from "../../lib/storage-url";
+import {
+  getExplanationImages,
+  getQuestionImages,
+  resolveStorageUrl,
+} from "../../lib/storage-url";
 import { AdminLayout } from "../../components/layouts/AdminLayout";
 import {
   ArrowLeft, Download, ChevronDown, FileText, BookOpen,
@@ -467,7 +471,7 @@ export function AdminTryoutDetailPage() {
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase mb-2">Soal</p>
                 <KatexRenderer content={previewQ.content} className="prose prose-sm max-w-none text-slate-800" />
-                {previewQ.metadata?.gambar_soal?.map((image: string, index: number) => (
+                {getQuestionImages(previewQ.metadata).map((image, index) => (
                   <img
                     key={`${image}-${index}`}
                     src={resolveStorageUrl(image)}
@@ -504,7 +508,7 @@ export function AdminTryoutDetailPage() {
                 <div className="bg-[#dce8f5] rounded-lg p-4">
                   <p className="text-xs font-semibold text-[#1E4D9C] uppercase mb-2">Pembahasan</p>
                   <KatexRenderer content={previewQ.explanation} className="prose prose-sm max-w-none text-slate-700" />
-                  {previewQ.metadata?.pembahasan?.gambar_pembahasan?.map((image: string, index: number) => (
+                  {getExplanationImages(previewQ.metadata).map((image, index) => (
                     <img
                       key={`${image}-${index}`}
                       src={resolveStorageUrl(image)}

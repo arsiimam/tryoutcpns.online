@@ -2,13 +2,16 @@ import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useRoute } from "wouter";
 import { Clock, Flag, ChevronLeft, ChevronRight, CheckCircle2, Grid3X3, X } from "lucide-react";
 import { KatexRenderer } from "../../components/KatexRenderer";
-import { resolveStorageUrl } from "../../lib/storage-url";
+import {
+  getQuestionImages,
+  resolveStorageUrl,
+} from "../../lib/storage-url";
 
 interface ApiQuestion {
   id: string; text: string; categoryId: string; sectionName?: string;
   options: { key: string; text: string; imageUrl?: string }[];
   correctAnswer?: string; explanation?: string; scoreWeight?: number;
-  metadata?: { gambar_soal?: string[] };
+  metadata?: unknown;
 }
 interface ApiSession {
   id: string; userId: string; tryoutId: number | string; status: string;
@@ -179,7 +182,7 @@ export function SessionPage() {
                 content={currentQ.text}
                 className="text-base text-slate-800 leading-relaxed mb-8 font-medium"
               />
-              {currentQ.metadata?.gambar_soal?.map((image, index) => (
+              {getQuestionImages(currentQ.metadata).map((image, index) => (
                 <img
                   key={`${image}-${index}`}
                   src={resolveStorageUrl(image)}
