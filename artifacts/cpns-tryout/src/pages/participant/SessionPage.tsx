@@ -187,7 +187,7 @@ export function SessionPage() {
                   key={`${image}-${index}`}
                   src={resolveStorageUrl(image)}
                   alt={`Gambar soal ${index + 1}`}
-                  className="mb-6 max-h-96 max-w-full rounded-lg border border-slate-200 object-contain"
+                  className="mx-auto mb-6 block max-h-96 max-w-full rounded-lg border border-slate-200 object-contain"
                   loading="lazy"
                 />
               ))}
@@ -211,18 +211,20 @@ export function SessionPage() {
                           opt.key
                         )}
                       </div>
-                      <KatexRenderer
-                        content={opt.text}
-                        className="text-slate-700 pt-1 leading-relaxed w-full"
-                      />
-                      {opt.imageUrl && (
-                        <img
-                          src={resolveStorageUrl(opt.imageUrl)}
-                          alt={`Gambar opsi ${opt.key}`}
-                          className="mt-1 max-h-28 max-w-[14rem] rounded border border-slate-200 object-contain"
-                          loading="lazy"
+                      <div className="min-w-0 flex-1">
+                        <KatexRenderer
+                          content={opt.text}
+                          className="text-slate-700 pt-1 leading-relaxed w-full"
                         />
-                      )}
+                        {opt.imageUrl && (
+                          <img
+                            src={resolveStorageUrl(opt.imageUrl)}
+                            alt={`Gambar opsi ${opt.key}`}
+                            className="mt-2 block max-h-28 max-w-[14rem] rounded border border-slate-200 object-contain"
+                            loading="lazy"
+                          />
+                        )}
+                      </div>
                       {/* Hidden radio input for accessibility */}
                       <input 
                         type="radio" 

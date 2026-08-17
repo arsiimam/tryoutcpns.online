@@ -255,7 +255,7 @@ export function ReviewBundleDetailPage() {
                             key={`${image}-${imageIndex}`}
                             src={resolveStorageUrl(image)}
                             alt={`Gambar soal ${imageIndex + 1}`}
-                            className="mt-3 max-h-80 max-w-full rounded-lg border border-slate-200 object-contain"
+                            className="mx-auto mt-3 block max-h-80 max-w-full rounded-lg border border-slate-200 object-contain"
                             loading="lazy"
                           />
                         ))}
@@ -283,7 +283,7 @@ export function ReviewBundleDetailPage() {
                                 <img
                                   src={resolveStorageUrl(opt.imageUrl)}
                                   alt={`Gambar opsi ${opt.key}`}
-                                  className="mt-1 max-h-24 max-w-[12rem] rounded border border-slate-200 object-contain"
+                                   className="mt-2 block max-h-24 max-w-[12rem] rounded border border-slate-200 object-contain"
                                   loading="lazy"
                                 />
                               )}

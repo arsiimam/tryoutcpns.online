@@ -84,13 +84,13 @@ function ImageGallery({ images, baseUrl }: { images: string[]; baseUrl?: string 
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 mt-2">
+      <div className="flex w-full flex-wrap justify-center gap-2 mt-2">
         {images.map((img, i) => (
           <div key={i} className="relative group cursor-zoom-in" onClick={() => setLightbox(resolveStorageUrl(img, baseUrl))}>
             <img
               src={resolveStorageUrl(img, baseUrl)}
               alt={`Gambar ${i + 1}`}
-              className="h-32 w-auto max-w-xs object-contain rounded-lg border border-slate-200 bg-slate-50"
+              className="block h-32 w-auto max-w-full object-contain rounded-lg border border-slate-200 bg-slate-50"
               loading="lazy"
             />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 rounded-lg transition-opacity">
@@ -195,7 +195,7 @@ export function QuestionRenderer({
                     <img
                       src={resolveStorageUrl(opt.imageUrl, storageBaseUrl)}
                       alt={`Opsi ${opt.key}`}
-                      className="mt-1 max-h-24 rounded border border-slate-200"
+                      className="mt-2 block max-h-24 max-w-full rounded border border-slate-200 object-contain"
                       loading="lazy"
                     />
                   )}
