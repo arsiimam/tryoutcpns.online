@@ -88,13 +88,49 @@ router.post("/admin/bundles/preview", importLimiter, async (req, res) => {
 
 /* ── Import bundle (parse + save) ────────────────────────── */
 router.post("/admin/bundles/import", importLimiter, async (req, res) => {
-  const { content, format = "json" } = req.body;
+  const { content, format = "json", parentId, bundleId } = req.body;
   if (!content) return res.status(400).json({ error: "Konten file diperlukan." });
 
   let parsed: ReturnType<typeof parseBundle>;
   try { parsed = parseBundle(content, format); }
   catch (err: any) { return res.status(400).json({ error: err.message }); }
 
+  /* ── Mode A: import ke bundle yang SUDAH ADA (append soal saja) ── */
+  if (bundleId) {
+    const targetId = Number(bundleId);
+    const [existing] = await db
+      .select()
+      .from(questionBundlesTable)
+      .where(eq(questionBundlesTable.id, targetId));
+    if (!existing) return res.status(404).json({ error: "Bundle tujuan tidak ditemukan." });
+
+    if (parsed.questions.length > 0) {
+      const lastQ = await db
+        .select({ orderNum: questionsTable.orderNum })
+        .from(questionsTable)
+        .where(eq(questionsTable.bundleId, targetId))
+        .orderBy(desc(questionsTable.orderNum))
+        .limit(1);
+      let nextOrder = (lastQ[0]?.orderNum ?? 0) + 1;
+      const rows = parsed.questions.map((q) => ({
+        bundleId:      targetId,
+        orderNum:      q.order ?? nextOrder++,
+        type:          q.type ?? "multiple_choice",
+        content:       q.content,
+        options:       q.options ?? null,
+        correctAnswer: q.correct_answer ?? null,
+        explanation:   q.explanation ?? null,
+        metadata:      q.metadata ?? null,
+      }));
+      await db.insert(questionsTable).values(rows);
+    }
+
+    await syncCount(targetId);
+    const [updated] = await db.select().from(questionBundlesTable).where(eq(questionBundlesTable.id, targetId));
+    return res.status(201).json({ bundle: updated, importedCount: parsed.questions.length, errors: parsed.errors });
+  }
+
+  /* ── Mode B: buat bundle BARU dari file (perilaku lama) ── */
   if (!parsed.bundle.name?.trim())
     return res.status(400).json({ error: "Nama bundle tidak ditemukan di file." });
 
@@ -105,6 +141,7 @@ router.post("/admin/bundles/import", importLimiter, async (req, res) => {
       name:        parsed.bundle.name.trim(),
       description: parsed.bundle.description ?? null,
       category:    parsed.bundle.category ?? null,
+      parentId:    parentId ? Number(parentId) : null,
       status:      "draft",
     })
     .returning();

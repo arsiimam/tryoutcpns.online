@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { KatexRenderer } from "../../components/KatexRenderer";
 import {
@@ -9,7 +9,7 @@ import {
 import { AdminLayout } from "../../components/layouts/AdminLayout";
 import {
   ArrowLeft, Download, Trash2, Eye, ChevronDown, FileText, BookOpen,
-  AlertCircle, BookMarked, Plus, Pencil,
+  AlertCircle, BookMarked, Plus, Pencil, Upload, X, CheckCircle,
 } from "lucide-react";
 
 /* ── types ─────────────────────────────────────────────── */
@@ -37,6 +37,16 @@ interface Question {
   createdAt: string;
 }
 
+interface PreviewResult {
+  bundleName: string;
+  category: string | null;
+  description: string | null;
+  questionCount: number;
+  imageCount: number;
+  errors: { index: number; message: string }[];
+  preview: { order: number; type: string; content: string; answer: string | null }[];
+}
+
 const API = "/api/admin/bundles";
 
 function stripHtml(html: string): string {
@@ -62,6 +72,54 @@ export function AdminBundleDetailPage() {
   const [previewQ,  setPreviewQ]  = useState<Question | null>(null);
   const [page,      setPage]      = useState(1);
   const PAGE_SIZE = 50;
+
+  /* ── Import Soal (append ke bundle ini, bukan bikin bundle baru) ── */
+  const [showImport,    setShowImport]    = useState(false);
+  const [importStep,    setImportStep]    = useState<"upload"|"preview"|"done">("upload");
+  const [importFile,    setImportFile]    = useState<File | null>(null);
+  const [importFormat,  setImportFormat]  = useState<"json"|"html">("json");
+  const [previewData,   setPreviewData]   = useState<PreviewResult | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError,   setImportError]   = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const openImport = () => {
+    setShowImport(true); setImportStep("upload");
+    setImportFile(null); setPreviewData(null); setImportError("");
+  };
+
+  const handlePreview = async () => {
+    if (!importFile) return;
+    setImportLoading(true); setImportError("");
+    try {
+      const text = await importFile.text();
+      const r = await fetch(`${API}/preview`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text, format: importFormat }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setImportError(d.error ?? "Gagal preview."); return; }
+      setPreviewData(d); setImportStep("preview");
+    } finally { setImportLoading(false); }
+  };
+
+  const handleImportConfirm = async () => {
+    if (!importFile) return;
+    setImportLoading(true); setImportError("");
+    try {
+      const text = await importFile.text();
+      // bundleId dikirim → backend APPEND soal ke bundle ini, bukan bikin bundle baru.
+      const r = await fetch(`${API}/import`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text, format: importFormat, bundleId }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setImportError(d.error ?? "Gagal import."); return; }
+      setImportStep("done");
+    } finally { setImportLoading(false); }
+  };
 
   /* ── load ─────────────────────────────────────────────── */
   const load = async () => {
@@ -157,6 +215,10 @@ export function AdminBundleDetailPage() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          <button onClick={openImport}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+            <Upload size={15} /> Import Soal
+          </button>
           <Link href={`/admin/questions/${bundle.id}/add`}>
             <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
               style={{ background: "#1E4D9C" }}>
@@ -187,7 +249,7 @@ export function AdminBundleDetailPage() {
           <div className="p-12 text-center text-slate-400">
             <BookMarked size={40} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">Belum ada soal</p>
-            <p className="text-sm mt-1">Klik "Tambah Soal" untuk membuat soal baru, atau import dari halaman Bank Soal.</p>
+            <p className="text-sm mt-1">Klik "Tambah Soal" untuk membuat satu per satu, atau "Import Soal" untuk mengunggah banyak soal sekaligus dari file JSON/HTML.</p>
           </div>
         ) : (
           <>
@@ -358,7 +420,117 @@ export function AdminBundleDetailPage() {
           </div>
         </div>
       )}
+
+      {/* ── Import Soal Modal (append ke bundle ini) ─────── */}
+      {showImport && (
+        <Modal title={`Import Soal ke "${bundle.name}"`} onClose={() => setShowImport(false)}>
+          {importStep === "upload" && (
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                {(["json","html"] as const).map(f => (
+                  <button key={f} onClick={() => setImportFormat(f)}
+                    className={`px-4 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${importFormat === f ? "bg-primary text-white border-primary" : "border-slate-300 text-slate-600 hover:bg-slate-50"}`}>
+                    {f.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500">
+                Soal dari file akan ditambahkan ke bundle ini (urutan melanjutkan soal yang sudah ada). Info nama/kategori di dalam file akan diabaikan.
+              </p>
+              <div
+                className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={() => fileRef.current?.click()}
+              >
+                <Upload size={28} className="mx-auto text-slate-400 mb-2" />
+                {importFile
+                  ? <p className="font-semibold text-slate-700">{importFile.name}</p>
+                  : <p className="text-slate-500 text-sm">Klik untuk pilih file <span className="font-semibold">.{importFormat}</span></p>
+                }
+              </div>
+              <input ref={fileRef} type="file" accept={`.${importFormat}`} className="hidden"
+                onChange={e => { setImportFile(e.target.files?.[0] ?? null); e.target.value = ""; }} />
+              {importError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+                  <AlertCircle size={15} /> {importError}
+                </div>
+              )}
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowImport(false)}
+                  className="px-4 py-2 rounded-lg border text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+                <button onClick={handlePreview} disabled={!importFile || importLoading}
+                  className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90 disabled:opacity-60">
+                  {importLoading ? "Memproses…" : "Preview"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {importStep === "preview" && previewData && (
+            <div className="space-y-4">
+              <div className="bg-slate-50 rounded-xl p-4 space-y-1 text-sm">
+                <p><span className="font-semibold">Jumlah soal terdeteksi:</span> {previewData.questionCount}</p>
+                {previewData.imageCount > 0 && <p><span className="font-semibold">Gambar:</span> {previewData.imageCount}</p>}
+              </div>
+              {previewData.errors.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
+                  <p className="font-semibold mb-1">{previewData.errors.length} peringatan:</p>
+                  {previewData.errors.slice(0,3).map(e => <p key={e.index}>• Soal #{e.index}: {e.message}</p>)}
+                </div>
+              )}
+              <div className="space-y-2">
+                {previewData.preview.map((p, i) => (
+                  <div key={i} className="border rounded-lg p-3 text-sm">
+                    <span className="text-xs font-bold text-slate-400 uppercase">Soal {p.order}</span>
+                    <p className="mt-1 text-slate-700 line-clamp-2">{p.content}</p>
+                  </div>
+                ))}
+              </div>
+              {importError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+                  <AlertCircle size={15} /> {importError}
+                </div>
+              )}
+              <div className="flex justify-between">
+                <button onClick={() => setImportStep("upload")}
+                  className="px-4 py-2 rounded-lg border text-sm font-semibold text-slate-700 hover:bg-slate-50">Kembali</button>
+                <button onClick={handleImportConfirm} disabled={importLoading}
+                  className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90 disabled:opacity-60">
+                  {importLoading ? "Menyimpan…" : `Tambahkan ${previewData.questionCount} Soal`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {importStep === "done" && (
+            <div className="text-center py-6">
+              <CheckCircle size={48} className="mx-auto text-emerald-500 mb-3" />
+              <p className="font-bold text-slate-800 text-lg">Soal berhasil ditambahkan!</p>
+              <button onClick={() => { setShowImport(false); load(); }}
+                className="mt-4 px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90">
+                Tutup
+              </button>
+            </div>
+          )}
+        </Modal>
+      )}
     </AdminLayout>
+  );
+}
+
+/* ── Modal wrapper ────────────────────────────────────────── */
+function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b">
+          <h2 className="font-bold text-lg text-slate-800">{title}</h2>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5">{children}</div>
+      </div>
+    </div>
   );
 }
 
