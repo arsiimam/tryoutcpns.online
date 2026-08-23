@@ -148,8 +148,8 @@ export function SessionPage() {
 
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Main Content (Soal) — scroll area mandiri */}
-        <main className="flex-1 flex flex-col overflow-hidden p-4 lg:p-8 min-h-0">
-          <div className="flex-1 max-w-4xl w-full mx-auto bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col min-h-0">
+        <main className="flex-1 flex flex-col overflow-hidden p-3 lg:p-4 min-h-0">
+          <div className="flex-1 w-full mx-auto bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col min-h-0">
             {/* Header Soal — sticky */}
             <div className="p-4 md:p-6 border-b flex justify-between items-center bg-slate-50 shrink-0">
               <div className="flex items-center gap-4">
@@ -158,7 +158,7 @@ export function SessionPage() {
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">
-                    {currentQ.categoryId === 'cat-1' ? 'TWK' : currentQ.categoryId === 'cat-2' ? 'TIU' : 'TKP'}
+                    {currentQ.categoryId || currentQ.sectionName || 'Soal'}
                   </div>
                   <div className="text-sm font-medium text-slate-800">Soal ke {currentIndex + 1} dari {questions.length}</div>
                 </div>
