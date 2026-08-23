@@ -34,6 +34,19 @@ export function SessionPage() {
   const searchParams = new URLSearchParams(window.location.search);
   const sessionId = searchParams.get('session');
 
+  // Kunci scroll di level dokumen selama sesi tryout aktif.
+  // Tanpa ini, browser bisa memicu scroll/overscroll-bounce pada <body>
+  // (mis. saat memilih opsi jawaban memindahkan fokus ke radio input),
+  // sehingga latar abu-abu <body> (di luar shell h-screen) jadi kelihatan
+  // dan area soal terasa "stuck"/terpotong sampai discroll balik manual.
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
+
   useEffect(() => {
     async function load() {
       if (!sessionId) return;
