@@ -112,6 +112,7 @@ router.get("/tryouts", requireAuth, async (req: any, res) => {
       const [results, dummyTotal, countRows] = await Promise.all([
         db.select({
           tryoutId:   tryoutResultsTable.tryoutId,
+          sessionId:  tryoutResultsTable.sessionId,
           totalScore: tryoutResultsTable.totalScore,
           twkScore:   tryoutResultsTable.twkScore,
           tiuScore:   tryoutResultsTable.tiuScore,
@@ -147,6 +148,7 @@ router.get("/tryouts", requireAuth, async (req: any, res) => {
         const key = String(r.tryoutId);
         if (!lastResultMap[key]) {
           lastResultMap[key] = {
+            sessionId:  r.sessionId,
             totalScore: r.totalScore,
             twkScore:   r.twkScore,
             tiuScore:   r.tiuScore,

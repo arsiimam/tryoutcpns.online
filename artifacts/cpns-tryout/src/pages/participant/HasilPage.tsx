@@ -149,6 +149,7 @@ export function HasilPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-500 uppercase font-semibold">
               <tr>
+                <th className="px-6 py-4">Tryout</th>
                 <th className="px-6 py-4">Tanggal</th>
                 <th className="px-6 py-4">TWK</th>
                 <th className="px-6 py-4">TIU</th>
@@ -161,6 +162,9 @@ export function HasilPage() {
             <tbody className="divide-y divide-slate-100">
               {results.map((r, i) => (
                 <tr key={i} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-slate-800 max-w-[220px] truncate" title={r.tryoutName}>
+                    {r.tryoutName ?? "-"}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-700">
                     {new Date(r.completedAt).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
                   </td>

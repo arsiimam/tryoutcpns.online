@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader } from "../../components/ui/shared";
 import { Link, useLocation } from "wouter";
-import { Clock, FileText, Target, PlayCircle, Lock, RotateCcw, CheckCircle2, XCircle, X, Trophy } from "lucide-react";
+import { Clock, FileText, Target, PlayCircle, Lock, RotateCcw, CheckCircle2, XCircle, X, Trophy, ArrowRight } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
 interface LastResult {
+  sessionId: string | null;
   totalScore: number;
   twkScore: number | null;
   tiuScore: number | null;
@@ -234,6 +235,20 @@ export function TryoutListPage() {
                       <Link href={`/tryout/${to.id}`} className="w-full flex items-center justify-center gap-2 h-10 rounded-lg font-semibold text-white bg-primary hover:bg-primary/90 transition-colors shadow-md">
                         <PlayCircle size={16} /> {hasResult ? "Lihat / Lanjut" : "Mulai Tryout"}
                       </Link>
+                      {hasResult && to.lastResult?.sessionId && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setLocation(`/tryout/${to.lastResult!.sessionId}/review`)}
+                            className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition-colors">
+                            Review Soal
+                          </button>
+                          <button
+                            onClick={() => setLocation(`/tryout/${to.id}/result?session=${to.lastResult!.sessionId}`)}
+                            className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition-colors">
+                            Detail <ArrowRight size={14} />
+                          </button>
+                        </div>
+                      )}
                       {hasResult && (
                         <button
                           onClick={() => setConfirm(to)}
