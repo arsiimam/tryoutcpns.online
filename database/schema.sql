@@ -201,6 +201,16 @@ CREATE TABLE IF NOT EXISTS tryout_results (
 );
 
 -- =============================================================================
+-- dummy_scores  (skor simulasi peserta, dipakai untuk ranking & Top 100)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS dummy_scores (
+  id         SERIAL PRIMARY KEY,
+  score      INTEGER NOT NULL,
+  name       TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- =============================================================================
 -- user_sessions  (managed by connect-pg-simple — express-session store)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS user_sessions (

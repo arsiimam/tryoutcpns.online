@@ -735,10 +735,10 @@ router.get("/ranking", requireAuth, async (req: any, res) => {
     const userId   = req.session.userId as string;
     const tryoutId = req.query.tryoutId as string | undefined;
 
-    // ── Top-100 leaderboard (user nyata saja) ──────────────────────────────
-    let rankingRows: any[];
+    // ── Top-100 leaderboard (peserta nyata + peserta simulasi digabung) ────
+    let realRows: any[];
     if (tryoutId) {
-      rankingRows = await db.execute(sql`
+      realRows = await db.execute(sql`
         SELECT tr.user_id, u.full_name,
                tr.total_score, tr.twk_score, tr.tiu_score, tr.tkp_score, tr.created_at
         FROM tryout_results tr
@@ -748,7 +748,7 @@ router.get("/ranking", requireAuth, async (req: any, res) => {
         LIMIT 100
       `).then(r => r.rows);
     } else {
-      rankingRows = await db.execute(sql`
+      realRows = await db.execute(sql`
         SELECT tr.user_id, u.full_name,
                AVG(tr.total_score)::int AS total_score,
                AVG(tr.twk_score)::int   AS twk_score,
@@ -763,16 +763,56 @@ router.get("/ranking", requireAuth, async (req: any, res) => {
       `).then(r => r.rows);
     }
 
-    const ranking = rankingRows.map((row: any, idx: number) => ({
+    // Kandidat dummy dengan skor tertinggi — cukup untuk mengisi sisa slot
+    // top-100 setelah digabung dan diurutkan ulang dengan peserta nyata.
+    const dummyRows = await db.execute(sql`
+      SELECT id, name, score, created_at
+      FROM dummy_scores
+      ORDER BY score DESC
+      LIMIT 150
+    `).then(r => r.rows as any[]);
+
+    const combinedRows = [
+      ...realRows.map((row: any) => ({
+        userId:   row.user_id as string,
+        userName: row.full_name as string,
+        total:    Number(row.total_score),
+        TWK:      Number(row.twk_score),
+        TIU:      Number(row.tiu_score),
+        TKP:      Number(row.tkp_score),
+        date:     row.created_at,
+        isDummy:  false,
+      })),
+      ...dummyRows.map((row: any) => {
+        // Skor dummy hanya berupa total — pecah proporsional ke TWK/TIU/TKP
+        // (skala SKD: TWK maks 150, TIU maks 175, TKP maks 225 dari total 550)
+        // hanya untuk keperluan tampilan.
+        const total = Number(row.score);
+        const twk   = Math.round((total * 150) / 550);
+        const tiu   = Math.round((total * 175) / 550);
+        const tkp   = Math.max(0, total - twk - tiu);
+        return {
+          userId:   `dummy-${row.id}`,
+          userName: row.name ?? `Peserta ${row.id}`,
+          total, TWK: twk, TIU: tiu, TKP: tkp,
+          date:     row.created_at,
+          isDummy:  true,
+        };
+      }),
+    ]
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 100);
+
+    const ranking = combinedRows.map((row, idx) => ({
       rank:     idx + 1,
-      userId:   row.user_id,
-      userName: row.full_name,
-      total:    row.total_score,
-      TWK:      row.twk_score,
-      TIU:      row.tiu_score,
-      TKP:      row.tkp_score,
-      date:     row.created_at,
-      isMe:     row.user_id === userId,
+      userId:   row.userId,
+      userName: row.userName,
+      total:    row.total,
+      TWK:      row.TWK,
+      TIU:      row.TIU,
+      TKP:      row.TKP,
+      date:     row.date,
+      isMe:     !row.isDummy && row.userId === userId,
     }));
 
     // ── Skor user saat ini (untuk hitung rank sebenarnya) ──────────────────

@@ -161,11 +161,11 @@ export function RankingPage() {
         )}
       </div>
 
-      {/* Tabel top-100 user nyata */}
+      {/* Tabel top-100 (peserta nyata + simulasi nasional) */}
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <h3 className="font-bold text-slate-900">Top 100 Peserta Aktif</h3>
-          <span className="text-xs text-slate-400">Menampilkan peserta nyata yang telah mengikuti tryout</span>
+          <span className="text-xs text-slate-400">Peringkat nasional — peserta dengan skor tertinggi selalu tampil di sini</span>
         </div>
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-xs">

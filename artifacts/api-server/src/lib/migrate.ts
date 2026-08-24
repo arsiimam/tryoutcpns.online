@@ -27,6 +27,51 @@ const MIGRATIONS: { name: string; sql: string }[] = [
       WHERE t.id = ranked.id;
     `,
   },
+  {
+    name: "003_dummy_scores_names_and_top_tier",
+    // Tambah kolom `name` di dummy_scores (supaya bisa tampil sebagai "peserta"
+    // di papan peringkat Top 100), batasi skor dummy maksimum 523, bentuk
+    // 150 skor teratas jadi kurva halus 523 → 450, lalu isi nama simulasi
+    // untuk semua baris yang belum punya nama (deterministik dari id).
+    sql: `
+      CREATE TABLE IF NOT EXISTS dummy_scores (
+        id         SERIAL PRIMARY KEY,
+        score      INTEGER NOT NULL,
+        name       TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      ALTER TABLE dummy_scores ADD COLUMN IF NOT EXISTS name TEXT;
+
+      WITH ranked AS (
+        SELECT id, ROW_NUMBER() OVER (ORDER BY score DESC, id) AS rn
+        FROM dummy_scores
+      )
+      UPDATE dummy_scores d
+      SET score = CASE
+        WHEN ranked.rn <= 150
+          THEN (GREATEST(450, LEAST(523, 523 - ROUND((ranked.rn - 1) * (523 - 450)::numeric / 149))))::int
+        ELSE LEAST(d.score, 449)
+      END
+      FROM ranked
+      WHERE d.id = ranked.id;
+
+      UPDATE dummy_scores
+      SET name = (ARRAY[
+        'Ahmad','Budi','Citra','Dewi','Eka','Fajar','Gita','Hendra','Indra','Joko',
+        'Kartika','Lestari','Made','Nita','Oki','Putri','Rian','Sari','Tono','Umi',
+        'Vina','Wawan','Yanti','Zainal','Agus','Bayu','Chandra','Dian','Erna','Farhan',
+        'Galih','Hana','Ika','Jaya','Kirana','Lina','Maya','Nanda','Oscar','Pratama'
+      ])[1 + (id % 40)]
+        || ' ' ||
+         (ARRAY[
+        'Saputra','Wijaya','Kusuma','Pratama','Santoso','Setiawan','Hidayat','Permana','Nugroho','Utomo',
+        'Ramadhan','Suryani','Handayani','Wibowo','Firmansyah','Purnama','Anggraini','Maulana','Rahayu','Susanto',
+        'Gunawan','Kurniawan','Fadillah','Yulianto','Puspita','Sembiring','Simanjuntak','Halim','Ariyanto','Wahyuni'
+      ])[1 + ((id / 40) % 30)]
+      WHERE name IS NULL;
+    `,
+  },
 ];
 
 export async function runMigrations(): Promise<void> {

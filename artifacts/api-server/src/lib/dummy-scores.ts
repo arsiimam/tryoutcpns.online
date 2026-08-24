@@ -16,8 +16,29 @@ export const DUMMY_N         = 11_523;
 export const DUMMY_MEAN      = 325;
 export const DUMMY_STD       = 55;
 export const DUMMY_MIN       = 0;
-export const DUMMY_MAX       = 550;
+export const DUMMY_MAX       = 523;
 export const DUMMY_BATCH     = 500;
+
+// ─── "Tier atas" papan peringkat ────────────────────────────────────────────
+// Sejumlah skor dummy dibentuk manual (bukan murni dari kurva gaussian) agar
+// Top 100 terlihat wajar: skor tertinggi persis DUMMY_TOP_MAX, lalu menurun
+// halus sampai DUMMY_TOP_FLOOR di posisi ke-DUMMY_TOP_COUNT.
+export const DUMMY_TOP_MAX   = 523;
+export const DUMMY_TOP_FLOOR = 450;
+export const DUMMY_TOP_COUNT = 150;
+
+// ─── Pool nama simulasi (dipakai juga oleh migrasi SQL — lihat migrate.ts) ─
+export const DUMMY_FIRST_NAMES = [
+  "Ahmad","Budi","Citra","Dewi","Eka","Fajar","Gita","Hendra","Indra","Joko",
+  "Kartika","Lestari","Made","Nita","Oki","Putri","Rian","Sari","Tono","Umi",
+  "Vina","Wawan","Yanti","Zainal","Agus","Bayu","Chandra","Dian","Erna","Farhan",
+  "Galih","Hana","Ika","Jaya","Kirana","Lina","Maya","Nanda","Oscar","Pratama",
+];
+export const DUMMY_LAST_NAMES = [
+  "Saputra","Wijaya","Kusuma","Pratama","Santoso","Setiawan","Hidayat","Permana","Nugroho","Utomo",
+  "Ramadhan","Suryani","Handayani","Wibowo","Firmansyah","Purnama","Anggraini","Maulana","Rahayu","Susanto",
+  "Gunawan","Kurniawan","Fadillah","Yulianto","Puspita","Sembiring","Simanjuntak","Halim","Ariyanto","Wahyuni",
+];
 
 // ─── Seeded PRNG (mulberry32) ──────────────────────────────────────────────
 function mulberry32(seed: number): () => number {
@@ -51,6 +72,22 @@ export function buildScoreArray(
     const raw = gaussianSample(mean, std, rand);
     scores.push(Math.round(Math.max(DUMMY_MIN, Math.min(DUMMY_MAX, raw))));
   }
+
+  // Bentuk tier atas: urutkan turun, paksa DUMMY_TOP_COUNT skor teratas jadi
+  // kurva halus dari DUMMY_TOP_MAX ke DUMMY_TOP_FLOOR, dan pastikan sisanya
+  // tidak menembus batas bawah tier itu (biar Top 100 tidak "bentrok").
+  scores.sort((a, b) => b - a);
+  const topCount = Math.min(DUMMY_TOP_COUNT, n);
+  for (let i = 0; i < topCount; i++) {
+    const t      = topCount === 1 ? 0 : i / (topCount - 1);
+    const base   = DUMMY_TOP_MAX - t * (DUMMY_TOP_MAX - DUMMY_TOP_FLOOR);
+    const jitter = Math.round((rand() - 0.5) * 4); // variasi +-2 poin biar tidak kaku
+    scores[i] = Math.max(DUMMY_TOP_FLOOR, Math.min(DUMMY_TOP_MAX, Math.round(base + jitter)));
+  }
+  for (let i = topCount; i < scores.length; i++) {
+    scores[i] = Math.min(scores[i], DUMMY_TOP_FLOOR - 1);
+  }
+
   return scores;
 }
 
@@ -73,8 +110,9 @@ export function computeStats(scores: number[]) {
     buckets[Math.min(9, Math.floor((s - DUMMY_MIN) / bucketSize))]++;
   }
   buckets.forEach((c, i) => {
-    const lo = DUMMY_MIN + i * bucketSize;
-    histogram.push({ range: `${lo}–${lo + bucketSize}`, count: c, pct: Math.round(c / n * 1000) / 10 });
+    const lo = Math.round(DUMMY_MIN + i * bucketSize);
+    const hi = Math.round(DUMMY_MIN + (i + 1) * bucketSize);
+    histogram.push({ range: `${lo}–${hi}`, count: c, pct: Math.round(c / n * 1000) / 10 });
   });
 
   return {
@@ -109,7 +147,27 @@ export async function regenerateDummyScores(
     await db.insert(dummyScoresTable).values(rows.slice(i, i + DUMMY_BATCH));
   }
 
+  // Isi nama simulasi (deterministik berdasarkan id) supaya bisa tampil di Top 100
+  await backfillDummyNames();
+
   return stats;
+}
+
+/** Isi kolom `name` untuk baris dummy yang belum punya nama (deterministik berdasarkan id). */
+export async function backfillDummyNames(): Promise<void> {
+  const firstNames = sql.raw(
+    `ARRAY[${DUMMY_FIRST_NAMES.map(n => `'${n}'`).join(",")}]`
+  );
+  const lastNames = sql.raw(
+    `ARRAY[${DUMMY_LAST_NAMES.map(n => `'${n}'`).join(",")}]`
+  );
+  await db.execute(sql`
+    UPDATE dummy_scores
+    SET name = (${firstNames})[1 + (id % ${DUMMY_FIRST_NAMES.length})]
+      || ' ' ||
+       (${lastNames})[1 + ((id / ${DUMMY_FIRST_NAMES.length}) % ${DUMMY_LAST_NAMES.length})]
+    WHERE name IS NULL
+  `);
 }
 
 // ─── DB queries yang dipakai oleh ranking ─────────────────────────────────
