@@ -44,9 +44,16 @@ async function syncCounts(tryoutId: number) {
    BUNDLE CRUD
 ═══════════════════════════════════════════════════════ */
 
+/* helper: sortOrder berikutnya = paling akhir (bundle baru selalu nambah di bawah) */
+async function nextTryoutSortOrder(): Promise<number> {
+  const [row] = await db.select({ maxOrder: max(tryoutBundlesTable.sortOrder) }).from(tryoutBundlesTable);
+  return (row?.maxOrder ?? 0) + 1;
+}
+
 /* LIST */
 router.get("/admin/tryouts", async (_req, res) => {
-  const bundles = await db.select().from(tryoutBundlesTable).orderBy(desc(tryoutBundlesTable.createdAt));
+  const bundles = await db.select().from(tryoutBundlesTable)
+    .orderBy(tryoutBundlesTable.sortOrder, tryoutBundlesTable.id);
   // attach section summary per bundle
   const ids = bundles.map(b => b.id);
   const sections = ids.length
@@ -59,6 +66,22 @@ router.get("/admin/tryouts", async (_req, res) => {
   res.json(result);
 });
 
+/* REORDER — simpan urutan tampil baru (hasil drag-and-drop di admin) */
+router.put("/admin/tryouts/reorder", async (req, res) => {
+  const { orderedIds } = req.body;
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0)
+    return res.status(400).json({ error: "orderedIds wajib berupa array id tryout." });
+
+  await Promise.all(
+    orderedIds.map((id: number, index: number) =>
+      db.update(tryoutBundlesTable)
+        .set({ sortOrder: index, updatedAt: new Date() })
+        .where(eq(tryoutBundlesTable.id, Number(id)))
+    )
+  );
+  res.json({ success: true });
+});
+
 /* CREATE EMPTY BUNDLE */
 router.post("/admin/tryouts", async (req, res) => {
   const { name, description, category, durationMinutes, passingGrade, settings, isFree } = req.body;
@@ -69,6 +92,7 @@ router.post("/admin/tryouts", async (req, res) => {
     passingGrade: passingGrade ?? 0,
     settings: settings ?? null,
     isFree: isFree ?? false,
+    sortOrder: await nextTryoutSortOrder(),
     status: "draft",
   }).returning();
   res.status(201).json({ ...bundle, sections: [] });
@@ -133,6 +157,7 @@ router.post("/admin/tryouts/:id/duplicate", async (req, res) => {
     durationMinutes: original.durationMinutes,
     passingGrade:    original.passingGrade,
     settings:        original.settings as any,
+    sortOrder:       await nextTryoutSortOrder(),
     status:          "draft",
   }).returning();
 
@@ -366,6 +391,7 @@ router.post("/admin/tryouts/import", importLimiter, async (req, res) => {
     durationMinutes: parsed.tryout.duration_minutes ?? 100,
     passingGrade:    parsed.tryout.passing_grade ?? 0,
     settings:        parsed.tryout.settings ?? null,
+    sortOrder:       await nextTryoutSortOrder(),
     status:          "draft",
   }).returning();
 

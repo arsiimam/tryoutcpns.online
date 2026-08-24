@@ -127,6 +127,7 @@ CREATE TABLE IF NOT EXISTS tryout_bundles (
   settings         JSONB,
   total_questions  INTEGER NOT NULL DEFAULT 0,
   is_free          BOOLEAN NOT NULL DEFAULT FALSE,
+  sort_order       INTEGER NOT NULL DEFAULT 0,  -- urutan tampil manual (digeser admin)
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

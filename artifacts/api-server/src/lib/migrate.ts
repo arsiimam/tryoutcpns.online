@@ -11,6 +11,22 @@ const MIGRATIONS: { name: string; sql: string }[] = [
     name: "001_widen_correct_answer_to_text",
     sql: `ALTER TABLE questions ALTER COLUMN correct_answer TYPE text`,
   },
+  {
+    name: "002_add_tryout_sort_order",
+    // Tambah kolom urutan manual untuk tryout_bundles + backfill dari urutan
+    // created_at yang sudah ada, supaya urutan tidak berubah saat migrasi ini jalan.
+    sql: `
+      ALTER TABLE tryout_bundles ADD COLUMN IF NOT EXISTS sort_order integer NOT NULL DEFAULT 0;
+
+      UPDATE tryout_bundles t
+      SET sort_order = ranked.rn
+      FROM (
+        SELECT id, ROW_NUMBER() OVER (ORDER BY created_at, id) AS rn
+        FROM tryout_bundles
+      ) ranked
+      WHERE t.id = ranked.id;
+    `,
+  },
 ];
 
 export async function runMigrations(): Promise<void> {

@@ -11,6 +11,7 @@ export const tryoutBundlesTable = pgTable("tryout_bundles", {
   settings:        jsonb("settings"),
   totalQuestions:  integer("total_questions").notNull().default(0),
   isFree:          boolean("is_free").notNull().default(false),
+  sortOrder:       integer("sort_order").notNull().default(0), // urutan tampil (manual, digeser admin)
   createdAt:       timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt:       timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

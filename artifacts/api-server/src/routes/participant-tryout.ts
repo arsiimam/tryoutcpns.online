@@ -94,7 +94,7 @@ router.get("/tryouts", requireAuth, async (req: any, res) => {
       .select()
       .from(tryoutBundlesTable)
       .where(eq(tryoutBundlesTable.status, "published"))
-      .orderBy(tryoutBundlesTable.id);
+      .orderBy(tryoutBundlesTable.sortOrder, tryoutBundlesTable.id);
 
     const sections = tryouts.length === 0 ? [] : await db
       .select()

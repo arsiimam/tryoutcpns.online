@@ -5,7 +5,7 @@ import { PageHeader } from "../../components/ui/shared";
 import {
   Upload, Plus, Eye, Edit2, Trash2, Copy, Download,
   ChevronDown, FileText, BookOpen, AlertCircle, CheckCircle,
-  Clock, BarChart2, Search, Layers, X,
+  Clock, BarChart2, Search, Layers, X, GripVertical,
 } from "lucide-react";
 
 /* ── types ──────────────────────────────────────────────── */
@@ -73,6 +73,37 @@ export function AdminTryoutsPage() {
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
+
+  /* ── drag & drop reorder ──────────────────────────────── */
+  // Reorder cuma masuk akal kalau daftar tidak sedang difilter/dicari —
+  // kalau sedang difilter, urutan yang kelihatan cuma sebagian dari semua tryout.
+  const canReorder = search === "" && catF === "Semua" && statusF === "Semua";
+  const dragIndexRef = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const persistOrder = async (ordered: Bundle[]) => {
+    try {
+      await fetch(`${API}/reorder`, {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds: ordered.map(b => b.id) }),
+      });
+    } catch { /* biarkan, tampilan lokal tetap sesuai urutan yang digeser */ }
+  };
+
+  const handleDrop = (dropIndex: number) => {
+    const dragIndex = dragIndexRef.current;
+    dragIndexRef.current = null;
+    setDragOverIndex(null);
+    if (dragIndex === null || dragIndex === dropIndex) return;
+    setBundles(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(dragIndex, 1);
+      next.splice(dropIndex, 0, moved);
+      persistOrder(next);
+      return next;
+    });
+  };
 
   /* ── filters ──────────────────────────────────────────── */
   const filtered = bundles.filter(b =>
@@ -248,6 +279,11 @@ export function AdminTryoutsPage() {
       </div>
 
       {/* Bundle table */}
+      {!canReorder && bundles.length > 1 && (
+        <p className="text-xs text-slate-400 mb-2">
+          Kosongkan pencarian &amp; filter untuk bisa mengatur urutan tryout (geser-geser).
+        </p>
+      )}
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-slate-400">Memuat...</div>
@@ -261,6 +297,7 @@ export function AdminTryoutsPage() {
           <table className="w-full text-sm text-left">
             <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
               <tr>
+                <th className="w-8 px-2 py-3"></th>
                 <th className="px-5 py-3">Nama Tryout</th>
                 <th className="px-4 py-3">Komposisi Soal</th>
                 <th className="px-4 py-3 text-center">Durasi</th>
@@ -270,10 +307,24 @@ export function AdminTryoutsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filtered.map(b => (
+              {filtered.map((b, index) => (
                 <tr key={b.id}
-                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  draggable={canReorder}
+                  onDragStart={() => { dragIndexRef.current = index; }}
+                  onDragOver={e => { if (canReorder) { e.preventDefault(); setDragOverIndex(index); } }}
+                  onDragEnd={() => { dragIndexRef.current = null; setDragOverIndex(null); }}
+                  onDrop={e => { if (canReorder) { e.preventDefault(); handleDrop(index); } }}
+                  className={`hover:bg-slate-50 transition-colors cursor-pointer ${
+                    dragOverIndex === index ? "border-t-2 border-primary" : ""
+                  }`}
                   onClick={() => window.location.assign(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/admin/tryouts/${b.id}`)}>
+                  <td className="px-2 py-4 text-center" onClick={e => e.stopPropagation()}>
+                    {canReorder && (
+                      <span title="Geser untuk mengatur urutan" className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 inline-flex">
+                        <GripVertical size={16} />
+                      </span>
+                    )}
+                  </td>
                   <td className="px-5 py-4">
                     <div className="font-semibold text-slate-900">{b.name}</div>
                     <div className="flex items-center gap-2 mt-0.5">
