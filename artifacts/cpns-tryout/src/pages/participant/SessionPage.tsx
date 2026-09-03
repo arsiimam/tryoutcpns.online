@@ -26,6 +26,8 @@ export function SessionPage() {
   const [questions, setQuestions] = useState<ApiQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
+  const deadlineRef = useRef<number | null>(null); // epoch ms saat waktu habis
+  const hasSubmittedRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -56,7 +58,12 @@ export function SessionPage() {
         const data = await r.json();
         setSession(data.session);
         setQuestions(data.questions ?? []);
-        setTimeLeft(data.session.timeRemaining ?? 100 * 60);
+        const remaining = data.session.timeRemaining ?? 100 * 60;
+        // Jangkarkan ke waktu absolut (epoch), bukan sekadar angka yang
+        // didekremen — supaya perhitungan sisa waktu selalu benar walau
+        // tab sempat ditinggalkan.
+        deadlineRef.current = Date.now() + remaining * 1000;
+        setTimeLeft(remaining);
       } catch (e) {
         console.error(e);
       } finally {
@@ -66,23 +73,37 @@ export function SessionPage() {
     load();
   }, [sessionId]);
 
+  // Timer dihitung ulang dari deadline absolut tiap tick (bukan -1 tiap
+  // detik), supaya tetap akurat walau browser men-throttle setInterval saat
+  // tab diminimize/ditinggalkan — begitu tab aktif lagi ("visibilitychange"/
+  // "focus"), sisa waktu langsung dikoreksi ke nilai sebenarnya, bukan diam
+  // di angka lama. Timer jadi tetap "berjalan" mengikuti waktu nyata,
+  // bukan hanya berjalan selama tab dibuka.
   useEffect(() => {
-    if (timeLeft <= 0 || !session) return;
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleForceSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft, session]);
+    if (!session || deadlineRef.current == null) return;
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.round((deadlineRef.current! - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) handleForceSubmit();
+    };
+
+    tick(); // cek langsung — menangani kasus waktu sudah habis saat sesi dibuka/dilanjutkan
+    const timer = setInterval(tick, 1000);
+    const onVisible = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", tick);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", tick);
+    };
+  }, [session?.id]);
 
   const handleForceSubmit = async () => {
-    if (!session) return;
+    if (!session || hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
     setSubmitting(true);
     try {
       await fetch(`/api/participant/sessions/${session.id}/submit`, {

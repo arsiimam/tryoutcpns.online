@@ -286,6 +286,21 @@ router.get("/sessions/:sessionId", requireAuth, async (req: any, res) => {
       return res.status(404).json({ error: "Sesi tidak ditemukan." });
     }
 
+    // Hitung sisa waktu dari waktu mulai sesungguhnya (session.startedAt),
+    // bukan dari nilai statis yang tersimpan di DB — supaya timer tetap
+    // akurat meski tab sempat ditinggalkan, di-refresh, atau sesi dibuka
+    // ulang lewat "Lihat/Lanjut" (waktu tidak "reset" ke durasi penuh lagi).
+    const [tryoutForTimer] = await db
+      .select({ durationMinutes: tryoutBundlesTable.durationMinutes })
+      .from(tryoutBundlesTable)
+      .where(eq(tryoutBundlesTable.id, session.tryoutId));
+
+    const totalSeconds   = (tryoutForTimer?.durationMinutes ?? 100) * 60;
+    const elapsedSeconds = Math.floor((Date.now() - new Date(session.startedAt).getTime()) / 1000);
+    const liveTimeRemaining = session.status === "in_progress"
+      ? Math.max(0, totalSeconds - elapsedSeconds)
+      : (session.timeRemaining ?? 0);
+
     // Get questions with sections
     const questions = await db
       .select({
@@ -325,6 +340,7 @@ router.get("/sessions/:sessionId", requireAuth, async (req: any, res) => {
       ...session,
       answers: session.answers as Record<string, string>,
       flagged: session.flagged as string[],
+      timeRemaining: liveTimeRemaining,
     };
 
     return res.json({ session: sessionData, questions: mappedQuestions });
