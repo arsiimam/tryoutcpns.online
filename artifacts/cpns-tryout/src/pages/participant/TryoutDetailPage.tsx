@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useRoute, useLocation } from "wouter";
+import { useRoute, useLocation, Link } from "wouter";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader } from "../../components/ui/shared";
 interface Tryout {
   id: string; title: string; description: string; duration: number;
   composition: { TWK: number; TIU: number; TKP: number };
   passingScore: { total: number; TWK: number; TIU: number; TKP: number };
-  isAccessibleFree: boolean; status: string;
+  isAccessibleFree: boolean; hasPremium: boolean; status: string;
 }
-import { Clock, FileText, Target, AlertCircle, ArrowLeft } from "lucide-react";
+import { Clock, FileText, Target, AlertCircle, ArrowLeft, Lock } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
 export function TryoutDetailPage() {
@@ -16,6 +16,7 @@ export function TryoutDetailPage() {
   const [tryout, setTryout] = useState<Tryout | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const { user } = useAuth();
 
@@ -35,6 +36,7 @@ export function TryoutDetailPage() {
   const handleStart = async () => {
     if (!tryout || !user) return;
     setStarting(true);
+    setStartError(null);
     try {
       const r = await fetch(`/api/participant/tryouts/${tryout.id}/sessions`, {
         method: "POST",
@@ -45,6 +47,7 @@ export function TryoutDetailPage() {
       setLocation(`/tryout/${tryout.id}/start?session=${data.session.id}`);
     } catch (e: any) {
       console.error(e);
+      setStartError(e?.message ?? "Gagal memulai tryout. Silakan coba lagi.");
       setStarting(false);
     }
   };
@@ -60,6 +63,7 @@ export function TryoutDetailPage() {
   }
 
   const totalSoal = tryout.composition.TWK + tryout.composition.TIU + tryout.composition.TKP;
+  const isLocked  = !tryout.isAccessibleFree && !tryout.hasPremium;
 
   return (
     <DashboardLayout>
@@ -148,17 +152,31 @@ export function TryoutDetailPage() {
             </div>
           </div>
           <div className="flex flex-col justify-end">
-            <button 
-              onClick={handleStart}
-              disabled={starting}
-              className="w-full h-14 rounded-xl bg-primary text-white font-bold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {starting ? (
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-              ) : (
-                "Kerjakan Sekarang"
-              )}
-            </button>
+            {startError && (
+              <div className="mb-3 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                {startError}
+              </div>
+            )}
+            {isLocked ? (
+              <Link
+                href="/subscription"
+                className="w-full h-14 rounded-xl bg-slate-200 text-slate-600 font-bold text-lg hover:bg-slate-300 transition-all flex items-center justify-center gap-2"
+              >
+                <Lock size={20} /> Buka dengan Premium
+              </Link>
+            ) : (
+              <button
+                onClick={handleStart}
+                disabled={starting}
+                className="w-full h-14 rounded-xl bg-primary text-white font-bold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {starting ? (
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                ) : (
+                  "Kerjakan Sekarang"
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -48,6 +48,7 @@ export function TryoutListPage() {
   const [page,       setPage]       = useState(1);
   const [confirm,    setConfirm]    = useState<Tryout | null>(null);
   const [restarting, setRestarting] = useState(false);
+  const [restartError, setRestartError] = useState<string | null>(null);
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -92,6 +93,7 @@ export function TryoutListPage() {
   const handleRestart = async () => {
     if (!confirm) return;
     setRestarting(true);
+    setRestartError(null);
     try {
       const r = await fetch(`${BASE}/api/participant/tryouts/${confirm.id}/sessions`, {
         method: "POST", credentials: "include",
@@ -99,8 +101,15 @@ export function TryoutListPage() {
         body: JSON.stringify({ force: true }),
       });
       const d = await r.json();
-      if (r.ok && d.session?.id) { setConfirm(null); setLocation(`/tryout/${confirm.id}`); }
-    } catch {}
+      if (r.ok && d.session?.id) {
+        setConfirm(null);
+        setLocation(`/tryout/${confirm.id}`);
+      } else {
+        setRestartError(d.error ?? "Gagal memulai ulang tryout. Silakan coba lagi.");
+      }
+    } catch {
+      setRestartError("Gagal memulai ulang tryout. Periksa koneksi internet Anda.");
+    }
     finally { setRestarting(false); }
   };
 
@@ -286,7 +295,7 @@ export function TryoutListPage() {
                       )}
                       {hasResult && (
                         <button
-                          onClick={() => setConfirm(to)}
+                          onClick={() => { setRestartError(null); setConfirm(to); }}
                           className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition-colors">
                           <RotateCcw size={14} /> Ulangi Tryout
                         </button>
@@ -329,7 +338,7 @@ export function TryoutListPage() {
               <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                 <RotateCcw size={18} className="text-amber-600" />
               </div>
-              <button onClick={() => setConfirm(null)} className="p-1 text-slate-400 hover:text-slate-600">
+              <button onClick={() => { setConfirm(null); setRestartError(null); }} className="p-1 text-slate-400 hover:text-slate-600">
                 <X size={18} />
               </button>
             </div>
@@ -338,8 +347,13 @@ export function TryoutListPage() {
             <p className="text-sm text-slate-500 mb-5">
               Sesi baru akan dimulai dari awal. Hasil sebelumnya tetap tersimpan di riwayat.
             </p>
+            {restartError && (
+              <div className="mb-5 -mt-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                {restartError}
+              </div>
+            )}
             <div className="flex gap-3">
-              <button onClick={() => setConfirm(null)}
+              <button onClick={() => { setConfirm(null); setRestartError(null); }}
                 className="flex-1 h-10 rounded-xl border text-sm font-medium text-slate-600 hover:bg-slate-50">
                 Batal
               </button>

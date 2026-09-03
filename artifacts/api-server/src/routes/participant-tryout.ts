@@ -183,6 +183,7 @@ router.get("/tryouts", requireAuth, async (req: any, res) => {
 ────────────────────────────────────────────── */
 router.get("/tryouts/:id", requireAuth, async (req: any, res) => {
   try {
+    const userId = req.session.userId as string;
     const [tryout] = await db
       .select()
       .from(tryoutBundlesTable)
@@ -197,7 +198,12 @@ router.get("/tryouts/:id", requireAuth, async (req: any, res) => {
       .from(tryoutSectionsTable)
       .where(eq(tryoutSectionsTable.tryoutId, tryout.id));
 
-    return res.json({ tryout: buildTryoutCard(tryout, sections) });
+    // Sertakan status langganan supaya halaman detail bisa menyembunyikan/
+    // mengunci tombol "Kerjakan Sekarang" untuk tryout berbayar kalau
+    // langganan user sudah tidak aktif (konsisten dengan kartu di daftar).
+    const premium = await hasActiveSub(userId);
+
+    return res.json({ tryout: { ...buildTryoutCard(tryout, sections), hasPremium: premium } });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
   }
@@ -221,18 +227,14 @@ router.post("/tryouts/:id/sessions", requireAuth, async (req: any, res) => {
       return res.status(404).json({ error: "Tryout tidak ditemukan." });
     }
 
-    // Access gate: if not free, need active subscription
-    if (!tryout.isFree) {
-      const premium = await hasActiveSub(userId);
-      if (!premium) {
-        return res.status(403).json({ error: "Tryout ini memerlukan langganan aktif." });
-      }
-    }
-
     const force = req.body?.force === true || req.query?.force === "true";
 
     if (!force) {
-      // Check for existing in-progress session (resume)
+      // Resume sesi yang sudah berjalan (in-progress) — sengaja TIDAK dicek
+      // langganan aktif di sini, supaya user yang langganannya habis di
+      // tengah jalan tetap bisa menyelesaikan tryout berbayar yang sudah
+      // ia mulai. Gerbang langganan hanya berlaku untuk MEMULAI attempt baru
+      // (di bawah), bukan untuk melanjutkan yang sudah berjalan.
       const existing = await db
         .select()
         .from(tryoutSessionsTable)
@@ -247,6 +249,15 @@ router.post("/tryouts/:id/sessions", requireAuth, async (req: any, res) => {
 
       if (existing.length > 0) {
         return res.json({ session: existing[0] });
+      }
+    }
+
+    // Access gate: attempt baru (pertama kali, atau "Ulangi Tryout" via
+    // force=true) untuk tryout berbayar wajib punya langganan aktif.
+    if (!tryout.isFree) {
+      const premium = await hasActiveSub(userId);
+      if (!premium) {
+        return res.status(403).json({ error: "Tryout ini memerlukan langganan aktif." });
       }
     }
 
