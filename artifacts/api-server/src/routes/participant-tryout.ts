@@ -94,7 +94,8 @@ router.get("/tryouts", requireAuth, async (req: any, res) => {
       .select()
       .from(tryoutBundlesTable)
       .where(eq(tryoutBundlesTable.status, "published"))
-      .orderBy(tryoutBundlesTable.sortOrder, tryoutBundlesTable.id);
+      // Paket gratis selalu tampil paling awal, baru urutan manual (drag & drop admin)
+      .orderBy(desc(tryoutBundlesTable.isFree), tryoutBundlesTable.sortOrder, tryoutBundlesTable.id);
 
     const sections = tryouts.length === 0 ? [] : await db
       .select()

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layouts/DashboardLayout";
 import { PageHeader } from "../../components/ui/shared";
 import { Link, useLocation } from "wouter";
-import { Clock, FileText, Target, PlayCircle, Lock, RotateCcw, CheckCircle2, XCircle, X, Trophy, ArrowRight } from "lucide-react";
+import { Clock, FileText, Target, PlayCircle, Lock, RotateCcw, CheckCircle2, XCircle, X, Trophy, ArrowRight, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
 
 interface LastResult {
@@ -28,6 +28,8 @@ interface Tryout {
 
 type Filter = "semua" | "belum" | "sudah" | "lulus" | "tidak_lulus";
 
+const PAGE_SIZE = 9;
+
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "semua",      label: "Semua" },
   { key: "belum",      label: "Belum Dikerjakan" },
@@ -42,6 +44,8 @@ export function TryoutListPage() {
   const [tryouts,    setTryouts]    = useState<Tryout[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [filter,     setFilter]     = useState<Filter>("semua");
+  const [search,     setSearch]     = useState("");
+  const [page,       setPage]       = useState(1);
   const [confirm,    setConfirm]    = useState<Tryout | null>(null);
   const [restarting, setRestarting] = useState(false);
   const { user } = useAuth();
@@ -56,13 +60,21 @@ export function TryoutListPage() {
       .finally(() => setLoading(false));
   }, [user]);
 
+  // Setiap kali filter atau pencarian berubah, kembali ke halaman pertama
+  useEffect(() => { setPage(1); }, [filter, search]);
+
   const hasPremium = tryouts.length > 0 ? tryouts[0].hasPremium : !!(
     user?.subscription?.status === "active" &&
     new Date(user?.subscription?.expiresAt ?? 0) > new Date()
   );
 
-  /* ── Filter logic ── */
+  /* ── Filter + pencarian ── */
+  const searchLower = search.trim().toLowerCase();
   const filtered = tryouts.filter(to => {
+    if (searchLower && !(
+      to.title.toLowerCase().includes(searchLower) ||
+      to.description.toLowerCase().includes(searchLower)
+    )) return false;
     if (filter === "semua")       return true;
     if (filter === "belum")       return !to.lastResult;
     if (filter === "sudah")       return !!to.lastResult;
@@ -70,6 +82,11 @@ export function TryoutListPage() {
     if (filter === "tidak_lulus") return !!to.lastResult && !to.lastResult.passed;
     return true;
   });
+
+  /* ── Pagination ── */
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   /* ── Ulangi tryout ── */
   const handleRestart = async () => {
@@ -102,6 +119,18 @@ export function TryoutListPage() {
         description="Pilih tryout dan simulasikan ujian sesungguhnya dengan timer."
       />
 
+      {/* ── Pencarian ── */}
+      <div className="relative mb-4 max-w-md">
+        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Cari nama tryout..."
+          className="w-full h-10 pl-10 pr-4 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+        />
+      </div>
+
       {/* ── Filter tabs ── */}
       <div className="flex gap-2 flex-wrap mb-6">
         {FILTERS.map(f => (
@@ -117,6 +146,10 @@ export function TryoutListPage() {
             {f.key !== "semua" && (
               <span className="ml-1.5 text-xs opacity-70">
                 ({tryouts.filter(to => {
+                  if (searchLower && !(
+                    to.title.toLowerCase().includes(searchLower) ||
+                    to.description.toLowerCase().includes(searchLower)
+                  )) return false;
                   if (f.key === "belum")       return !to.lastResult;
                   if (f.key === "sudah")       return !!to.lastResult;
                   if (f.key === "lulus")       return !!to.lastResult?.passed;
@@ -133,11 +166,13 @@ export function TryoutListPage() {
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-slate-400">
           <FileText size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="font-medium">Tidak ada tryout dengan filter ini.</p>
+          <p className="font-medium">
+            {searchLower ? `Tidak ada tryout yang cocok dengan "${search}".` : "Tidak ada tryout dengan filter ini."}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((to) => {
+          {paginated.map((to) => {
             const isLocked  = !to.isAccessibleFree && !hasPremium;
             const totalSoal = to.totalQuestions || (to.composition.TWK + to.composition.TIU + to.composition.TKP);
             const hasResult = !!to.lastResult;
@@ -262,6 +297,27 @@ export function TryoutListPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Pagination ── */}
+      {filtered.length > PAGE_SIZE && (
+        <div className="flex items-center justify-center gap-3 mt-8">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            <ChevronLeft size={16} />
+          </button>
+          <span className="text-sm text-slate-600 font-medium">
+            Halaman <span className="text-slate-900 font-bold">{currentPage}</span> dari {totalPages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            <ChevronRight size={16} />
+          </button>
         </div>
       )}
 
