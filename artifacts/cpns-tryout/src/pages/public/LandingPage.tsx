@@ -205,7 +205,7 @@ export function LandingPage() {
       <header className={`lp-nav${navScrolled ? " lp-nav--scrolled" : ""}`}>
         <div className="lp-nav-inner">
           <Link href="/" className="lp-brand">
-            <BrandLogo variant="dark" size="md" />
+            <BrandLogo variant="dark" size="lg" />
           </Link>
 
           <nav className="lp-nav-links">
