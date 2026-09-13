@@ -162,7 +162,7 @@ export function HasilPage() {
             <tbody className="divide-y divide-slate-100">
               {results.map((r, i) => (
                 <tr key={i} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-800 max-w-[220px] truncate" title={r.tryoutName}>
+                  <td className="px-6 py-4 font-medium text-slate-800 max-w-[280px] whitespace-normal break-words leading-snug">
                     {r.tryoutName ?? "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-700">
