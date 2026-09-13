@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, appSettingsTable, userSubscriptionsTable } from "@workspace/db";
-import { eq, inArray, desc } from "drizzle-orm";
+import { usersTable, appSettingsTable, userSubscriptionsTable, tryoutResultsTable } from "@workspace/db";
+import { eq, inArray, desc, count, avg, max } from "drizzle-orm";
 import { invalidateGoogleCredCache } from "./auth";
 import { invalidateDuitkuCredCache } from "../lib/duitku";
 import { invalidateMidtransCache, invalidateGatewayCache } from "../lib/midtrans";
@@ -378,8 +378,28 @@ router.get("/admin/users", requireAdmin, async (_req, res) => {
     if (!latestSub.has(s.userId)) latestSub.set(s.userId, s);
   }
 
+  /* Ringkasan aktivitas tryout per user — buat admin bisa pantau
+     siapa yang sudah/belum pernah mengerjakan tryout dan skornya. */
+  const tryoutStatsRows =
+    userIds.length > 0
+      ? await db
+          .select({
+            userId:        tryoutResultsTable.userId,
+            totalTryouts:  count(tryoutResultsTable.id),
+            avgScore:      avg(tryoutResultsTable.totalScore),
+            lastActiveAt:  max(tryoutResultsTable.createdAt),
+          })
+          .from(tryoutResultsTable)
+          .where(inArray(tryoutResultsTable.userId, userIds))
+          .groupBy(tryoutResultsTable.userId)
+      : [];
+
+  const statsByUser = new Map<string, (typeof tryoutStatsRows)[0]>();
+  for (const s of tryoutStatsRows) statsByUser.set(s.userId, s);
+
   const result = users.map((u) => {
     const sub = latestSub.get(u.id) ?? null;
+    const stats = statsByUser.get(u.id) ?? null;
     return {
       id: u.id,
       fullName: u.fullName,
@@ -397,6 +417,11 @@ router.get("/admin/users", requireAdmin, async (_req, res) => {
             expiresAt: sub.expiresAt,
           }
         : null,
+      tryoutStats: {
+        totalTryouts: stats ? Number(stats.totalTryouts) : 0,
+        avgScore:     stats && stats.avgScore !== null ? Math.round(Number(stats.avgScore)) : null,
+        lastActiveAt: stats?.lastActiveAt ?? null,
+      },
     };
   });
 

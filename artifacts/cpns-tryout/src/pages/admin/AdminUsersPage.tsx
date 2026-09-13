@@ -15,6 +15,12 @@ interface SubscriptionInfo {
   expiresAt: string;
 }
 
+interface TryoutStats {
+  totalTryouts: number;
+  avgScore: number | null;
+  lastActiveAt: string | null;
+}
+
 interface AdminUser {
   id: string;
   fullName: string;
@@ -24,6 +30,7 @@ interface AdminUser {
   avatarUrl: string | null;
   createdAt: string;
   subscription: SubscriptionInfo | null;
+  tryoutStats: TryoutStats;
 }
 
 /* ------------------------------------------------------------------ */
@@ -44,6 +51,15 @@ function formatDate(iso: string | null | undefined) {
     month: "short",
     year: "numeric",
   });
+}
+
+function TryoutActivity({ stats }: { stats: TryoutStats }) {
+  if (stats.totalTryouts === 0) {
+    return <span className="text-slate-400 text-xs italic">Belum pernah</span>;
+  }
+  return (
+    <span className="text-slate-600 text-xs">{formatDate(stats.lastActiveAt)}</span>
+  );
 }
 
 function SubBadge({ sub }: { sub: SubscriptionInfo | null }) {
@@ -208,6 +224,9 @@ export function AdminUsersPage() {
                 <tr>
                   <th className="px-4 py-3">Pengguna</th>
                   <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3 text-center">Total Tryout</th>
+                  <th className="px-4 py-3">Skor Rata-rata</th>
+                  <th className="px-4 py-3">Terakhir Aktif</th>
                   <th className="px-4 py-3">Provider</th>
                   <th className="px-4 py-3">Status Langganan</th>
                   <th className="px-4 py-3">Mulai Langganan</th>
@@ -218,7 +237,7 @@ export function AdminUsersPage() {
               <tbody className="divide-y divide-slate-100">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
+                    <td colSpan={10} className="px-4 py-12 text-center text-slate-400">
                       Tidak ada pengguna ditemukan.
                     </td>
                   </tr>
@@ -256,6 +275,21 @@ export function AdminUsersPage() {
                         {/* Role */}
                         <td className="px-4 py-3">
                           <RoleBadge role={u.role} />
+                        </td>
+
+                        {/* Total tryout dikerjakan */}
+                        <td className="px-4 py-3 text-center font-semibold text-slate-700">
+                          {u.tryoutStats.totalTryouts}
+                        </td>
+
+                        {/* Skor rata-rata */}
+                        <td className="px-4 py-3 text-slate-700 font-medium">
+                          {u.tryoutStats.avgScore ?? <span className="text-slate-400 font-normal">—</span>}
+                        </td>
+
+                        {/* Terakhir aktif */}
+                        <td className="px-4 py-3">
+                          <TryoutActivity stats={u.tryoutStats} />
                         </td>
 
                         {/* Provider */}
